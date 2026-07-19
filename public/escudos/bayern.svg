@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <circle cx="50" cy="50" r="45" fill="#dc2626" stroke="#ffffff" stroke-width="3" />
+  <circle cx="50" cy="50" r="32" fill="#0284c7" stroke="#ffffff" stroke-width="3" />
+  <g clip-path="url(#innerCircle)">
+    <clipPath id="innerCircle">
+      <circle cx="50" cy="50" r="29" />
+    </clipPath>
+    <rect x="15" y="15" width="70" height="70" fill="#0284c7" />
+    <path d="M 10 10 L 90 90 M 30 10 L 110 90 M -10 10 L 70 90 M 50 10 L 130 90 M -30 10 L 50 90" stroke="#ffffff" stroke-width="6" stroke-dasharray="8 8" />
+  </g>
+  <circle cx="50" cy="50" r="32" fill="none" stroke="#ffffff" stroke-width="2.5" />
+  <text x="50" y="18" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="7" fill="#ffffff" text-anchor="middle">FC BAYERN</text>
+  <text x="50" y="88" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="7" fill="#ffffff" text-anchor="middle">MUNCHEN</text>
+</svg>

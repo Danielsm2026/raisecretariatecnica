@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <clipPath id="shieldClip">
+      <path d="M50 5 C 75 5, 90 12, 90 40 C 90 70, 50 95, 50 95 C 50 95, 10 70, 10 40 C 10 12, 25 5, 50 5 Z" />
+    </clipPath>
+  </defs>
+  <path d="M50 5 C 75 5, 90 12, 90 40 C 90 70, 50 95, 50 95 C 50 95, 10 70, 10 40 C 10 12, 25 5, 50 5 Z" fill="#1e1b4b" stroke="#f59e0b" stroke-width="3" />
+  <g clip-path="url(#shieldClip)">
+    <rect x="10" y="45" width="16" height="50" fill="#b91c1c" />
+    <rect x="26" y="45" width="16" height="50" fill="#1d4ed8" />
+    <rect x="42" y="45" width="16" height="50" fill="#b91c1c" />
+    <rect x="58" y="45" width="16" height="50" fill="#1d4ed8" />
+    <rect x="74" y="45" width="16" height="50" fill="#b91c1c" />
+    <rect x="10" y="5" width="80" height="40" fill="#eab308" />
+    <rect x="20" y="5" width="6" height="40" fill="#b91c1c" />
+    <rect x="10" y="22" width="26" height="6" fill="#b91c1c" />
+    <rect x="50" y="5" width="40" height="40" fill="#eab308" />
+    <rect x="55" y="5" width="5" height="40" fill="#b91c1c" />
+    <rect x="65" y="5" width="5" height="40" fill="#b91c1c" />
+    <rect x="75" y="5" width="5" height="40" fill="#b91c1c" />
+    <rect x="85" y="5" width="5" height="40" fill="#b91c1c" />
+    <rect x="10" y="38" width="80" height="12" fill="#020617" />
+    <text x="50" y="47" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="10" fill="#ffffff" text-anchor="middle">FCB</text>
+  </g>
+</svg>

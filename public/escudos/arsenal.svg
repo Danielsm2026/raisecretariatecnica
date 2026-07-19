@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <path d="M20 10 L80 10 L80 60 C80 80, 50 95, 50 95 C50 95, 20 80, 20 60 Z" fill="#dc2626" stroke="#ffffff" stroke-width="3" />
+  <rect x="35" y="44" width="34" height="8" rx="2" fill="#eab308" stroke="#ffffff" stroke-width="1" />
+  <circle cx="42" cy="55" r="7" fill="#eab308" stroke="#ffffff" stroke-width="1" />
+  <circle cx="58" cy="55" r="7" fill="#eab308" stroke="#ffffff" stroke-width="1" />
+  <rect x="30" y="41" width="6" height="14" fill="#eab308" />
+  <text x="50" y="28" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="12" fill="#ffffff" text-anchor="middle">ARSENAL</text>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <clipPath id="athleticClip">
+      <path d="M15 15 L85 15 L85 45 C85 70, 50 92, 50 92 C50 92, 15 70, 15 45 Z" />
+    </clipPath>
+  </defs>
+  <path d="M15 15 L85 15 L85 45 C85 70, 50 92, 50 92 C50 92, 15 70, 15 45 Z" fill="#ffffff" stroke="#b91c1c" stroke-width="3" />
+  <g clip-path="url(#athleticClip)">
+    <rect x="15" y="40" width="10" height="60" fill="#b91c1c" />
+    <rect x="25" y="40" width="10" height="60" fill="#ffffff" />
+    <rect x="35" y="40" width="10" height="60" fill="#b91c1c" />
+    <rect x="45" y="40" width="10" height="60" fill="#ffffff" />
+    <rect x="55" y="40" width="10" height="60" fill="#b91c1c" />
+    <rect x="65" y="40" width="10" height="60" fill="#ffffff" />
+    <rect x="75" y="40" width="10" height="60" fill="#b91c1c" />
+    <rect x="15" y="15" width="70" height="25" fill="#0f172a" />
+    <text x="50" y="32" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="10" fill="#ffffff" text-anchor="middle">ATHLETIC</text>
+    <path d="M 40 50 L 60 50 L 60 70 L 40 70 Z" fill="#64748b" opacity="0.8" />
+    <path d="M 48 55 L 52 55 L 52 70 L 48 70 Z" fill="#0f172a" />
+  </g>
+</svg>

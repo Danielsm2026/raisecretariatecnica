@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <clipPath id="portoClip">
+      <path d="M25 35 L75 35 L75 75 C75 90, 50 98, 50 98 C50 98, 25 90, 25 75 Z" />
+    </clipPath>
+  </defs>
+  <path d="M35 35 L40 15 L50 22 L60 15 L65 35 Z" fill="#eab308" stroke="#b45309" stroke-width="1.5" />
+  <circle cx="50" cy="12" r="4" fill="#ef4444" />
+  <path d="M25 35 L75 35 L75 75 C75 90, 50 98, 50 98 C50 98, 25 90, 25 75 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="3.5" />
+  <g clip-path="url(#portoClip)">
+    <rect x="25" y="35" width="10" height="70" fill="#1d4ed8" />
+    <rect x="45" y="35" width="10" height="70" fill="#1d4ed8" />
+    <rect x="65" y="35" width="10" height="70" fill="#1d4ed8" />
+    <circle cx="50" cy="65" r="16" fill="#eab308" opacity="0.9" />
+    <text x="50" y="70" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="14" fill="#1d4ed8" text-anchor="middle">FCP</text>
+  </g>
+</svg>
