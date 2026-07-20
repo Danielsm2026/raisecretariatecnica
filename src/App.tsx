@@ -136,13 +136,14 @@ export default function App() {
 
         // Merge local deleted IDs with DB deleted IDs and update local storage
         let localDeletedIds = getDeletedPlayerIds();
-        if (localDeletedIds.includes('p16') || localDeletedIds.includes('p_roger_escoruela')) {
-          localDeletedIds = localDeletedIds.filter(id => id !== 'p16' && id !== 'p_roger_escoruela');
+        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08'];
+        if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
+          localDeletedIds = localDeletedIds.filter(id => !forceKeepIds.includes(id));
           try {
             localStorage.setItem('scouting_deleted_players_db', JSON.stringify(localDeletedIds));
           } catch (e) {}
         }
-        const cleanDbDeletedIds = dbDeletedIds.filter(id => id !== 'p16' && id !== 'p_roger_escoruela');
+        const cleanDbDeletedIds = dbDeletedIds.filter(id => !forceKeepIds.includes(id));
         const mergedDeletedIds = Array.from(new Set([...localDeletedIds, ...cleanDbDeletedIds]));
         try {
           localStorage.setItem('scouting_deleted_players_db', JSON.stringify(mergedDeletedIds));
@@ -235,6 +236,10 @@ export default function App() {
               current.nombre = 'Osky Menéndez';
               updated = true;
             }
+          }
+          if ((current.id === 'fich_2026_07' || current.id === 'fich_2026_08') && current.lateralidad !== 'Zurdo') {
+            current.lateralidad = 'Zurdo';
+            updated = true;
           }
           const teamName = current.equipo ? current.equipo.trim() : '';
           if (teamName === 'Bilbao Ath.' || teamName === 'Bilbao Athletic') {
@@ -411,8 +416,9 @@ export default function App() {
         
         // Merge missing initial players automatically (like the new goalkeepers), excluding any manually deleted ones
         let deletedIds = getDeletedPlayerIds();
-        if (deletedIds.includes('p16') || deletedIds.includes('p_roger_escoruela')) {
-          deletedIds = deletedIds.filter(id => id !== 'p16' && id !== 'p_roger_escoruela');
+        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08'];
+        if (deletedIds.some(id => forceKeepIds.includes(id))) {
+          deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
           try {
             localStorage.setItem('scouting_deleted_players_db', JSON.stringify(deletedIds));
           } catch (e) {}
@@ -444,6 +450,10 @@ export default function App() {
               current.nombre = 'Osky Menéndez';
               updated = true;
             }
+          }
+          if ((current.id === 'fich_2026_07' || current.id === 'fich_2026_08') && current.lateralidad !== 'Zurdo') {
+            current.lateralidad = 'Zurdo';
+            updated = true;
           }
           const teamName = current.equipo ? current.equipo.trim() : '';
           if (teamName === 'Bilbao Ath.' || teamName === 'Bilbao Athletic') {
