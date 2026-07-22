@@ -21,6 +21,148 @@ import {
 } from 'lucide-react';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
 
+// Helper to map any position string to one of the 5 position codes
+export function getPositionCode(posicion: string): 'POR' | 'DF' | 'MED' | 'EXT' | 'DEL' {
+  const pos = (posicion || '').toLowerCase();
+  if (pos.includes('port')) return 'POR';
+  if (pos.includes('extrem')) return 'EXT';
+  if (pos.includes('delant') || pos.includes('punta')) return 'DEL';
+  if (pos.includes('defens') || pos.includes('later') || pos.includes('carril') || pos.includes('liber')) return 'DF';
+  return 'MED';
+}
+
+// Position Badge component matching the attached screenshot style and icons
+export function PositionBadge({ code, size = 'md' }: { code: 'POR' | 'DF' | 'MED' | 'EXT' | 'DEL'; size?: 'sm' | 'md' | 'lg' }) {
+  const configs = {
+    POR: {
+      label: 'POR',
+      borderColor: 'border-emerald-600',
+      bgColor: 'bg-[#061e14]',
+      textColor: 'text-emerald-400',
+      shadow: 'shadow-[0_0_8px_rgba(16,185,129,0.25)]',
+      icon: (s: string) => (
+        <svg className={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+          <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v6" />
+          <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" />
+          <path d="M18 8a2 2 0 0 1 2 2v4a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6v-1a2 2 0 0 1 2-2h1" />
+        </svg>
+      )
+    },
+    DF: {
+      label: 'DF',
+      borderColor: 'border-sky-500',
+      bgColor: 'bg-[#051829]',
+      textColor: 'text-sky-400',
+      shadow: 'shadow-[0_0_8px_rgba(56,189,248,0.25)]',
+      icon: (s: string) => (
+        <svg className={s} viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" />
+        </svg>
+      )
+    },
+    MED: {
+      label: 'MED',
+      borderColor: 'border-amber-500',
+      bgColor: 'bg-[#291f05]',
+      textColor: 'text-amber-400',
+      shadow: 'shadow-[0_0_8px_rgba(245,158,11,0.25)]',
+      icon: (s: string) => (
+        <svg className={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      )
+    },
+    EXT: {
+      label: 'EXT',
+      borderColor: 'border-orange-500',
+      bgColor: 'bg-[#291205]',
+      textColor: 'text-orange-400',
+      shadow: 'shadow-[0_0_8px_rgba(249,115,22,0.25)]',
+      icon: (s: string) => (
+        <svg className={s} viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 2L3 14h7v8l10-12h-7V2z" />
+        </svg>
+      )
+    },
+    DEL: {
+      label: 'DEL',
+      borderColor: 'border-red-600',
+      bgColor: 'bg-[#290505]',
+      textColor: 'text-red-500',
+      shadow: 'shadow-[0_0_8px_rgba(239,68,68,0.25)]',
+      icon: (s: string) => (
+        <svg className={s} viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10" fill="#f8fafc" stroke="#0f172a" strokeWidth="1.5" />
+          <polygon points="12,7 14.5,9 13.5,12 10.5,12 9.5,9" fill="#0f172a" />
+          <line x1="12" y1="7" x2="12" y2="2" stroke="#0f172a" strokeWidth="1.2" />
+          <line x1="14.5" y1="9" x2="19" y2="7.5" stroke="#0f172a" strokeWidth="1.2" />
+          <line x1="13.5" y1="12" x2="17.5" y2="16" stroke="#0f172a" strokeWidth="1.2" />
+          <line x1="10.5" y1="12" x2="6.5" y2="16" stroke="#0f172a" strokeWidth="1.2" />
+          <line x1="9.5" y1="9" x2="5" y2="7.5" stroke="#0f172a" strokeWidth="1.2" />
+        </svg>
+      )
+    }
+  };
+
+  const cfg = configs[code] || configs.MED;
+
+  if (size === 'sm') {
+    return (
+      <div className={`w-[30px] h-[36px] border ${cfg.borderColor} ${cfg.bgColor} ${cfg.shadow} rounded p-0.5 flex flex-col items-center justify-between shrink-0 select-none`}>
+        <span className={`text-[7.5px] font-mono font-black ${cfg.textColor} leading-none tracking-tight pt-0.5`}>
+          {cfg.label}
+        </span>
+        <div className={`mb-0.5 ${cfg.textColor}`}>
+          {cfg.icon("w-3 h-3")}
+        </div>
+      </div>
+    );
+  }
+
+  if (size === 'lg') {
+    return (
+      <div className={`w-12 h-16 border-2 ${cfg.borderColor} ${cfg.bgColor} ${cfg.shadow} rounded-lg p-1 flex flex-col items-center justify-between shrink-0 select-none`}>
+        <span className={`text-[11px] font-mono font-black ${cfg.textColor} leading-none tracking-wider pt-0.5`}>
+          {cfg.label}
+        </span>
+        <div className={`mb-1 ${cfg.textColor}`}>
+          {cfg.icon("w-5.5 h-5.5")}
+        </div>
+      </div>
+    );
+  }
+
+  // Default 'md' - exact proportions from attached screenshot
+  return (
+    <div className={`w-10 h-13 border ${cfg.borderColor} ${cfg.bgColor} ${cfg.shadow} rounded-md p-1 flex flex-col items-center justify-between shrink-0 select-none`}>
+      <span className={`text-[9.5px] font-mono font-black ${cfg.textColor} leading-none tracking-wider pt-0.5`}>
+        {cfg.label}
+      </span>
+      <div className={`mb-0.5 ${cfg.textColor}`}>
+        {cfg.icon("w-4 h-4")}
+      </div>
+    </div>
+  );
+}
+
+export function PositionLegendBar() {
+  const codes: ('POR' | 'DF' | 'MED' | 'EXT' | 'DEL')[] = ['POR', 'DF', 'MED', 'EXT', 'DEL'];
+  return (
+    <div className="bg-[#050e17]/90 border border-slate-800/90 rounded-xl p-2.5 flex flex-col items-center shadow-xl shrink-0">
+      <span className="text-[9px] font-mono font-black text-slate-300 uppercase tracking-widest mb-1.5">
+        POSICIÓN
+      </span>
+      <div className="flex items-center gap-2">
+        {codes.map((code) => (
+          <PositionBadge key={code} code={code} size="md" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Helper to get a realistic 2-digit dorsal number from a player ID or name
 function getPlayerDorsal(player: ScoutedPlayer): string {
   const matches = player.id.match(/\d+/);
@@ -548,33 +690,23 @@ export default function TeamsView({
 
     const roster = teamObj.players;
     
-    // Categorize by tactial role groups
-    const porteros = roster.filter(p => p.posicion === 'Portero');
-    const defensas = roster.filter(p => 
-      p.posicion === 'Defensa Central' || 
-      p.posicion === 'Lateral Derecho' || 
-      p.posicion === 'Lateral Izquierdo'
-    );
-    const medios = roster.filter(p => 
-      p.posicion === 'Mediocentro Defensivo' || 
-      p.posicion === 'Mediocentro' || 
-      p.posicion === 'Mediapunta'
-    );
-    const delanteros = roster.filter(p => 
-      p.posicion === 'Extremo Derecho' || 
-      p.posicion === 'Extremo Izquierdo' || 
-      p.posicion === 'Delantero Centro'
-    );
+    // Categorize by 5 position codes matching the position logos
+    const porteros = roster.filter(p => getPositionCode(p.posicion) === 'POR');
+    const defensas = roster.filter(p => getPositionCode(p.posicion) === 'DF');
+    const medios = roster.filter(p => getPositionCode(p.posicion) === 'MED');
+    const extremos = roster.filter(p => getPositionCode(p.posicion) === 'EXT');
+    const delanteros = roster.filter(p => getPositionCode(p.posicion) === 'DEL');
 
     return {
       name: teamObj.name,
       logoUrl: teamObj.logoUrl,
       allPlayers: roster,
       sections: [
-        { title: '🧤 Porteros', players: porteros },
-        { title: '🛡️ Defensas', players: defensas },
-        { title: '🧠 Centrocampistas', players: medios },
-        { title: '⚡ Delanteros', players: delanteros }
+        { code: 'POR' as const, title: 'Porteros', players: porteros },
+        { code: 'DF' as const, title: 'Defensas', players: defensas },
+        { code: 'MED' as const, title: 'Centrocampistas', players: medios },
+        { code: 'EXT' as const, title: 'Extremos', players: extremos },
+        { code: 'DEL' as const, title: 'Delanteros', players: delanteros }
       ].filter(s => s.players.length > 0)
     };
   }, [selectedTeam, teamsData]);
@@ -896,33 +1028,38 @@ export default function TeamsView({
           </div>
 
           {/* Team Profile Banner */}
-          <div className="bg-slate-900 border border-slate-850 rounded-lg p-5 flex flex-col md:flex-row items-center justify-center gap-5 relative overflow-hidden">
+          <div className="bg-slate-900 border border-slate-850 rounded-lg p-5 flex flex-col lg:flex-row items-center justify-between gap-5 relative overflow-hidden">
             <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-blue-600/10 to-transparent pointer-events-none"></div>
             
-            {/* Team Crest */}
-            <div className="w-16 h-16 shrink-0 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 flex items-center justify-center shadow-inner">
-              <TeamLogo logoUrl={currentTeamRoster.logoUrl} teamName={currentTeamRoster.name} />
-            </div>
+            <div className="flex items-center gap-5">
+              {/* Team Crest */}
+              <div className="w-16 h-16 shrink-0 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 flex items-center justify-center shadow-inner">
+                <TeamLogo logoUrl={currentTeamRoster.logoUrl} teamName={currentTeamRoster.name} />
+              </div>
 
-            {/* Team Identity Info */}
-            <div className="text-center md:text-left flex-initial space-y-1">
-              <h2 className="text-xl font-bold text-white tracking-wide font-sans">{currentTeamRoster.name}</h2>
-              <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-mono text-slate-400 uppercase">
-                <div>
-                  <span className="text-slate-500">Futbolistas scoutados:</span>{' '}
-                  <span className="text-blue-400 font-bold">{currentTeamRoster.allPlayers.length}</span>
-                </div>
-                <div className="hidden sm:block">
-                  <span className="text-slate-500">|</span>
-                </div>
-                <div>
-                  <span className="text-slate-500">Edad Media:</span>{' '}
-                  <span className="text-indigo-400 font-bold">
-                    {(currentTeamRoster.allPlayers.reduce((sum, p) => sum + (new Date().getFullYear() - p.anoNacimiento), 0) / currentTeamRoster.allPlayers.length).toFixed(1)} años
-                  </span>
+              {/* Team Identity Info */}
+              <div className="text-center md:text-left flex-initial space-y-1">
+                <h2 className="text-xl font-bold text-white tracking-wide font-sans">{currentTeamRoster.name}</h2>
+                <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-mono text-slate-400 uppercase">
+                  <div>
+                    <span className="text-slate-500">Futbolistas scoutados:</span>{' '}
+                    <span className="text-blue-400 font-bold">{currentTeamRoster.allPlayers.length}</span>
+                  </div>
+                  <div className="hidden sm:block">
+                    <span className="text-slate-500">|</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Edad Media:</span>{' '}
+                    <span className="text-indigo-400 font-bold">
+                      {(currentTeamRoster.allPlayers.reduce((sum, p) => sum + (new Date().getFullYear() - p.anoNacimiento), 0) / currentTeamRoster.allPlayers.length).toFixed(1)} años
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Position Legend Bar matching the requested logos */}
+            <PositionLegendBar />
           </div>
 
           {/* Categorized squad listings or Campograma view */}
@@ -1114,7 +1251,8 @@ export default function TeamsView({
                 <div key={idx} className="space-y-3">
                   
                   {/* Sector Header */}
-                  <div className="flex items-center space-x-2 border-b border-slate-850/80 pb-2">
+                  <div className="flex items-center space-x-3 border-b border-slate-850/80 pb-2">
+                    <PositionBadge code={section.code} size="sm" />
                     <span className="text-xs font-mono font-bold uppercase text-slate-300 tracking-wider">
                       {section.title}
                     </span>
@@ -1128,12 +1266,16 @@ export default function TeamsView({
                     <div className="space-y-2">
                       {section.players.map((player) => {
                         const edad = new Date().getFullYear() - player.anoNacimiento;
+                        const posCode = getPositionCode(player.posicion);
                         return (
                           <div 
                             key={player.id}
                             className="bg-slate-900 border border-slate-850/80 rounded-lg p-3 hover:border-slate-700/60 hover:bg-slate-900/80 transition-all flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 group"
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
+                              {/* Position Badge Icon */}
+                              <PositionBadge code={posCode} size="sm" />
+
                               {/* Avatar */}
                               <div 
                                 className="w-10 h-10 rounded bg-slate-950/60 border border-slate-850 overflow-hidden shrink-0 flex items-center justify-center p-0.5 cursor-pointer"
@@ -1255,15 +1397,19 @@ export default function TeamsView({
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                       {section.players.map((player) => {
                         const edad = new Date().getFullYear() - player.anoNacimiento;
+                        const posCode = getPositionCode(player.posicion);
                         return (
                           <div 
                             key={player.id}
                             className="bg-slate-900 border border-slate-850/80 rounded-lg p-4 hover:border-slate-700/60 hover:bg-slate-900/80 transition-all group flex flex-col justify-between space-y-4"
                           >
                             
-                            <div className="flex items-start gap-3.5">
+                            <div className="flex items-start gap-3">
+                              {/* Position Badge Icon */}
+                              <PositionBadge code={posCode} size="sm" />
+
                               {/* Face image or avatar placeholder */}
-                              <div className="w-12 h-12 rounded bg-slate-950/60 border border-slate-850 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                              <div className="w-11 h-11 rounded bg-slate-950/60 border border-slate-850 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
                                 {player.fotoUrl ? (
                                   <img 
                                     src={player.fotoUrl} 

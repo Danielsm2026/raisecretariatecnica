@@ -50,39 +50,43 @@ function SoccerPitch({
 
   return (
     <div 
-      className={`relative w-full h-32 bg-emerald-850 rounded border border-emerald-700/80 overflow-hidden ${
-        onChange ? 'cursor-crosshair hover:brightness-105 active:scale-[0.99] transition-transform' : ''
+      className={`relative w-full h-36 bg-[#f5fbf7] rounded-lg border-2 border-emerald-600 overflow-hidden shadow-inner ${
+        onChange ? 'cursor-crosshair hover:bg-[#ebf8f1] active:scale-[0.99] transition-all' : ''
       }`}
       onClick={handleClick}
       title={onChange ? "Haz clic en el campo para reposicionar el marcador táctico" : "Ubicación táctica del futbolista"}
     >
       {/* Outer yard line */}
-      <div className="absolute inset-1.5 border border-white/20" />
-      {/* Midfield line */}
-      <div className="absolute inset-y-1.5 left-1/2 -translate-x-1/2 border-l border-white/20" />
-      {/* Center circle */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border border-white/20 rounded-full" />
-      {/* Left Penalty Area */}
-      <div className="absolute top-1/4 bottom-1/4 left-1.5 w-6 border-y border-r border-white/20" />
-      {/* Right Penalty Area */}
-      <div className="absolute top-1/4 bottom-1/4 right-1.5 w-6 border-y border-l border-white/20" />
-      {/* Left Goal box */}
-      <div className="absolute top-[38%] bottom-[38%] left-1.5 w-2 border-y border-r border-white/30" />
-      {/* Right Goal box */}
-      <div className="absolute top-[38%] bottom-[38%] right-1.5 w-2 border-y border-l border-white/30" />
+      <div className="absolute inset-1.5 border border-emerald-600/35 rounded-sm" />
       
-      {/* Coordinate Marker with glowing ring */}
+      {/* Midfield line */}
+      <div className="absolute inset-y-1.5 left-1/2 -translate-x-1/2 border-l border-emerald-600/35" />
+      
+      {/* Center circle */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 border border-emerald-600/35 rounded-full" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-emerald-600/40 rounded-full" />
+
+      {/* Left Penalty Area */}
+      <div className="absolute top-1/5 bottom-1/5 left-1.5 w-7 border-y border-r border-emerald-600/35" />
+      {/* Left Goal box */}
+      <div className="absolute top-[35%] bottom-[35%] left-1.5 w-2.5 border-y border-r border-emerald-600/40" />
+
+      {/* Right Penalty Area */}
+      <div className="absolute top-1/5 bottom-1/5 right-1.5 w-7 border-y border-l border-emerald-600/35" />
+      {/* Right Goal box */}
+      <div className="absolute top-[35%] bottom-[35%] right-1.5 w-2.5 border-y border-l border-emerald-600/40" />
+      
+      {/* Coordinate Marker - Amber dot with black ring matching user screenshot */}
       <div 
-        className="absolute w-3.5 h-3.5 -ml-1.75 -mt-1.75 bg-amber-400 border-2 border-slate-900 rounded-full shadow-md shadow-amber-500/50 flex items-center justify-center transition-all duration-300"
+        className="absolute w-4 h-4 -ml-2 -mt-2 bg-amber-400 border-2 border-slate-900 rounded-full shadow-lg shadow-amber-500/50 flex items-center justify-center transition-all duration-300 z-10"
         style={{ left: `${x}%`, top: `${y}%` }}
       >
-        <span className="w-1 h-1 bg-red-600 rounded-full animate-ping absolute" />
-        <span className="w-1 h-0.5 bg-red-600 rounded-full" />
+        <span className="w-1.5 h-1.5 bg-slate-900 rounded-full" />
       </div>
 
       {onChange && (
-        <span className="absolute bottom-1 right-2 text-[8px] text-white/40 font-mono">
-          EDIT_CLIC (X:{x}, Y:{y})
+        <span className="absolute bottom-1 right-2 text-[8px] text-emerald-800/60 font-mono font-semibold">
+          REPOSICIONAR (X:{x}, Y:{y})
         </span>
       )}
     </div>
