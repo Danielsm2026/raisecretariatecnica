@@ -470,22 +470,22 @@ export default function PlayerDetails({
                   FICHA JUGADOR
                 </span>
                 
-                {/* Circular Profile Silhouette Mockup */}
-                <div className="w-14 h-14 bg-slate-200 rounded-full border border-slate-350 flex items-center justify-center my-1.5 overflow-hidden text-slate-500 shadow-inner relative">
+                {/* Profile Photo - Larger & fitted to frame */}
+                <div className="w-28 h-28 md:w-32 md:h-32 bg-slate-200 rounded-full border-2 border-slate-300 flex items-center justify-center my-2 overflow-hidden text-slate-500 shadow-md relative shrink-0">
                   {player.fotoUrl ? (
                     <img 
                       src={player.fotoUrl} 
                       alt={player.nombre} 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-top"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
                     />
                   ) : (
-                    <User className="w-8 h-8" />
+                    <User className="w-14 h-14 text-slate-400" />
                   )}
-                  <span className="absolute bottom-0 inset-x-0 text-[8px] bg-slate-800/80 text-white py-0.5 text-center font-mono">PRO</span>
+                  <span className="absolute bottom-0 inset-x-0 text-[9px] bg-slate-900/80 text-white py-0.5 text-center font-mono font-bold tracking-wider">PRO</span>
                 </div>
 
                 {isEditingReport ? (
@@ -509,46 +509,48 @@ export default function PlayerDetails({
                 <table className="w-full text-[10px] border-collapse bg-white border border-slate-355 rounded overflow-hidden h-full">
                   <tbody>
                     <tr className="border-b border-slate-200">
-                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 w-1/3 text-center">
+                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 w-1/3 text-center align-middle">
                         Fecha / Edad:
                       </td>
-                      <td className="px-2.5 py-1.5 text-slate-900 font-mono font-medium">
-                        {player.anoNacimiento} ({edad} años)
+                      <td className="px-2.5 py-1.5 text-slate-900 font-mono font-medium text-center align-middle">
+                        <div className="text-center w-full">{player.anoNacimiento} ({edad} años)</div>
                       </td>
                     </tr>
                     <tr className="border-b border-slate-200">
-                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center">
+                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center align-middle">
                         Equipo:
                       </td>
-                      <td className="px-2.5 py-1.5 text-slate-900 font-semibold text-[11px] flex items-center gap-1.5">
-                        <img 
-                          src={getPlayerEscudoUrl(player)} 
-                          alt="Escudo" 
-                          className="w-5 h-5 object-contain"
-                          onError={(e) => {
-                            e.currentTarget.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(player.equipo || 'FC')}&radius=10&backgroundColor=1e293b&fontSize=45`;
-                          }}
-                        />
-                        {isEditingReport ? (
-                          <input
-                            type="text"
-                            value={equipo}
-                            onChange={(e) => setEquipo(e.target.value)}
-                            className="w-full bg-slate-50 text-[10px] border border-slate-300 rounded px-1 py-0.5 focus:outline-none"
-                            placeholder="Nombre del Club"
+                      <td className="px-2.5 py-1.5 text-slate-900 font-semibold text-[11px] text-center align-middle">
+                        <div className="flex items-center justify-center gap-1.5 w-full mx-auto">
+                          <img 
+                            src={getPlayerEscudoUrl(player)} 
+                            alt="Escudo" 
+                            className="w-5 h-5 object-contain shrink-0"
+                            onError={(e) => {
+                              e.currentTarget.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(player.equipo || 'FC')}&radius=10&backgroundColor=1e293b&fontSize=45`;
+                            }}
                           />
-                        ) : (
-                          equipo
-                        )}
+                          {isEditingReport ? (
+                            <input
+                              type="text"
+                              value={equipo}
+                              onChange={(e) => setEquipo(e.target.value)}
+                              className="w-full bg-slate-50 text-[10px] border border-slate-300 rounded px-1 py-0.5 focus:outline-none text-center"
+                              placeholder="Nombre del Club"
+                            />
+                          ) : (
+                            <span>{equipo}</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
-                    <tr className="border-b border-slate-200">
-                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center">
-                        Escudo del Club:
-                      </td>
-                      <td className="px-2.5 py-2 text-slate-900 font-mono text-[10px]">
-                        {isEditingReport ? (
-                          <div className="max-w-md bg-slate-50 p-2 rounded border border-slate-200 text-slate-900">
+                    {isEditingReport && (
+                      <tr className="border-b border-slate-200">
+                        <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center align-middle">
+                          Escudo del Club:
+                        </td>
+                        <td className="px-2.5 py-2 text-slate-900 font-mono text-[10px] text-center align-middle">
+                          <div className="max-w-md bg-slate-50 p-2 rounded border border-slate-200 text-slate-900 mx-auto">
                             <ImageUploadInput
                               id="details-escudoUrl"
                               label="Escudo del Club"
@@ -557,20 +559,16 @@ export default function PlayerDetails({
                               folderName="team_crests"
                             />
                           </div>
-                        ) : (
-                          <span className="text-[9px] text-slate-500 break-all select-all block leading-tight">
-                            {player.escudoUrl ? player.escudoUrl : 'Predeterminado (Automático)'}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-slate-200">
-                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center">
-                        Foto del Jugador:
-                      </td>
-                      <td className="px-2.5 py-2 text-slate-900 font-mono text-[10px]">
-                        {isEditingReport ? (
-                          <div className="max-w-md bg-slate-50 p-2 rounded border border-slate-200 text-slate-900">
+                        </td>
+                      </tr>
+                    )}
+                    {isEditingReport && (
+                      <tr className="border-b border-slate-200">
+                        <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center align-middle">
+                          Foto del Jugador:
+                        </td>
+                        <td className="px-2.5 py-2 text-slate-900 font-mono text-[10px] text-center align-middle">
+                          <div className="max-w-md bg-slate-50 p-2 rounded border border-slate-200 text-slate-900 mx-auto">
                             <ImageUploadInput
                               id="details-fotoUrl"
                               label="Foto del Jugador"
@@ -579,43 +577,31 @@ export default function PlayerDetails({
                               folderName="player_photos"
                             />
                           </div>
-                        ) : (
-                          <span className="text-[9px] text-slate-500 break-all select-all block leading-tight">
-                            {player.fotoUrl ? player.fotoUrl : 'Sin foto cargada'}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-slate-200">
-                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center">
-                        Pie / Altura:
-                      </td>
-                      <td className="px-2.5 py-1.5 text-slate-900 font-mono flex items-center gap-1.5">
-                        <span className="font-bold text-slate-700">{player.lateralidad}</span>
-                        <span>/</span>
-                        {isEditingReport ? (
-                          <input
-                            type="text"
-                            value={altura}
-                            onChange={(e) => setAltura(e.target.value)}
-                            className="w-16 bg-slate-50 text-[10px] border border-slate-300 rounded px-1 py-0.5 focus:outline-none"
-                            placeholder="1.84 m"
-                          />
-                        ) : (
-                          <span className="text-slate-600">{altura}</span>
-                        )}
-                      </td>
-                    </tr>
-                    {player.elo !== undefined && (
-                      <tr className="border-t border-slate-200">
-                        <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center">
-                          Puntuación ELO:
-                        </td>
-                        <td className="px-2.5 py-1.5 text-slate-900 font-mono font-bold text-purple-700">
-                          {player.elo} (Nivel Categoría)
                         </td>
                       </tr>
                     )}
+                    <tr className="border-b border-slate-200">
+                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center align-middle">
+                        Pie / Altura:
+                      </td>
+                      <td className="px-2.5 py-1.5 text-slate-900 font-mono text-center align-middle">
+                        <div className="flex items-center justify-center gap-1.5 w-full mx-auto">
+                          <span className="font-bold text-slate-700">{player.lateralidad}</span>
+                          <span>/</span>
+                          {isEditingReport ? (
+                            <input
+                              type="text"
+                              value={altura}
+                              onChange={(e) => setAltura(e.target.value)}
+                              className="w-16 bg-slate-50 text-[10px] border border-slate-300 rounded px-1 py-0.5 focus:outline-none text-center"
+                              placeholder="1.84 m"
+                            />
+                          ) : (
+                            <span className="text-slate-600">{altura}</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
