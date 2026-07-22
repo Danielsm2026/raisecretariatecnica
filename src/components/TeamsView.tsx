@@ -1295,26 +1295,6 @@ export default function TeamsView({
                               </div>
                             </div>
 
-                            {/* Player attributes metrics */}
-                            <div className="grid grid-cols-4 gap-1.5 bg-slate-950/50 p-2 rounded text-center border border-slate-850/50 font-mono">
-                              <div>
-                                <div className="text-[8px] text-slate-500 font-semibold">FÍS</div>
-                                <div className="text-xs font-bold text-emerald-400">{player.atributos?.fisico ?? '0'}</div>
-                              </div>
-                              <div>
-                                <div className="text-[8px] text-slate-500 font-semibold">TÉC</div>
-                                <div className="text-xs font-bold text-blue-400">{player.atributos?.tecnica ?? '0'}</div>
-                              </div>
-                              <div>
-                                <div className="text-[8px] text-slate-500 font-semibold">TÁC</div>
-                                <div className="text-xs font-bold text-amber-500">{player.atributos?.tactica ?? '0'}</div>
-                              </div>
-                              <div>
-                                <div className="text-[8px] text-slate-500 font-semibold">MEN</div>
-                                <div className="text-xs font-bold text-purple-400">{player.atributos?.mental ?? '0'}</div>
-                              </div>
-                            </div>
-
                             {/* Bottom action panel */}
                             <div className="flex items-center justify-between pt-2 border-t border-slate-850 text-[10px] font-mono">
                               
