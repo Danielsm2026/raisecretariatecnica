@@ -429,6 +429,33 @@ const RAW_PLAYERS: ScoutedPlayer[] = [
     tieneValorPor: 'ENVERGADURA DE 1.94M.\nREDUCCIÓN DEL RETO AÉREO.\nCOMPROMISO TÁCTICO.\nSEGURIDAD EN COBERTURA.'
   },
   {
+    id: 'p_andres_lopez',
+    nombre: 'Andrés López Carmona',
+    equipo: 'Real Avilés',
+    posicion: 'Defensa Central',
+    anoNacimiento: 2003,
+    lateralidad: 'Zurdo',
+    valorMercado: 180000,
+    calificacion: 3.5,
+    notas: 'Defensa central zurdo de gran envergadura (1.90 m) y perfil Sub-23. Destaca por su solidez en el juego aéreo, contundencia física y buena salida de balón limpia con la pierna izquierda.',
+    atributos: {
+      fisico: 8,
+      tecnica: 7,
+      tactica: 7,
+      mental: 7
+    },
+    fechaRegistro: '2026-07-22',
+    altura: '1.90 m',
+    recomendacion: 'FIRMAR',
+    recomendacionComentario: 'Perfil de central zurdo muy cotizado por su altura (1.90 m), juventud y margen de proyección.',
+    descripcionGeneral: 'Andrés López Carmona es un defensa central zurdo de 1.90 m de estatura que aporta solidez, contundencia en las disputas individuales y una salida de balón limpia con la zurda.',
+    fortalezas: 'Gran potencia y dominio en el juego aéreo (1.90 m).\nSalida de balón aseada y precisa con perfil zurdo.\nSolidez y firmeza en los duelos individuales por bajo.\nBuen perfilamiento en vigilancias y coberturas.',
+    debilidades: 'Debe ganar experiencia en la gestión de tiempos ante delanteros muy veteranos.',
+    enSuEquipo: 'Aporta equilibrio y salida de balón desde el perfil izquierdo de la zaga, dominando el área propia.',
+    enPocasPalabras: 'CENTRAL ZURDO.\nALTURA (1.90 M).\nSALIDA DE BALÓN.\nDOMINIO AÉREO.\nGRAN PROYECCIÓN.',
+    tieneValorPor: 'PERFIL PERFECCIONADO CON ZURDA.\nENVERGADURA DE 1.90 M.\nCAPACIDAD DEFENSIVA.\nTALENTO SUB-23.'
+  },
+  {
     id: 'p19',
     nombre: 'R. Grigore',
     equipo: 'Real Avilés',
