@@ -32,7 +32,7 @@ export function getPositionCode(posicion: string): 'POR' | 'DF' | 'MED' | 'EXT' 
 }
 
 // Position Badge component matching the attached screenshot style and icons
-export function PositionBadge({ code, size = 'md' }: { code: 'POR' | 'DF' | 'MED' | 'EXT' | 'DEL'; size?: 'sm' | 'md' | 'lg' }) {
+export function PositionBadge({ code, size = 'md' }: { code: 'POR' | 'DF' | 'MED' | 'EXT' | 'DEL'; size?: 'sm' | 'md' | 'lg'; key?: string }) {
   const configs = {
     POR: {
       label: 'POR',
@@ -1057,9 +1057,6 @@ export default function TeamsView({
                 </div>
               </div>
             </div>
-
-            {/* Position Legend Bar matching the requested logos */}
-            <PositionLegendBar />
           </div>
 
           {/* Categorized squad listings or Campograma view */}

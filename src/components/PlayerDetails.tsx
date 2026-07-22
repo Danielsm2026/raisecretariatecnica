@@ -14,11 +14,13 @@ import {
   X, 
   Sparkles, 
   Compass, 
-  User 
+  User,
+  Download 
 } from 'lucide-react';
 import { ensureReportFields } from '../utils/reportDefaults';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
 import ImageUploadInput from './ImageUploadInput';
+import { exportPlayerReportPDF } from '../utils/exportPlayerReportPDF';
 
 interface PlayerDetailsProps {
   player: ScoutedPlayer | null;
@@ -218,6 +220,24 @@ export default function PlayerDetails({
     setIsEditingReport(false);
   };
 
+  const handleDownloadPDF = async () => {
+    if (!player) return;
+    await exportPlayerReportPDF(player, {
+      equipo,
+      altura,
+      fotoUrl: fotoUrl || player.fotoUrl,
+      escudoUrl: escudoUrl || getPlayerEscudoUrl(player),
+      recomendacion,
+      recomendacionComentario,
+      descripcionGeneral,
+      fortalezas,
+      debilidades,
+      enSuEquipo,
+      enPocasPalabras,
+      tieneValorPor
+    });
+  };
+
   // Format single multiline text into visual list elements
   const renderStringBullets = (text: string) => {
     if (!text.trim()) return <li className="text-slate-500 italic">Ningún punto documentado</li>;
@@ -383,10 +403,26 @@ export default function PlayerDetails({
         </div>
       )}
 
-      {/* RENDER TAB 2: RICH DOCUMENTARY "INFORME DESCRIPTIVO" (FC CARTAGENA PDF STYLE) */}
+      {/* RENDER TAB 2: RICH DOCUMENTARY "INFORME DESCRIPTIVO" */}
       {activeTab === 'document' && (
         <div className="p-4 bg-slate-100 text-slate-900 font-sans border border-slate-350 shadow-inner max-h-[82vh] overflow-y-auto rounded-b">
           
+          {/* Export PDF Control Toolbar */}
+          <div className="mb-3 flex items-center justify-between bg-slate-900 text-white px-3 py-2 rounded border border-slate-800 shadow-sm">
+            <span className="text-[11px] font-bold font-mono uppercase tracking-wider text-slate-300">
+              Documento Oficial de Scouting
+            </span>
+            <button
+              type="button"
+              onClick={handleDownloadPDF}
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs bg-red-600 hover:bg-red-550 text-white rounded font-bold transition-all shadow active:scale-95 cursor-pointer"
+              title="Exportar este Informe Descriptivo a PDF"
+            >
+              <Download className="w-3.5 h-3.5 text-red-100" />
+              <span>Exportar PDF</span>
+            </button>
+          </div>
+
           {/* Mock PDF Document Box Sheet container */}
           <div className="bg-white p-5 border border-slate-300 rounded shadow-md class-pdf-layout relative select-text">
             
@@ -397,7 +433,7 @@ export default function PlayerDetails({
               </span>
               <div className="text-right">
                 <span className="text-xs font-bold font-sans tracking-wide text-slate-700">
-                  FC CARTAGENA SAD
+                  REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL
                 </span>
               </div>
             </div>

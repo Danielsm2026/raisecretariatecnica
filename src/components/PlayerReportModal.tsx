@@ -10,11 +10,13 @@ import {
   Award, 
   Calendar, 
   Flag,
-  Sparkles
+  Sparkles,
+  Download
 } from 'lucide-react';
 import { ensureReportFields } from '../utils/reportDefaults';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
 import ImageUploadInput from './ImageUploadInput';
+import { exportPlayerReportPDF } from '../utils/exportPlayerReportPDF';
 
 interface PlayerReportModalProps {
   isOpen: boolean;
@@ -166,6 +168,24 @@ export default function PlayerReportModal({
     onClose();
   };
 
+  const handleDownloadPDF = async () => {
+    if (!player) return;
+    await exportPlayerReportPDF(player, {
+      equipo,
+      altura,
+      fotoUrl,
+      escudoUrl: escudoUrl || getPlayerEscudoUrl(player),
+      recomendacion,
+      recomendacionComentario,
+      descripcionGeneral,
+      fortalezas,
+      debilidades,
+      enSuEquipo,
+      enPocasPalabras,
+      tieneValorPor
+    });
+  };
+
   // Helper lists renderer for Bullets
   const renderStringBullets = (text: string) => {
     if (!text.trim()) return <li className="text-slate-400 italic text-[11px]">Ningún punto documentado</li>;
@@ -217,7 +237,7 @@ export default function PlayerReportModal({
                 Editor de Documento Oficial de Scouting
               </h3>
               <p className="text-[10px] text-slate-400 font-mono">
-                FC CARTAGENA SAD • EXPEDIENTE DEPORTIVO • ID: <span className="text-blue-400 font-bold">{player.id}</span>
+                REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL • EXPEDIENTE DEPORTIVO • ID: <span className="text-blue-400 font-bold">{player.id}</span>
               </p>
             </div>
           </div>
@@ -233,9 +253,10 @@ export default function PlayerReportModal({
               title="Alternar entre modo de vista y modo de edición directa de las secciones"
             >
               <Edit3 className="w-3 h-3" />
-              <span>{isEditing ? 'Edición Activa' : 'Previsualizar'}</span>
+              <span>{isEditing ? 'Editar' : 'Previsualizar'}</span>
             </button>
-            
+
+
             <button 
               onClick={onClose}
               className="p-1 px-2 text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-750 rounded transition-all active:scale-95"
@@ -256,7 +277,7 @@ export default function PlayerReportModal({
               </span>
               <div className="text-right">
                 <span className="text-[13px] font-extrabold font-sans tracking-wide text-slate-850">
-                  FC CARTAGENA SAD
+                  REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL
                 </span>
               </div>
             </div>
@@ -622,7 +643,7 @@ export default function PlayerReportModal({
 
             {/* Document Seal Footer */}
             <div className="flex items-center justify-between text-[7.5px] text-slate-400 font-mono mt-6 pt-3.5 border-t border-slate-200">
-              <span>DOCUMENTO OFICIAL REF: CARTAGENA_OJEADOS_{player.id}</span>
+              <span>DOCUMENTO OFICIAL REF: REAL_AVILES_OJEADOS_{player.id}</span>
               <span>LFP OFICIAL DEPARTAMENTO SCOUTING REGLAMENTO DEPORTIVO</span>
               <span>FIRMADO ELECTRÓNICAMENTE</span>
             </div>
@@ -631,23 +652,37 @@ export default function PlayerReportModal({
         </div>
 
         {/* Modal Action Save Buttons */}
-        <div className="bg-slate-950 px-6 py-4 flex items-center justify-end space-x-3 border-t border-slate-800">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-755 text-slate-300 hover:text-white rounded border border-slate-700 font-bold transition-all hover:scale-102 active:scale-95"
-          >
-            Cancelar
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleSave}
-            className="inline-flex items-center gap-2 px-5 py-2 text-xs bg-emerald-600 hover:bg-emerald-550 text-white rounded font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95"
-          >
-            <Check className="w-4 h-4 text-emerald-100" />
-            <span>Guardar Informe Oficial</span>
-          </button>
+        <div className="bg-slate-950 px-6 py-4 flex items-center justify-between border-t border-slate-800">
+          <div>
+            <button
+              type="button"
+              onClick={handleDownloadPDF}
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs bg-red-600 hover:bg-red-550 text-white rounded font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95"
+              title="Exportar documento oficial a PDF"
+            >
+              <Download className="w-4 h-4 text-red-100" />
+              <span>Exportar PDF</span>
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-755 text-slate-300 hover:text-white rounded border border-slate-700 font-bold transition-all hover:scale-102 active:scale-95"
+            >
+              Cancelar
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleSave}
+              className="inline-flex items-center gap-2 px-5 py-2 text-xs bg-emerald-600 hover:bg-emerald-550 text-white rounded font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95"
+            >
+              <Check className="w-4 h-4 text-emerald-100" />
+              <span>Guardar Informe Oficial</span>
+            </button>
+          </div>
         </div>
 
       </div>
