@@ -20,12 +20,121 @@ import {
   RefreshCw,
   Star,
   X,
-  ChevronRight
+  ChevronRight,
+  Folder,
+  FolderOpen,
+  ArrowLeft,
+  FileSpreadsheet
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { MEDIAPUNTA_ADVANCED_DATA, MediapuntaData } from '../data/mediapuntaAdvancedData';
+
+interface PositionFolderConfig {
+  id: string;
+  name: string;
+  code: string;
+  matchPositions: string[];
+  description: string;
+  iconBg: string;
+  borderColor: string;
+  textColor: string;
+  badgeBg: string;
+  isAdvanced?: boolean;
+}
+
+const POSITION_FOLDERS: PositionFolderConfig[] = [
+  {
+    id: 'Portero',
+    name: 'Portero',
+    code: 'POR',
+    matchPositions: ['Portero'],
+    description: 'Guardametas, blocajes, juego aéreo, reflejos y distribución con el pie.',
+    iconBg: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    borderColor: 'hover:border-amber-500/50',
+    textColor: 'text-amber-400',
+    badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+  },
+  {
+    id: 'Lateral Derecho',
+    name: 'Lateral Derecho',
+    code: 'LD',
+    matchPositions: ['Lateral Derecho'],
+    description: 'Carrileros diestros, profundidad ofensiva, centros y recorrido de banda.',
+    iconBg: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    borderColor: 'hover:border-blue-500/50',
+    textColor: 'text-blue-400',
+    badgeBg: 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+  },
+  {
+    id: 'Lateral Izquierdo',
+    name: 'Lateral Izquierdo',
+    code: 'LI',
+    matchPositions: ['Lateral Izquierdo'],
+    description: 'Carrileros zurdos, repliegue defensivo, pases al área y velocidad.',
+    iconBg: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+    borderColor: 'hover:border-cyan-500/50',
+    textColor: 'text-cyan-400',
+    badgeBg: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+  },
+  {
+    id: 'Defensa Central',
+    name: 'Defensa Central',
+    code: 'DFC',
+    matchPositions: ['Defensa Central'],
+    description: 'Centrales, contundencia en duelos, juego aéreo y salida de balón.',
+    iconBg: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    borderColor: 'hover:border-emerald-500/50',
+    textColor: 'text-emerald-400',
+    badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+  },
+  {
+    id: 'Mediocentro',
+    name: 'Mediocentro',
+    code: 'MC',
+    matchPositions: ['Mediocentro', 'Mediocentro Defensivo'],
+    description: 'Pivotes defensivos, mediocentros organizadores y box-to-box.',
+    iconBg: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    borderColor: 'hover:border-purple-500/50',
+    textColor: 'text-purple-400',
+    badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+  },
+  {
+    id: 'Extremo',
+    name: 'Extremo',
+    code: 'EXT',
+    matchPositions: ['Extremo Derecho', 'Extremo Izquierdo', 'Extremo'],
+    description: 'Extremos a banda cambiada, desborde 1v1, centros y finalización.',
+    iconBg: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+    borderColor: 'hover:border-rose-500/50',
+    textColor: 'text-rose-400',
+    badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+  },
+  {
+    id: 'Mediapunta',
+    name: 'Mediapunta',
+    code: 'MCO',
+    matchPositions: ['Mediapunta'],
+    description: 'Creadores de juego, visión, xG/xA, pases clave y métricas avanzadas.',
+    iconBg: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
+    borderColor: 'hover:border-yellow-500/50',
+    textColor: 'text-yellow-400',
+    badgeBg: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
+    isAdvanced: true
+  },
+  {
+    id: 'Delantero',
+    name: 'Delantero',
+    code: 'DC',
+    matchPositions: ['Delantero Centro', 'Delantero'],
+    description: 'Nueves de área, rematadores, xG, desmarques y presión arriba.',
+    iconBg: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
+    borderColor: 'hover:border-indigo-500/50',
+    textColor: 'text-indigo-400',
+    badgeBg: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+  }
+];
 
 const PERCENTILE_METRICS: Array<keyof MediapuntaData> = [
   'xG',
@@ -71,6 +180,16 @@ export default function DataReportsView({ players, matchReports }: DataReportsVi
   const [scatterXAxis, setScatterXAxis] = useState<keyof MediapuntaData>('xG');
   const [scatterYAxis, setScatterYAxis] = useState<keyof MediapuntaData>('xA');
   const [hoveredScatterPoint, setHoveredScatterPoint] = useState<MediapuntaData | null>(null);
+
+  // States and helper logic for Position Folders View
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+
+  const getFolderPlayerCount = (folder: PositionFolderConfig) => {
+    if (folder.isAdvanced) {
+      return MEDIAPUNTA_ADVANCED_DATA.length;
+    }
+    return players.filter(p => folder.matchPositions.some(pos => p.posicion === pos || p.posicion.includes(folder.id))).length;
+  };
 
   // 1. CALCULATED GLOBAL METRICS
   const metrics = useMemo(() => {
@@ -663,562 +782,130 @@ export default function DataReportsView({ players, matchReports }: DataReportsVi
       {/* 1. TOP TITLE BANNER */}
       <div className="bg-slate-900/60 border border-slate-800/80 p-5 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="p-1.5 bg-blue-550/15 border border-blue-500/30 text-blue-400 rounded-md">
-              <BarChart4 className="w-5 h-5 text-blue-400" />
+          <div className="flex items-center space-x-3">
+            <span className="p-2 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-lg">
+              <Folder className="w-5 h-5 text-blue-400" />
             </span>
             <div>
               <h2 className="text-base font-bold font-mono text-white uppercase tracking-wider">
-                Módulo de Inteligencia de Datos y Análisis
+                Módulo de Informes de Datos por Posición
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Estadísticas de la cartera, segmentación de futbolistas y exportación de informes personalizados.
+                Carpetas de demarcación, base de datos segmentada y análisis de rendimiento de futbolistas.
               </p>
             </div>
           </div>
         </div>
+
+        {selectedFolder && (
+          <button
+            onClick={() => setSelectedFolder(null)}
+            className="inline-flex items-center space-x-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-xs font-mono font-bold transition-all border border-slate-700 shadow shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4 text-blue-400" />
+            <span>Volver a Carpetas</span>
+          </button>
+        )}
       </div>
 
-
-
-      {/* 3. SUB-TABS NAVIGATION */}
-      <div className="flex border-b border-slate-850 pb-px gap-1">
-        <button
-          className="px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider border-b-2 border-blue-500 text-blue-400 bg-slate-900/20 flex items-center space-x-2"
-        >
-          <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-500 animate-pulse" />
-          <span>Análisis Por Posición</span>
-        </button>
-      </div>
-
-      {/* 4. ACTUAL ACTIVE VIEW */}
-      <div>
-        {/* SUB-VIEW 1: EXPLORER AND CUSTOM REPORT GENERATOR */}
-        {false && (
-          <div className="space-y-4">
-            {/* Filter controls box */}
-            <div className="bg-slate-900/30 border border-slate-850/80 p-4 rounded-lg space-y-3.5">
-              <div className="flex items-center justify-between border-b border-slate-850 pb-2">
-                <span className="text-[11px] font-bold font-mono text-slate-300 uppercase tracking-wider flex items-center">
-                  <Filter className="w-3.5 h-3.5 text-blue-400 mr-2" />
-                  Parámetros de Filtrado Cruzado
-                </span>
-                <button
-                  onClick={handleResetFilters}
-                  className="text-[10px] font-mono text-slate-400 hover:text-white flex items-center space-x-1"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Restablecer Filtros</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5">
-                {/* Search query input */}
-                <div className="space-y-1 md:col-span-1">
-                  <label className="block text-[9px] font-mono text-slate-400 uppercase">Buscar Jugador / Notas</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Nombre, club, etc..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white placeholder-slate-500 font-sans focus:outline-none focus:border-blue-500"
-                    />
-                    <Search className="w-3 h-3 text-slate-500 absolute right-2.5 top-2.5" />
-                  </div>
-                </div>
-
-                {/* Position filter */}
-                <div className="space-y-1">
-                  <label className="block text-[9px] font-mono text-slate-400 uppercase">Posición de Juego</label>
-                  <select
-                    value={filterPosition}
-                    onChange={(e) => setFilterPosition(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="All">Todas las Posiciones</option>
-                    <option value="Portero">Portero</option>
-                    <option value="Defensa Central">Defensa Central</option>
-                    <option value="Lateral Derecho">Lateral Derecho</option>
-                    <option value="Lateral Izquierdo">Lateral Izquierdo</option>
-                    <option value="Mediocentro Defensivo">Mediocentro Defensivo</option>
-                    <option value="Mediocentro">Mediocentro</option>
-                    <option value="Mediapunta">Mediapunta</option>
-                    <option value="Extremo Derecho">Extremo Derecho</option>
-                    <option value="Extremo Izquierdo">Extremo Izquierdo</option>
-                    <option value="Delantero Centro">Delantero Centro</option>
-                  </select>
-                </div>
-
-                {/* Preferred foot filter */}
-                <div className="space-y-1">
-                  <label className="block text-[9px] font-mono text-slate-400 uppercase">Pie Dominante</label>
-                  <select
-                    value={filterFoot}
-                    onChange={(e) => setFilterFoot(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="All">Cualquiera</option>
-                    <option value="Diestro">Diestro (D)</option>
-                    <option value="Zurdo">Zurdo (Z)</option>
-                    <option value="Ambidiestro">Ambidiestro (A)</option>
-                  </select>
-                </div>
-
-                {/* Recommendation filter */}
-                <div className="space-y-1">
-                  <label className="block text-[9px] font-mono text-slate-400 uppercase">Recomendación</label>
-                  <select
-                    value={filterRecommendation}
-                    onChange={(e) => setFilterRecommendation(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="All">Cualquier recomendación</option>
-                    <option value="FIRMAR">🥇 FIRMAR</option>
-                    <option value="SEGUIMIENTO">📝 SEGUIMIENTO</option>
-                    <option value="DESCARTAR">❌ DESCARTAR</option>
-                  </select>
-                </div>
-
-                {/* Minimum Calification filter */}
-                <div className="space-y-1">
-                  <label className="block text-[9px] font-mono text-slate-400 uppercase">Calificación Mínima</label>
-                  <select
-                    value={filterMinRating}
-                    onChange={(e) => setFilterMinRating(Number(e.target.value))}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="0">Cualquier nivel</option>
-                    <option value="3">3★ o más</option>
-                    <option value="4">4★ o más</option>
-                    <option value="5">Solo 5★ (Elite)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Generated scouting table view */}
-            <div className="bg-slate-900/20 border border-slate-850/80 rounded-lg overflow-hidden">
-              <div className="p-3 bg-slate-900/40 border-b border-slate-850 flex items-center justify-between">
-                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
-                  Listado de futbolistas generadores ({filteredPlayers.length} resultados)
-                </span>
-                <span className="text-[9px] text-slate-500">
-                  Haz click arriba en "Exportar PDF" para descargar el reporte en formato A4
-                </span>
-              </div>
-              <div className="overflow-x-auto">
-                {filteredPlayers.length === 0 ? (
-                  <div className="p-8 text-center text-slate-500 text-xs">
-                    No hay ningún futbolista en cartera que coincida con los criterios de búsqueda y filtros seleccionados.
-                  </div>
-                ) : (
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-850/80 bg-slate-900/40 text-[9px] font-mono text-slate-400 uppercase tracking-wider">
-                        <th className="p-3">Nombre / Equipo</th>
-                        <th className="p-3">Posición</th>
-                        <th className="p-3 text-center">Nacim.</th>
-                        <th className="p-3 text-center font-mono">Pie</th>
-                        <th className="p-3 text-right">Valor Mercado</th>
-                        <th className="p-3 text-center">Valoración</th>
-                        <th className="p-3 text-center">Físicas</th>
-                        <th className="p-3 text-center">Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-850/60 text-xs text-slate-300">
-                      {filteredPlayers.map(p => {
-                        // Count average physical capacities
-                        const matchPhys = getPhysicalCapacitiesByPosition(p.posicion);
-                        const starsListNum = matchPhys ? matchPhys.capacities.map(cap => p.valoracionFisica?.[cap] || 2) : [];
-                        const avgPhys = starsListNum.length > 0 
-                          ? (starsListNum.reduce((s,v) => s+v, 0) / starsListNum.length).toFixed(1)
-                          : 'N/A';
-
-                        return (
-                          <tr key={p.id} className="hover:bg-slate-900/25 transition">
-                            <td className="p-3">
-                              <div className="font-semibold text-white">{p.nombre}</div>
-                              <div className="text-[10px] text-slate-400 flex items-center mt-0.5">
-                                {p.escudoUrl && (
-                                  <img 
-                                    src={p.escudoUrl} 
-                                    alt={p.equipo} 
-                                    referrerPolicy="no-referrer" 
-                                    className="w-3.5 h-3.5 object-contain mr-1 shrink-0" 
-                                  />
-                                )}
-                                <span>{p.equipo}</span>
-                                {p.categoria && (
-                                  <span className="mx-1.5 text-slate-650">•</span>
-                                )}
-                                <span className="text-[9px] text-slate-400 uppercase font-mono font-bold tracking-tight">
-                                  {p.categoria}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="p-3">
-                              <span className="bg-slate-900 border border-slate-800 text-[10px] text-blue-300 px-2 py-0.5 rounded font-mono">
-                                {p.posicion}
-                              </span>
-                            </td>
-                            <td className="p-3 text-center font-mono text-[11px]">
-                              {p.anoNacimiento}
-                            </td>
-                            <td className="p-3 text-center font-mono font-bold text-slate-400">
-                              {p.lateralidad === 'Diestro' ? 'D' : p.lateralidad === 'Zurdo' ? 'Z' : 'A'}
-                            </td>
-                            <td className="p-3 text-right font-mono font-medium text-emerald-400 text-[11px]">
-                              {p.valorMercado ? formatCurrency(p.valorMercado) : 'N/A'}
-                            </td>
-                            <td className="p-3 text-center">
-                              <div className="flex items-center justify-center space-x-0.5 text-amber-500">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                  <span key={i} className="text-[11px]">
-                                    {i < p.calificacion ? '★' : '☆'}
-                                  </span>
-                                ))}
-                              </div>
-                            </td>
-                            <td className="p-3 text-center">
-                              {avgPhys !== 'N/A' ? (
-                                <span className="bg-amber-500/10 border border-amber-500/25 text-[10px] font-mono text-amber-400 px-2 py-0.5 rounded flex items-center justify-center w-14 mx-auto space-x-1">
-                                  <span>{avgPhys}</span>
-                                  <span className="text-[8px] text-amber-500 font-sans">★</span>
-                                </span>
-                              ) : (
-                                <span className="text-slate-600 text-[10px]">-</span>
-                              )}
-                            </td>
-                            <td className="p-3 text-center">
-                              <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded tracking-wide ${
-                                p.recomendacion === 'FIRMAR' 
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                                  : p.recomendacion === 'DESCARTAR'
-                                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                  : 'bg-slate-800 text-slate-300 border border-slate-700'
-                              }`}>
-                                {p.recomendacion || 'SEGUIMIENTO'}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SUB-VIEW 2: AGE DEMOGRAPHICS & BORN-YEAR SPREAD */}
-        {false && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* Visual breakdown diagram */}
-            <div className="bg-slate-900/30 border border-slate-850 p-5 rounded-lg lg:col-span-8 space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold font-mono text-white uppercase tracking-wider flex items-center">
-                  <Calendar className="w-4 h-4 text-blue-400 mr-2" />
-                  Pirámide Poblacional de Cartera (Años de Nacimiento)
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Visualización de la distribución del talento scoutado agrupados por año de nacimiento.
-                </p>
-              </div>
-
-              {/* Custom Bar chart rendered with Tailwind & HTML */}
-              <div className="space-y-3.5 pt-4">
-                {demographicsData.map(item => {
-                  // Percentage calculate relative to max players in a single year to draw bar scale
-                  const maxCount = Math.max(...demographicsData.map(d => d.count), 1);
-                  const widthPercent = (item.count / maxCount) * 100;
-                  
-                  return (
-                    <div key={item.year} className="flex items-center space-x-3">
-                      <div className="w-16 text-right font-mono text-xs font-bold text-slate-300">
-                        Año {item.year}
-                      </div>
-                      
-                      <div className="flex-1 bg-slate-950/80 rounded-full h-8 overflow-hidden relative flex items-center px-4 border border-slate-900/80">
-                        {/* Graphical colored bar */}
-                        <div 
-                          className="bg-gradient-to-r from-blue-600/60 to-indigo-600/60 h-full absolute left-0 top-0 transition-all rounded-r"
-                          style={{ width: `${widthPercent}%` }}
-                        />
-                        
-                        {/* Interactive count bubble inside or text */}
-                        <div className="relative z-10 font-bold text-[11px] text-white flex justify-between w-full font-mono">
-                          <span>{item.count} {item.count === 1 ? 'jugador' : 'jugadores'}</span>
-                          <span className="text-amber-400 bg-slate-950/80 px-1.5 py-0.2 rounded border border-slate-800 text-[10px]">
-                            Rating medio: {item.avgScore} ★
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Strategic Advice Card */}
-              <div className="bg-slate-950/40 border border-slate-850 p-3.5 rounded-lg text-xs leading-relaxed text-slate-400 space-y-2 mt-2">
-                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider block">
-                  💡 Análisis Estratégico de Edad
-                </span>
-                <p>
-                  Tener una cartera diversificada en años de nacimiento garantiza la sostenibilidad de los proyectos. 
-                  Los perfiles con años de nacimiento más recientes ({demographicsData.map(d => d.year).filter(y => y >= 2003).join(', ')}) representan 
-                  prospectos de alto valor de reventa o potencial desarrollo, mientras que años anteriores ({demographicsData.map(d => d.year).filter(y => y < 2003).slice(0, 3).join(', ')}) ofrecen madurez competitiva inmediata.
-                </p>
-              </div>
-            </div>
-
-            {/* Side summary list of younger prospects */}
-            <div className="bg-slate-900/30 border border-slate-850 p-5 rounded-lg lg:col-span-4 space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold font-mono text-white uppercase tracking-wider flex items-center">
-                  👶 Promesas Jóvenes (U21)
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Futbolistas nacidos en 2004 o posterior con mayor calificación global en cartera.
-                </p>
-              </div>
-
-              <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
-                {players
-                  .filter(p => p.anoNacimiento >= 2004)
-                  .sort((a,b) => b.calificacion - a.calificacion)
-                  .slice(0, 7)
-                  .map(p => (
-                    <div key={p.id} className="bg-slate-950/50 border border-slate-850/80 p-2.5 rounded hover:border-slate-800 transition flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <div className="font-semibold text-xs text-white">{p.nombre}</div>
-                        <div className="text-[10px] text-slate-400 flex items-center">
-                          <span>{p.posicion}</span>
-                          <span className="mx-1 text-slate-700">•</span>
-                          <span>Nac. {p.anoNacimiento}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[10px] font-bold text-amber-400">
-                          {p.calificacion} ★
-                        </div>
-                        <div className="text-[9px] font-mono text-emerald-400 mt-0.5">
-                          {p.valorMercado ? formatCurrency(p.valorMercado) : 'N/A'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                {players.filter(p => p.anoNacimiento >= 2004).length === 0 && (
-                  <div className="text-center text-slate-650 text-xs py-10">
-                    No hay registrados jugadores nacidos de 2004 en adelante.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SUB-VIEW 3: PHYSICAL CAPACITY DETAILED RATINGS */}
-        {false && (
-          <div className="space-y-4">
-            <div className="bg-slate-900/30 border border-slate-850 p-5 rounded-lg">
-              <h3 className="text-sm font-semibold font-mono text-white uppercase tracking-wider flex items-center">
-                <Activity className="w-4 h-4 text-amber-500 mr-2 animate-pulse" />
-                Matriz de Capacidades Físicas (Análisis Posicional)
+      {/* 2. FOLDER DIRECTORY SCREEN (When selectedFolder === null) */}
+      {selectedFolder === null ? (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-850 pb-3">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+              <h3 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+                Selecciona una Carpeta de Posición
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Evaluaciones de rendimiento físico específico de porteros, defensores y atacantes basado en las valoraciones grabadas.
-              </p>
+            </div>
+            <span className="text-[11px] font-mono text-slate-500">
+              8 Demarcaciones Disponibles
+            </span>
+          </div>
 
-              {/* Positional average ratings block */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                {physicalByPositionGroup.map(group => (
-                  <div key={group.category} className="bg-slate-950/60 border border-slate-850 p-3 rounded hover:border-slate-800 transition">
-                    <div className="flex items-center justify-between border-b border-slate-850/60 pb-1.5 mb-2">
-                      <span className="text-xs font-bold font-mono text-white uppercase">{group.category}</span>
-                      <span className="text-[9px] text-slate-400 bg-slate-900 px-1.5 py-0.2 rounded">
-                        {group.count} {group.count === 1 ? 'prospecto' : 'prospectos'}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {POSITION_FOLDERS.map((folder) => {
+              const count = getFolderPlayerCount(folder);
+              return (
+                <div
+                  key={folder.id}
+                  onClick={() => setSelectedFolder(folder.id)}
+                  className={`bg-slate-900/70 border border-slate-800/90 ${folder.borderColor} hover:bg-slate-850/90 rounded-xl p-5 transition-all duration-200 cursor-pointer group shadow-md hover:shadow-xl flex flex-col justify-between relative overflow-hidden`}
+                >
+                  {folder.isAdvanced && (
+                    <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-yellow-500 text-slate-950 text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-bl-lg shadow">
+                      Módulo Avanzado
+                    </div>
+                  )}
+                  
+                  <div>
+                    <div className="flex items-center justify-between mb-3.5">
+                      <div className={`p-3 rounded-lg border ${folder.iconBg} group-hover:scale-105 transition-transform`}>
+                        <Folder className="w-6 h-6" />
+                      </div>
+                      <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded border ${folder.badgeBg}`}>
+                        {folder.code}
                       </span>
                     </div>
-                    
-                    <div className="space-y-2">
-                      {group.averages.map(avg => {
-                        const starsFill = Math.round(avg.avg);
-                        return (
-                          <div key={avg.name} className="flex items-center justify-between">
-                            <span className="text-[10px] text-slate-400">{avg.name}</span>
-                            <div className="flex items-center space-x-1 font-mono text-[10px]">
-                              <span className="text-[10.5px] text-white font-bold">{avg.avg}</span>
-                              <div className="flex items-center text-amber-500 text-[8px]">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                  <span key={i} className="text-[10px] leading-none">
-                                    {i < starsFill ? '★' : '☆'}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+
+                    <h3 className={`text-base font-bold ${folder.textColor} group-hover:text-white transition-colors`}>
+                      {folder.name}
+                    </h3>
+
+                    <p className="text-xs text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">
+                      {folder.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-800/80 mt-4 flex items-center justify-between">
+                    <span className="text-[11px] font-mono font-semibold text-slate-300">
+                      {folder.isAdvanced ? `${count} Informes Avanzados` : `${count} ${count === 1 ? 'Futbolista' : 'Futbolistas'}`}
+                    </span>
+                    <div className="flex items-center space-x-1 text-xs font-mono text-blue-400 group-hover:text-blue-300">
+                      <span>Abrir</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
-                ))}
-
-                {physicalByPositionGroup.length === 0 && (
-                  <div className="col-span-3 text-center text-slate-600 text-xs py-8">
-                    No se han registrado valoraciones físicas en ningún jugador de la cartera. Abre un jugador en la pantalla principal para configurarlo.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Potencias Físicas (Powerhouse players) */}
-            <div className="bg-slate-900/30 border border-slate-850 p-5 rounded-lg">
-              <div>
-                <h3 className="text-sm font-semibold font-mono text-white uppercase tracking-wider flex items-center">
-                  ⚡ Potencias Físicas de la Roster (4★ o 3★+)
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Futbolistas que destacan por su rendimiento físico superior según los informes de scouting cargados.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-4">
-                {physicalStandouts.slice(0, 8).map(({ player, capacities, avgRating }) => (
-                  <div key={player.id} className="bg-slate-950/70 border border-slate-850 p-3 rounded flex flex-col justify-between hover:border-amber-500/20 transition">
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9.5px] font-mono text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded flex items-center space-x-0.5">
-                          <span>{avgRating}</span>
-                          <span className="text-[8px] text-amber-500">★</span>
-                        </span>
-                        <span className="text-[9px] text-slate-500 uppercase font-mono">{player.posicion}</span>
-                      </div>
-                      <h4 className="font-bold text-xs text-white pt-1">{player.nombre}</h4>
-                      <p className="text-[10px] text-slate-400">{player.equipo}</p>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-900 mt-3 space-y-1">
-                      <span className="text-[8.5px] font-mono text-slate-500 uppercase block tracking-wider">Puntos Destacados:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {capacities.slice(0, 2).map(c => (
-                          <span key={c} className="text-[8px] bg-slate-900 text-slate-300 font-mono border border-slate-850 px-1 py-0.2 rounded">
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {physicalStandouts.length === 0 && (
-                  <div className="col-span-4 text-center text-slate-650 text-xs py-8">
-                    No hay suficientes datos físicos guardados todavía para calcular potencias.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SUB-VIEW 4: TEAMS & COMPETITIONS ANALYTICS FROM REPORTS */}
-        {false && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Left box: Teams Representation */}
-            <div className="bg-slate-900/30 border border-slate-850 p-5 rounded-lg space-y-3.5">
-              <div>
-                <h3 className="text-sm font-semibold font-mono text-white uppercase tracking-wider flex items-center">
-                  🛡️ Presencia de Clubes en Cartera
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Número de futbolistas bajo seguimiento por entidad deportiva y su calificación promedio.
-                </p>
-              </div>
-
-              <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                {teamsStats.map(team => (
-                  <div key={team.teamName} className="bg-slate-950/40 border border-slate-850/80 p-3 rounded flex items-center justify-between hover:border-slate-800 transition">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded bg-slate-900 border border-slate-800 flex items-center justify-center text-xs font-mono font-bold text-slate-400">
-                        {team.teamName.slice(0,2).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-white">{team.teamName}</div>
-                        <div className="text-[10px] text-slate-400">
-                          {team.total} {team.total === 1 ? 'futbolista en cartera' : 'futbolistas en cartera'}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <div className="text-xs font-mono text-amber-400 flex items-center justify-end space-x-0.5">
-                        <span>{team.avgRating}</span>
-                        <span className="text-[10px] text-amber-500">★</span>
-                      </div>
-                      <span className="text-[8px] text-slate-500">Valoración Promedio</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right box: Competitions Scouted */}
-            <div className="bg-slate-900/30 border border-slate-850 p-5 rounded-lg space-y-3.5">
-              <div>
-                <h3 className="text-sm font-semibold font-mono text-white uppercase tracking-wider flex items-center">
-                  🏆 Competiciones Bajo Seguimiento
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Análisis del volumen de informes y promedio de goles de los partidos scoutados.
-                </p>
-              </div>
-
-              <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                {competitionsStats.map(comp => (
-                  <div key={comp.compName} className="bg-slate-950/40 border border-slate-850/80 p-3 rounded flex items-center justify-between hover:border-slate-800 transition">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded">
-                        <Trophy className="w-4 h-4 shrink-0 text-amber-400" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-white">{comp.compName}</div>
-                        <div className="text-[10px] text-slate-400">
-                          {comp.total} {comp.total === 1 ? 'partido con informe' : 'partidos con informe'}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-xs font-mono text-sky-400 font-bold">{comp.avgGoals}</div>
-                      <span className="text-[8.5px] text-slate-500">Goles/Partido</span>
-                    </div>
-                  </div>
-                ))}
-                {competitionsStats.length === 0 && (
-                  <div className="text-center text-slate-650 text-xs py-12">
-                    No hay informes de partido guardados para extraer estadísticas de competición.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {subTab === 'positional_advanced' && (
-          <div className="space-y-4">
-            {/* Header controls box */}
-            <div className="bg-slate-900/30 border border-slate-850/80 p-4 rounded-lg space-y-3.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-850 pb-3 gap-2">
-                <div>
-                  <span className="text-[11px] font-bold font-mono text-amber-400 uppercase tracking-wider flex items-center">
-                    <Sparkles className="w-4 h-4 text-amber-500 mr-2" />
-                    Métricas Avanzadas por Posición
-                  </span>
-                  <h3 className="text-sm font-semibold text-white mt-1">
-                    Base de Datos de Mediapuntas (MCO) - Tercera RFEF y Canteras Elite
-                  </h3>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* 3. OPENED FOLDER CONTENT VIEW */
+        <div className="space-y-4">
+          <div className="flex items-center justify-between bg-slate-950/80 border border-slate-850 p-3 rounded-lg">
+            <div className="flex items-center space-x-2 text-xs font-mono">
+              <span className="text-slate-400">Informes de Datos</span>
+              <span className="text-slate-600">/</span>
+              <FolderOpen className="w-4 h-4 text-amber-400" />
+              <span className="text-amber-400 font-bold uppercase">Carpeta: {selectedFolder}</span>
+            </div>
+            <button
+              onClick={() => setSelectedFolder(null)}
+              className="text-xs text-blue-400 hover:text-blue-300 font-mono flex items-center space-x-1"
+            >
+              <span>← Cambiar Carpeta</span>
+            </button>
+          </div>
+
+          {selectedFolder === 'Mediapunta' ? (
+            <>
+              {/* MEDIAPUNTA ADVANCED REPORT VIEW */}
+            <div className="space-y-4">
+              {/* Header controls box */}
+              <div className="bg-slate-900/30 border border-slate-850/80 p-4 rounded-lg space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-850 pb-3 gap-2">
+                  <div>
+                    <span className="text-[11px] font-bold font-mono text-amber-400 uppercase tracking-wider flex items-center">
+                      <Sparkles className="w-4 h-4 text-amber-500 mr-2" />
+                      Métricas Avanzadas por Posición
+                    </span>
+                    <h3 className="text-sm font-semibold text-white mt-1">
+                      Base de Datos de Mediapuntas (MCO) - Tercera RFEF y Canteras Elite
+                    </h3>
+                  </div>
+                  <div className="flex items-center space-x-2 shrink-0">
                 <div className="flex items-center space-x-2 shrink-0">
                   <button
                     onClick={handleExportPositionalCSV}
@@ -1787,8 +1474,7 @@ export default function DataReportsView({ players, matchReports }: DataReportsVi
               💡 <strong>Instrucciones de Análisis:</strong> Los datos superiores corresponden a promedios normalizados por 90 minutos de juego (excepto minutos totales, edad y altura). Puedes ordenar por cualquiera de las métricas clave haciendo clic directamente sobre el título de su columna. Las celdas estadísticas están coloreadas automáticamente en cuatro gamas exactas por percentil de rendimiento: <span className="text-red-400">Rojo (0-25%)</span>, <span className="text-orange-400">Naranja (25-50%)</span>, <span className="text-blue-400">Azul (50-75%)</span> y <span className="text-emerald-400 font-bold">Verde (75-100%)</span>.
             </p>
           </div>
-        )}
-      </div>
+        </div>
 
       {/* MODAL DE ANÁLISIS DE DISPERSIÓN Y VALOR POR 90 */}
       {isAnalysisModalOpen && selectedMediapunta && (() => {
@@ -2124,7 +1810,38 @@ export default function DataReportsView({ players, matchReports }: DataReportsVi
           </div>
         );
       })()}
-
+            </>
+          ) : (
+            (() => {
+              const currentFolderConfig = POSITION_FOLDERS.find(f => f.id === selectedFolder);
+              return (
+                <div className="bg-slate-900/60 border border-slate-800 p-8 rounded-xl text-center space-y-4 max-w-xl mx-auto my-8 shadow-lg">
+                  <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto">
+                    <Folder className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold font-mono text-white">
+                      Carpeta: {currentFolderConfig?.name || selectedFolder}
+                    </h3>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      El módulo de informes de datos avanzados para esta posición se encuentra en fase de integración.
+                    </p>
+                  </div>
+                  <div className="pt-2 flex justify-center space-x-3">
+                    <button
+                      onClick={() => setSelectedFolder('Mediapunta')}
+                      className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded text-xs font-mono font-bold transition flex items-center space-x-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Ver Módulo Avanzado (Mediapunta)</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()
+          )}
+        </div>
+      )}
     </div>
   );
 }

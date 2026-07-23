@@ -94,6 +94,8 @@ export async function exportPlayerReportPDF(
     enSuEquipo?: string;
     enPocasPalabras?: string;
     tieneValorPor?: string;
+    pitchX?: number;
+    pitchY?: number;
   }
 ) {
   const doc = new jsPDF({
@@ -186,15 +188,36 @@ export async function exportPlayerReportPDF(
 
   y += 12;
 
-  // --- Player Main Card Header Box with Photo & Escudo ---
-  const mainCardHeight = 28;
+  // Tactical Pitch Coordinates calculation
+  const getPitchCoords = (pos: string) => {
+    switch (pos) {
+      case 'Portero': return { x: 50, y: 88 };
+      case 'Defensa Central': return { x: 50, y: 72 };
+      case 'Lateral Derecho': return { x: 80, y: 68 };
+      case 'Lateral Izquierdo': return { x: 20, y: 68 };
+      case 'Mediocentro Defensivo': return { x: 50, y: 54 };
+      case 'Mediocentro': return { x: 50, y: 44 };
+      case 'Mediapunta': return { x: 50, y: 30 };
+      case 'Extremo Derecho': return { x: 82, y: 22 };
+      case 'Extremo Izquierdo': return { x: 18, y: 22 };
+      case 'Delantero Centro': return { x: 50, y: 12 };
+      default: return { x: 50, y: 50 };
+    }
+  };
+
+  const defaultCoords = getPitchCoords(player.posicion);
+  const pitchCoordX = reportData?.pitchX !== undefined ? reportData.pitchX : (player.pitchX !== undefined ? player.pitchX : defaultCoords.x);
+  const pitchCoordY = reportData?.pitchY !== undefined ? reportData.pitchY : (player.pitchY !== undefined ? player.pitchY : defaultCoords.y);
+
+  // --- Player Main Card Header Box with Photo & Escudo & Tactical Pitch ---
+  const mainCardHeight = 31;
   doc.setFillColor(248, 250, 252); // slate-50
   doc.setDrawColor(203, 213, 225); // slate-300
   doc.setLineWidth(0.3);
   doc.roundedRect(12, y, 186, mainCardHeight, 1.5, 1.5, 'FD');
 
   // Player Photo rendering
-  const photoSize = 22;
+  const photoSize = 25;
   const photoX = 15;
   const photoY = y + 3;
 
@@ -210,7 +233,7 @@ export async function exportPlayerReportPDF(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       doc.setTextColor(100, 116, 139);
-      doc.text(player.nombre.charAt(0).toUpperCase(), photoX + photoSize / 2, photoY + 14, { align: 'center' });
+      doc.text(player.nombre.charAt(0).toUpperCase(), photoX + photoSize / 2, photoY + 15, { align: 'center' });
     }
   } else {
     // Placeholder photo box
@@ -219,45 +242,121 @@ export async function exportPlayerReportPDF(
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(100, 116, 139);
-    doc.text(player.nombre.charAt(0).toUpperCase(), photoX + photoSize / 2, photoY + 14, { align: 'center' });
+    doc.text(player.nombre.charAt(0).toUpperCase(), photoX + photoSize / 2, photoY + 15, { align: 'center' });
   }
 
   // Player Name & Position (Next to photo)
-  const infoX = 42;
+  const infoX = 43;
   doc.setTextColor(220, 38, 38); // red-600
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'bold');
   doc.text('FICHA JUGADOR', infoX, y + 7);
 
   doc.setTextColor(15, 23, 42);
-  doc.setFontSize(12);
-  doc.text(player.nombre.toUpperCase(), infoX, y + 14);
+  doc.setFontSize(11);
+  doc.text(player.nombre.toUpperCase(), infoX, y + 13.5);
 
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(71, 85, 105);
-  doc.text(`POSICIÓN: ${player.posicion.toUpperCase()}`, infoX, y + 20);
+  doc.text(`POSICIÓN: ${player.posicion.toUpperCase()}`, infoX, y + 19.5);
 
-  // Table Data on Right Side of Main Card Box with Team Escudo
-  const rightX = 112;
-  doc.setFontSize(8.5);
+  // Table Data on Middle of Main Card Box with Team Escudo
+  const middleX = 88;
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 41, 59);
 
   // Team Crest rendering
-  let equipoTextX = rightX;
+  let equipoTextX = middleX;
   if (escudoData) {
     try {
-      const escudoSize = 7;
-      doc.addImage(escudoData, 'PNG', rightX, y + 3.5, escudoSize, escudoSize);
-      equipoTextX = rightX + escudoSize + 2;
+      const escudoSize = 6.5;
+      doc.addImage(escudoData, 'PNG', middleX, y + 3.5, escudoSize, escudoSize);
+      equipoTextX = middleX + escudoSize + 2;
     } catch {
-      equipoTextX = rightX;
+      equipoTextX = middleX;
     }
   }
 
-  doc.text(`Equipo: ${equipo}`, equipoTextX, y + 8.5);
-  doc.text(`Año Nacimiento / Edad: ${player.anoNacimiento} (${age} años)`, rightX, y + 15);
-  doc.text(`Pie / Altura: ${player.lateralidad} / ${altura}`, rightX, y + 21.5);
+  doc.text(`Equipo: ${equipo}`, equipoTextX, y + 8);
+  doc.text(`Año Nac. / Edad: ${player.anoNacimiento} (${age} a.)`, middleX, y + 14);
+  doc.text(`Pie / Altura: ${player.lateralidad} / ${altura}`, middleX, y + 20);
+
+  // --- Right Side: Tactical Pitch (Campo de Fútbol) ---
+  const pBoxX = 143;
+  const pBoxY = y + 2.5;
+  const pBoxW = 52;
+  const pBoxH = 26;
+
+  // Pitch Container Outer Box
+  doc.setFillColor(241, 245, 249); // slate-100
+  doc.setDrawColor(226, 232, 240); // slate-200
+  doc.setLineWidth(0.2);
+  doc.roundedRect(pBoxX, pBoxY, pBoxW, pBoxH, 1, 1, 'FD');
+
+  // Box Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6);
+  doc.setTextColor(220, 38, 38); // red-600
+  doc.text('POSICIÓN TÁCTICA', pBoxX + pBoxW / 2, pBoxY + 3.5, { align: 'center' });
+
+  // Field Pitch Rectangle
+  const pitchXPos = pBoxX + 2;
+  const pitchYPos = pBoxY + 4.5;
+  const pitchW = pBoxW - 4; // 48 mm
+  const pitchH = pBoxH - 6; // 20 mm
+
+  // Green Pitch Background
+  doc.setFillColor(240, 253, 244); // emerald-50
+  doc.setDrawColor(16, 185, 129); // emerald-500
+  doc.setLineWidth(0.25);
+  doc.rect(pitchXPos, pitchYPos, pitchW, pitchH, 'FD');
+
+  // Outer yard line
+  const pPad = 0.8;
+  const fX = pitchXPos + pPad;
+  const fY = pitchYPos + pPad;
+  const fW = pitchW - (pPad * 2);
+  const fH = pitchH - (pPad * 2);
+  doc.setDrawColor(5, 150, 105); // emerald-600
+  doc.setLineWidth(0.15);
+  doc.rect(fX, fY, fW, fH, 'S');
+
+  // Midfield Line
+  const midX = fX + fW / 2;
+  doc.line(midX, fY, midX, fY + fH);
+
+  // Center Circle & Dot
+  doc.circle(midX, fY + fH / 2, 2.8, 'S');
+  doc.setFillColor(5, 150, 105);
+  doc.circle(midX, fY + fH / 2, 0.35, 'F');
+
+  // Left Penalty Area
+  doc.rect(fX, fY + fH * 0.2, fW * 0.16, fH * 0.6, 'S');
+  // Left Goal Box
+  doc.rect(fX, fY + fH * 0.35, fW * 0.06, fH * 0.3, 'S');
+
+  // Right Penalty Area
+  doc.rect(fX + fW * 0.84, fY + fH * 0.2, fW * 0.16, fH * 0.6, 'S');
+  // Right Goal Box
+  doc.rect(fX + fW * 0.94, fY + fH * 0.35, fW * 0.06, fH * 0.3, 'S');
+
+  // Tactical Marker Dot (Amber circle with dark outline)
+  const posXClamped = Math.max(5, Math.min(95, pitchCoordX));
+  const posYClamped = Math.max(5, Math.min(95, pitchCoordY));
+
+  const markerX = fX + (posXClamped / 100) * fW;
+  const markerY = fY + (posYClamped / 100) * fH;
+
+  // Outer ring (Amber-500)
+  doc.setFillColor(245, 158, 11); // amber-500
+  doc.setDrawColor(15, 23, 42); // slate-900
+  doc.setLineWidth(0.3);
+  doc.circle(markerX, markerY, 1.8, 'FD');
+
+  // Inner center dot
+  doc.setFillColor(15, 23, 42);
+  doc.circle(markerX, markerY, 0.5, 'F');
 
   y += mainCardHeight + 6;
 

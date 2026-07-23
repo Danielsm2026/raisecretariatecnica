@@ -182,7 +182,9 @@ export default function PlayerReportModal({
       debilidades,
       enSuEquipo,
       enPocasPalabras,
-      tieneValorPor
+      tieneValorPor,
+      pitchX,
+      pitchY
     });
   };
 

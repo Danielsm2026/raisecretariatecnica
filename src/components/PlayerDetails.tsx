@@ -234,7 +234,9 @@ export default function PlayerDetails({
       debilidades,
       enSuEquipo,
       enPocasPalabras,
-      tieneValorPor
+      tieneValorPor,
+      pitchX,
+      pitchY
     });
   };
 
