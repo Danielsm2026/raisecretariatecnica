@@ -340,9 +340,10 @@ export async function exportPlayerReportPDF(
     }
   }
 
-  doc.text(`Equipo: ${equipo}`, equipoTextX, y + 8);
-  doc.text(`Año Nac. / Edad: ${player.anoNacimiento} (${age} a.)`, middleX, y + 14);
-  doc.text(`Pie / Altura: ${player.lateralidad} / ${altura}`, middleX, y + 20);
+  doc.text(`Equipo: ${equipo}`, equipoTextX, y + 6);
+  doc.text(`Categoría: ${player.categoria || 'Primera RFEF'}`, middleX, y + 12);
+  doc.text(`Año Nac. / Edad: ${player.anoNacimiento} (${age} a.)`, middleX, y + 18);
+  doc.text(`Pie / Altura: ${player.lateralidad} / ${altura}`, middleX, y + 24);
 
   // --- Right Side: Tactical Pitch (Campo de Fútbol) ---
   const pBoxW = 38;

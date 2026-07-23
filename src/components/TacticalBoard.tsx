@@ -6,6 +6,7 @@ import {
   ChevronRight, ArrowLeft, Edit3, Plus, Layout, FileText, Check, Copy, Sparkles, X 
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface TacticalBoardProps {
   players: ScoutedPlayer[];
@@ -82,6 +83,9 @@ const FOLDERS = [
   }
 ];
 
+const LOGO_PRIMERA_RFEF = 'https://cdn.resfu.com/media/img/league_logos/primera-federacion.png?size=120x&lossy=1';
+const LOGO_SEGUNDA_RFEF = 'https://cdn.resfu.com/media/img/league_logos/segunda_rfef.png?size=120x&lossy=1';
+
 const SUBFOLDERS_MENSUALES = [
   {
     id: '1rfef' as const,
@@ -89,6 +93,7 @@ const SUBFOLDERS_MENSUALES = [
     shortTitle: '1ª RFEF',
     subtitle: 'Seguimiento y campogramas posicionales de Primera RFEF',
     icon: Shield,
+    logoImg: LOGO_PRIMERA_RFEF,
     gradient: 'from-blue-600/20 via-indigo-600/10 to-slate-900',
     borderColor: 'border-blue-500/30 hover:border-blue-500/60',
     accentColor: 'text-blue-400',
@@ -101,6 +106,7 @@ const SUBFOLDERS_MENSUALES = [
     shortTitle: '2ª RFEF',
     subtitle: 'Seguimiento y campogramas posicionales de Segunda RFEF',
     icon: Shield,
+    logoImg: LOGO_SEGUNDA_RFEF,
     gradient: 'from-emerald-600/20 via-teal-600/10 to-slate-900',
     borderColor: 'border-emerald-500/30 hover:border-emerald-500/60',
     accentColor: 'text-emerald-400',
@@ -249,7 +255,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.error('Error reading saved campogramas:', e);
@@ -266,6 +272,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
   const [editingCampograma, setEditingCampograma] = useState<CampogramaItem | null>(null);
   const [editTitleInput, setEditTitleInput] = useState('');
+  const [campogramaToDelete, setCampogramaToDelete] = useState<{ id: string; nombre: string } | null>(null);
 
   // Save campogramas to localStorage on change
   useEffect(() => {
@@ -795,11 +802,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   // Action: Delete Campograma
   const handleDeleteCampograma = (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
-    if (window.confirm(`¿Estás seguro de que deseas eliminar el campograma "${name}"?`)) {
-      setCampogramas(prev => prev.filter(c => c.id !== id));
-      if (activeCampogramaId === id) setActiveCampogramaId(null);
-      showNotification(`Campograma "${name}" eliminado`, 'info');
-    }
+    setCampogramaToDelete({ id, nombre: name });
+  };
+
+  const confirmDeleteCampograma = () => {
+    if (!campogramaToDelete) return;
+    const { id, nombre } = campogramaToDelete;
+    setCampogramas(prev => prev.filter(c => c.id !== id));
+    if (activeCampogramaId === id) setActiveCampogramaId(null);
+    showNotification(`Campograma "${nombre}" eliminado`, 'info');
+    setCampogramaToDelete(null);
   };
 
   // Action: Rename Campograma
@@ -820,9 +832,24 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     showNotification('Nombre del campograma actualizado', 'success');
   };
 
+  // Confirmation modal helper
+  const renderConfirmationModal = () => (
+    <ConfirmationModal
+      isOpen={!!campogramaToDelete}
+      onClose={() => setCampogramaToDelete(null)}
+      onConfirm={confirmDeleteCampograma}
+      title="Eliminar Campograma"
+      message={`¿Estás seguro de que deseas eliminar permanentemente el campograma "${campogramaToDelete?.nombre}"? Esta acción no se puede deshacer.`}
+      confirmText="Sí, Eliminar"
+      cancelText="Cancelar"
+      isDanger={true}
+    />
+  );
+
   // ==================== RENDER LEVEL 1: CARPETAS DASHBOARD ====================
   if (currentFolder === null) {
     return (
+      <>
       <div className="space-y-6">
         {/* Top Banner */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg relative overflow-hidden">
@@ -890,43 +917,9 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             );
           })}
         </div>
-
-        {/* Quick Summary list of recent campogramas */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
-          <h3 className="text-xs font-bold font-mono uppercase tracking-widest text-slate-300 mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-blue-400" />
-            <span>Últimos Campogramas Editados</span>
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {campogramas.slice(0, 3).map(c => {
-              const folderObj = FOLDERS.find(f => f.id === c.folderId);
-              return (
-                <div
-                  key={c.id}
-                  onClick={() => {
-                    setCurrentFolder(c.folderId);
-                    setActiveCampogramaId(c.id);
-                  }}
-                  className="bg-slate-950 hover:bg-slate-850/80 border border-slate-800 hover:border-slate-700 p-3.5 rounded-lg cursor-pointer transition-all flex items-center justify-between group"
-                >
-                  <div className="min-w-0 pr-2">
-                    <span className="text-[9px] font-mono font-bold text-blue-400 uppercase bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-900/30">
-                      {folderObj?.shortTitle || 'Campograma'}
-                    </span>
-                    <h4 className="text-xs font-bold text-white group-hover:text-blue-300 truncate mt-1">
-                      {c.nombre}
-                    </h4>
-                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">
-                      Sistema {c.formation} • {c.monthlyView ? 'Posicional' : 'Alineación 11'}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all shrink-0" />
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
+      {renderConfirmationModal()}
+      </>
     );
   }
 
@@ -937,6 +930,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   if (currentFolder === 'mensuales' && currentSubFolder === null && activeCampogramaId === null) {
     const Icon = folderInfo.icon;
     return (
+      <>
       <div className="space-y-6">
         {/* Header Breadcrumbs & Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
@@ -983,8 +977,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center ${sf.accentColor} group-hover:scale-110 transition-transform`}>
-                      <SfIcon className="w-6 h-6" />
+                    <div className="flex items-center space-x-3">
+                      <div className="w-14 h-14 rounded-xl bg-slate-950 border border-slate-700/80 p-1.5 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform shrink-0 overflow-hidden">
+                        {sf.logoImg ? (
+                          <img src={sf.logoImg} alt={sf.title} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                        ) : (
+                          <SfIcon className={`w-7 h-7 ${sf.accentColor}`} />
+                        )}
+                      </div>
                     </div>
                     <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full border ${sf.badgeBg}`}>
                       {itemsInSubFolder.length} {itemsInSubFolder.length === 1 ? 'Campograma' : 'Campogramas'}
@@ -1010,6 +1010,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           })}
         </div>
       </div>
+      {renderConfirmationModal()}
+      </>
     );
   }
 
@@ -1029,6 +1031,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   if (activeCampogramaId === null) {
     const Icon = folderInfo.icon;
     return (
+      <>
       <div className="space-y-6">
         {/* Header Breadcrumbs & Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
@@ -1063,7 +1066,11 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               <h1 className="text-xl font-black font-display text-white uppercase tracking-wider flex items-center gap-2 mt-0.5">
                 {currentSubFolderObj ? (
                   <>
-                    <Shield className={`w-5 h-5 ${currentSubFolderObj.accentColor}`} />
+                    {currentSubFolderObj.logoImg ? (
+                      <img src={currentSubFolderObj.logoImg} alt={currentSubFolderObj.title} className="w-8 h-8 object-contain rounded-lg border border-slate-700 bg-slate-950 p-0.5 shadow-md shrink-0" referrerPolicy="no-referrer" />
+                    ) : (
+                      <Shield className={`w-5 h-5 ${currentSubFolderObj.accentColor}`} />
+                    )}
                     <span>{currentSubFolderObj.title}</span>
                   </>
                 ) : (
@@ -1097,6 +1104,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               ? Object.values(item.monthlyAssignments || {}).reduce<number>((acc, curr) => acc + ((curr as string[])?.length || 0), 0)
               : Object.values(item.assignments || {}).filter(Boolean).length;
 
+            const itemSubFolder = item.folderId === 'mensuales' 
+              ? SUBFOLDERS_MENSUALES.find(s => s.id === (item.subFolderId || '1rfef'))
+              : null;
+
             return (
               <div
                 key={item.id}
@@ -1105,9 +1116,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <span className="text-[9px] font-mono font-extrabold uppercase bg-blue-950/60 text-blue-400 border border-blue-900/40 px-2 py-0.5 rounded">
-                      SISTEMA {item.formation}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      {itemSubFolder?.logoImg && (
+                        <img src={itemSubFolder.logoImg} alt={itemSubFolder.title} className="w-5 h-5 object-contain rounded border border-slate-700 bg-slate-950 p-0.5 shrink-0" referrerPolicy="no-referrer" />
+                      )}
+                      <span className="text-[9px] font-mono font-extrabold uppercase bg-blue-950/60 text-blue-400 border border-blue-900/40 px-2 py-0.5 rounded">
+                        SISTEMA {item.formation}
+                      </span>
+                    </div>
                     <span className="text-[9px] font-mono text-slate-500">
                       {item.fechaModificacion}
                     </span>
@@ -1335,11 +1351,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           </div>
         )}
       </div>
+      {renderConfirmationModal()}
+      </>
     );
   }
 
   // ==================== RENDER LEVEL 3: EDITING CAMPOGRAMA ON SOCCER PITCH ====================
   return (
+    <>
     <div className="space-y-4">
       {/* Top Header Navigation bar */}
       <div className="bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
@@ -1365,6 +1384,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               <span className="text-blue-400 font-bold">{activeCamp?.nombre}</span>
             </div>
             <div className="flex items-center space-x-2">
+              {currentSubFolderObj?.logoImg && (
+                <img 
+                  src={currentSubFolderObj.logoImg} 
+                  alt={currentSubFolderObj.title} 
+                  className="w-7 h-7 object-contain rounded-md border border-slate-700 bg-slate-950 p-0.5 shadow-md shrink-0" 
+                  referrerPolicy="no-referrer"
+                />
+              )}
               <h1 className="text-base font-bold font-display text-white uppercase tracking-wider truncate">
                 {activeCamp?.nombre}
               </h1>
@@ -1375,10 +1402,21 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     setEditTitleInput(activeCamp.nombre);
                   }
                 }}
-                className="text-slate-500 hover:text-blue-400 p-1"
+                className="text-slate-500 hover:text-blue-400 p-1 transition-colors"
                 title="Renombrar campograma"
               >
                 <Edit3 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  if (activeCamp) {
+                    handleDeleteCampograma(e, activeCamp.id, activeCamp.nombre);
+                  }
+                }}
+                className="text-slate-500 hover:text-red-400 hover:bg-red-950/40 p-1 rounded transition-colors"
+                title="Eliminar este campograma"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -1651,6 +1689,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             {/* Bottom Penalty Area */}
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[45%] h-[18%] border-t border-x border-emerald-500/25 pointer-events-none"></div>
 
+            {/* League Badge Watermark */}
+            {currentSubFolderObj?.logoImg && (
+              <div className="absolute top-3 right-3 z-10 flex items-center space-x-2 bg-slate-950/85 backdrop-blur-md border border-emerald-500/40 px-3 py-1.5 rounded-lg shadow-2xl pointer-events-none">
+                <img src={currentSubFolderObj.logoImg} alt={currentSubFolderObj.title} className="w-6 h-6 object-contain rounded-md border border-emerald-500/50 bg-slate-950 p-0.5" referrerPolicy="no-referrer" />
+                <span className="text-[10px] font-mono font-black text-emerald-300 uppercase tracking-widest">{currentSubFolderObj.shortTitle}</span>
+              </div>
+            )}
+
             {/* Positions overlay */}
             <div className="absolute inset-0 z-20">
               {currentPositions.map((pos) => {
@@ -1803,6 +1849,9 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           </div>
         </div>
       </div>
-    </div>
+
+      </div>
+      {renderConfirmationModal()}
+    </>
   );
 }

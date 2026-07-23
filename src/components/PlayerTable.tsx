@@ -574,9 +574,6 @@ export default function PlayerTable({
               <th className="px-2 py-2 text-center italic">
                 Valoración
               </th>
-              <th className="px-2 py-2 text-center italic text-red-400/90">
-                Eliminar
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/40 bg-slate-900">
@@ -734,30 +731,11 @@ export default function PlayerTable({
                       <option value="DESCARTAR" className="bg-slate-900 text-slate-100">Descartar</option>
                     </select>
                   </td>
-
-                  {/* Eliminar Column */}
-                  <td className="px-2 py-2 text-center">
-                    {onDeletePlayer && (
-                      <button
-                        type="button"
-                        id={`btn-delete-${player.id}`}
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent row selection
-                          setPlayerToDelete(player);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-2 py-1 text-[10.5px] font-bold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-md transition-all hover:scale-105 active:scale-95"
-                        title={`Eliminar de la lista a ${player.nombre}`}
-                      >
-                        <Trash2 className="w-3" />
-                        <span>Borrar</span>
-                      </button>
-                    )}
-                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={11} className="px-6 py-12 text-center text-slate-500 bg-slate-900/40">
+                <td colSpan={9} className="px-6 py-12 text-center text-slate-500 bg-slate-900/40">
                   Ningún prospecto deportivo coincide con los filtros de búsqueda.
                 </td>
               </tr>

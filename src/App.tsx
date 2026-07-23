@@ -1499,6 +1499,7 @@ export default function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSavePlayer}
+        onDeletePlayer={handleDeletePlayer}
         playerToEdit={editingPlayer}
       />
 

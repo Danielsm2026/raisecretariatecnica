@@ -51,15 +51,20 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
 
 export function getCategoryEscudoUrl(categoria?: string): string {
   const cat = (categoria || '').toLowerCase().trim();
-  if (!cat || cat.includes('primera rfef') || cat.includes('1ª rfef') || cat.includes('1ª federacion') || cat.includes('primera federación') || cat.includes('primera federacion')) {
-    return '/escudos/primera-federacion.png';
-  }
-  if (cat.includes('segunda rfef') || cat.includes('2ª rfef') || cat.includes('segunda federacion') || cat.includes('segunda federación')) {
+  
+  if (cat.includes('segunda rfef') || cat.includes('2ª rfef') || cat.includes('2ª federacion') || cat.includes('segunda federacion') || cat.includes('segunda federación') || cat.includes('2ª federación')) {
     return '/escudos/segunda-federacion.png';
   }
-  if (cat.includes('segunda div') || cat.includes('hypermotion') || cat.includes('smartbank') || cat.includes('laliga2')) {
+  if (cat.includes('segunda div') || cat.includes('hypermotion') || cat.includes('smartbank') || cat.includes('laliga2') || cat.includes('2ª división') || cat.includes('2ª division')) {
     return 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/LaLiga_Hypermotion_2023_logo.svg/500px-LaLiga_Hypermotion_2023_logo.svg.png';
   }
-  // Default fallback
+  if (cat.includes('tercera rfef') || cat.includes('3ª rfef') || cat.includes('3ª federacion') || cat.includes('tercera federacion') || cat.includes('tercera federación') || cat.includes('3ª federación')) {
+    return 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Logo_Tercera_Federaci%C3%B3n.png/480px-Logo_Tercera_Federaci%C3%B3n.png';
+  }
+  if (cat.includes('primera div') || cat.includes('laliga ea') || cat.includes('1ª division') || cat.includes('1ª división')) {
+    return 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_EA_Sports_2023_logo.svg/500px-LaLiga_EA_Sports_2023_logo.svg.png';
+  }
+
+  // Default / Primera Federación
   return '/escudos/primera-federacion.png';
 }

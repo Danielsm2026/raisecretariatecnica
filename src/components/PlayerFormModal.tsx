@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ScoutedPlayer, Position, Footedness } from '../types';
-import { X, Award, Info } from 'lucide-react';
+import { X, Award, Info, Trash2 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 
 interface PlayerFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (player: Omit<ScoutedPlayer, 'id' | 'fechaRegistro'> & { id?: string }) => void;
+  onDeletePlayer?: (id: string) => void;
   playerToEdit?: ScoutedPlayer | null;
 }
 
@@ -29,7 +30,7 @@ const FOOTEDNESS_OPTIONS: Footedness[] = [
   'Ambidiestro'
 ];
 
-export default function PlayerFormModal({ isOpen, onClose, onSave, playerToEdit }: PlayerFormModalProps) {
+export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlayer, playerToEdit }: PlayerFormModalProps) {
   const [nombre, setNombre] = useState('');
   const [equipo, setEquipo] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -53,9 +54,11 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, playerToEdit 
   const [valoracionFisica, setValoracionFisica] = useState<Record<string, number>>({});
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   // Populate form if editing
   useEffect(() => {
+    setShowConfirmDelete(false);
     if (playerToEdit) {
       setNombre(playerToEdit.nombre);
       setEquipo(playerToEdit.equipo);
@@ -493,22 +496,65 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, playerToEdit 
           </div>
 
           {/* Buttons footer inside form */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
-            <button
-              id="btn-cancel-modal-form"
-              type="button"
-              onClick={onClose}
-              className="px-4 py-1.5 text-xs text-slate-350 font-bold hover:bg-slate-800 border border-slate-750 bg-slate-850 rounded transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              id="btn-submit-modal-form"
-              type="submit"
-              className="px-5 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold rounded transition-colors shadow-sm uppercase tracking-widest"
-            >
-              Archivar Jugador
-            </button>
+          <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+            <div>
+              {playerToEdit && onDeletePlayer && (
+                !showConfirmDelete ? (
+                  <button
+                    id="btn-delete-scout-player"
+                    type="button"
+                    onClick={() => setShowConfirmDelete(true)}
+                    className="inline-flex items-center space-x-2 px-3.5 py-1.5 text-xs font-bold text-red-400 hover:text-red-300 bg-red-950/40 hover:bg-red-900/50 border border-red-500/40 rounded-lg transition-all shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <span>Borrar</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center space-x-2 bg-red-950/80 border border-red-500/60 px-3 py-1 rounded-lg">
+                    <span className="text-[11px] font-bold text-red-200">¿Borrar jugador?</span>
+                    <button
+                      id="btn-confirm-delete-player"
+                      type="button"
+                      onClick={() => {
+                        if (playerToEdit && onDeletePlayer) {
+                          onDeletePlayer(playerToEdit.id);
+                          onClose();
+                        }
+                      }}
+                      className="px-2.5 py-1 text-2xs bg-red-600 hover:bg-red-500 text-white font-bold rounded transition-colors"
+                    >
+                      Sí, eliminar
+                    </button>
+                    <button
+                      id="btn-cancel-delete-player"
+                      type="button"
+                      onClick={() => setShowConfirmDelete(false)}
+                      className="px-2 py-1 text-2xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded transition-colors"
+                    >
+                      No
+                    </button>
+                  </div>
+                )
+              )}
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                id="btn-cancel-modal-form"
+                type="button"
+                onClick={onClose}
+                className="px-4 py-1.5 text-xs text-slate-350 font-bold hover:bg-slate-800 border border-slate-750 bg-slate-850 rounded transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                id="btn-submit-modal-form"
+                type="submit"
+                className="px-5 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold rounded transition-colors shadow-sm uppercase tracking-widest"
+              >
+                Archivar Jugador
+              </button>
+            </div>
           </div>
         </form>
       </div>
