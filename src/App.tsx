@@ -416,7 +416,7 @@ export default function App() {
         
         // Merge missing initial players automatically (like the new goalkeepers), excluding any manually deleted ones
         let deletedIds = getDeletedPlayerIds();
-        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez'];
+        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_mangel_prendes', 'p_samu_mayo'];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
           deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
           try {
