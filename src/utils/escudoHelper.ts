@@ -43,3 +43,18 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // Fallback to a clean inline SVG with initials or simple sport shield
   return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(teamNormal || 'FC')}&radius=10&backgroundColor=1e293b&fontSize=45`;
 }
+
+export function getCategoryEscudoUrl(categoria?: string): string {
+  const cat = (categoria || '').toLowerCase().trim();
+  if (!cat || cat.includes('primera rfef') || cat.includes('1ª rfef') || cat.includes('1ª federacion') || cat.includes('primera federación') || cat.includes('primera federacion')) {
+    return 'https://images.seeklogo.com/logo-png/49/2/primera-federacion-logo-png_seeklogo-494767.png';
+  }
+  if (cat.includes('segunda rfef') || cat.includes('2ª rfef') || cat.includes('segunda federacion') || cat.includes('segunda federación')) {
+    return 'https://images.seeklogo.com/logo-png/49/2/segunda-federacion-rfef-logo-png_seeklogo-494768.png';
+  }
+  if (cat.includes('segunda div') || cat.includes('hypermotion') || cat.includes('smartbank') || cat.includes('laliga2')) {
+    return 'https://images.seeklogo.com/logo-png/42/1/laliga-smartbank-logo-png_seeklogo-428616.png';
+  }
+  // Default fallback
+  return 'https://images.seeklogo.com/logo-png/49/2/primera-federacion-logo-png_seeklogo-494767.png';
+}

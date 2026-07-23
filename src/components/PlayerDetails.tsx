@@ -18,7 +18,7 @@ import {
   Download 
 } from 'lucide-react';
 import { ensureReportFields } from '../utils/reportDefaults';
-import { getPlayerEscudoUrl } from '../utils/escudoHelper';
+import { getPlayerEscudoUrl, getCategoryEscudoUrl } from '../utils/escudoHelper';
 import ImageUploadInput from './ImageUploadInput';
 import { exportPlayerReportPDF } from '../utils/exportPlayerReportPDF';
 
@@ -441,13 +441,16 @@ export default function PlayerDetails({
             {/* Document Title bar */}
             <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 my-4">
               <div className="flex items-center space-x-2">
-                {/* Visual Circle instead of broken image banner */}
-                <div className="w-8 h-8 rounded-full border-2 border-slate-800 bg-slate-50 flex items-center justify-center font-bold text-slate-800 text-xs shadow-inner">
-                  LFP
-                </div>
-                <div className="leading-none">
-                  <p className="text-[8px] font-sans text-slate-500 font-semibold tracking-wider">LaLiga</p>
-                  <p className="text-[7px] font-mono text-slate-400">SmartBank</p>
+                <div className="h-14 sm:h-16 w-auto max-w-[200px] flex items-center justify-start py-1">
+                  <img
+                    src={getCategoryEscudoUrl(player.categoria)}
+                    alt={player.categoria || 'Categoría'}
+                    className="h-12 sm:h-14 max-h-14 w-auto object-contain drop-shadow-md"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
                 </div>
               </div>
               

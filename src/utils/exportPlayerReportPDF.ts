@@ -1,68 +1,82 @@
 import { jsPDF } from 'jspdf';
 import { ScoutedPlayer } from '../types';
-import { getPlayerEscudoUrl } from './escudoHelper';
+import { getPlayerEscudoUrl, getCategoryEscudoUrl } from './escudoHelper';
 
 async function urlToDataUrl(url: string): Promise<string | null> {
   if (!url) return null;
   if (url.startsWith('data:image/')) return url;
 
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
+  const loadImageDataUrl = (imgSrc: string, useCrossOrigin = true): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      if (useCrossOrigin) img.crossOrigin = 'anonymous';
 
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width || 120;
-        canvas.height = img.naturalHeight || img.height || 120;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL('image/png'));
-          return;
-        }
-      } catch (err) {
-        console.warn('Canvas toDataURL failed for image:', url, err);
-      }
-      resolve(null);
-    };
-
-    img.onerror = () => {
-      // Fallback: Try fetch blob
-      fetch(url)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const res = reader.result as string;
-            if (res && res.includes('image/svg')) {
-              const svgImg = new Image();
-              svgImg.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = svgImg.naturalWidth || 120;
-                canvas.height = svgImg.naturalHeight || 120;
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                  ctx.drawImage(svgImg, 0, 0);
-                  resolve(canvas.toDataURL('image/png'));
-                } else {
-                  resolve(null);
-                }
-              };
-              svgImg.onerror = () => resolve(null);
-              svgImg.src = res;
-            } else {
-              resolve(res);
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width || 120;
+          canvas.height = img.naturalHeight || img.height || 120;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL('image/png');
+            if (dataUrl && dataUrl.length > 100) {
+              resolve(dataUrl);
+              return;
             }
-          };
-          reader.onerror = () => resolve(null);
-          reader.readAsDataURL(blob);
-        })
-        .catch(() => resolve(null));
-    };
+          }
+        } catch (err) {
+          console.warn('Canvas toDataURL SecurityError for:', imgSrc, err);
+        }
+        resolve(null);
+      };
 
-    img.src = url;
-  });
+      img.onerror = () => resolve(null);
+      img.src = imgSrc;
+    });
+  };
+
+  const fetchToDataUrl = async (targetUrl: string): Promise<string | null> => {
+    try {
+      const res = await fetch(targetUrl);
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result || null);
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  // 1. Direct canvas load
+  let data = await loadImageDataUrl(url, true);
+  if (data) return data;
+
+  // 2. Direct fetch
+  data = await fetchToDataUrl(url);
+  if (data) return data;
+
+  // 3. Try CORS proxy fallbacks
+  const proxiedUrls = [
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+  ];
+
+  for (const proxied of proxiedUrls) {
+    data = await fetchToDataUrl(proxied);
+    if (data) return data;
+    data = await loadImageDataUrl(proxied, true);
+    if (data) return data;
+  }
+
+  return null;
 }
 
 export async function exportPlayerReportPDF(
@@ -101,11 +115,13 @@ export async function exportPlayerReportPDF(
 
   const playerPhotoUrl = reportData?.fotoUrl || player.fotoUrl || '';
   const escudoUrl = reportData?.escudoUrl || getPlayerEscudoUrl(player);
+  const categoryEscudoUrl = getCategoryEscudoUrl(player.categoria);
 
-  // Preload player photo and team escudo as Data URLs for jsPDF
-  const [playerPhotoData, escudoData] = await Promise.all([
+  // Preload player photo, team escudo, and category escudo as Data URLs for jsPDF
+  const [playerPhotoData, escudoData, categoryData] = await Promise.all([
     urlToDataUrl(playerPhotoUrl),
-    urlToDataUrl(escudoUrl)
+    urlToDataUrl(escudoUrl),
+    urlToDataUrl(categoryEscudoUrl)
   ]);
 
   const age = player.anoNacimiento ? new Date().getFullYear() - player.anoNacimiento : '-';
@@ -129,11 +145,29 @@ export async function exportPlayerReportPDF(
 
   let y = 28;
 
-  // --- Document Title & Recommendation Box ---
+  // --- Category Logo (Left side) ---
+  if (categoryData) {
+    try {
+      doc.addImage(categoryData, 'PNG', 12, y - 7, 36, 16);
+    } catch {
+      // Fallback text if image rendering fails
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(30, 41, 59);
+      doc.text(player.categoria || 'Primera RFEF', 12, y);
+    }
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(30, 41, 59);
+    doc.text(player.categoria || 'Primera RFEF', 12, y);
+  }
+
+  // --- Document Title (Centered) ---
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(15);
+  doc.setFontSize(14);
   doc.setTextColor(15, 23, 42);
-  doc.text('INFORME DESCRIPTIVO', 12, y);
+  doc.text('INFORME DESCRIPTIVO', 105, y, { align: 'center' });
 
   // Recommendation Badge Box
   doc.setFillColor(15, 23, 42);
