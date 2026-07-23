@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ScoutedPlayer } from '../types';
-import { Shield, Trash2, SwitchCamera, UserPlus, Users, Search, HelpCircle, UserCheck, Download } from 'lucide-react';
+import { 
+  Shield, Trash2, SwitchCamera, UserPlus, Users, Search, HelpCircle, 
+  UserCheck, Download, Folder, FolderPlus, Calendar, Snowflake, Sun, 
+  ChevronRight, ArrowLeft, Edit3, Plus, Layout, FileText, Check, Copy, Sparkles, X 
+} from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
 interface TacticalBoardProps {
@@ -9,8 +13,25 @@ interface TacticalBoardProps {
   onUpdatePlayer?: (player: ScoutedPlayer) => void;
 }
 
+export type CampogramaFolderId = 'mensuales' | 'invierno' | 'verano';
+export type CampogramaSubFolderId = '1rfef' | '2rfef';
+
+export interface CampogramaItem {
+  id: string;
+  folderId: CampogramaFolderId;
+  subFolderId?: CampogramaSubFolderId;
+  nombre: string;
+  descripcion?: string;
+  fechaModificacion: string;
+  formation: '4-4-2' | '4-3-3' | '4-2-3-1' | '3-5-2' | '5-4-1' | '4-1-4-1';
+  monthlyView: boolean;
+  assignments: { [positionId: string]: string | null };
+  monthlyAssignments: { [positionId: string]: string[] };
+  notes?: string;
+}
+
 interface AssignedPositions {
-  [positionId: string]: string | null; // maps positionId -> playerId
+  [positionId: string]: string | null;
 }
 
 interface PitchPosition {
@@ -22,11 +43,245 @@ interface PitchPosition {
   allowedRoles: string[];
 }
 
+const FOLDERS = [
+  {
+    id: 'mensuales' as const,
+    title: 'Campogramas Mensuales',
+    shortTitle: 'Mensuales',
+    subtitle: 'Seguimiento mensual de plantilla y demanda posicional',
+    icon: Calendar,
+    gradient: 'from-blue-600/20 via-indigo-600/10 to-slate-900',
+    borderColor: 'border-blue-500/30 hover:border-blue-500/60',
+    accentColor: 'text-blue-400',
+    badgeBg: 'bg-blue-950/60 text-blue-300 border-blue-800/40',
+    description: 'Campogramas posicionales actualizados mes a mes para evaluar el progreso y evolución de la cartera.',
+  },
+  {
+    id: 'invierno' as const,
+    title: 'Campograma Invierno',
+    shortTitle: 'Invierno',
+    subtitle: 'Planificación para el mercado de fichajes de invierno',
+    icon: Snowflake,
+    gradient: 'from-cyan-600/20 via-sky-600/10 to-slate-900',
+    borderColor: 'border-cyan-500/30 hover:border-cyan-500/60',
+    accentColor: 'text-cyan-400',
+    badgeBg: 'bg-cyan-950/60 text-cyan-300 border-cyan-800/40',
+    description: 'Alineaciones objetivo y refuerzos prioritarios para la ventana de traspasos invernal.',
+  },
+  {
+    id: 'verano' as const,
+    title: 'Campograma Verano',
+    shortTitle: 'Verano',
+    subtitle: 'Planificación para el mercado de fichajes de verano',
+    icon: Sun,
+    gradient: 'from-amber-600/20 via-orange-600/10 to-slate-900',
+    borderColor: 'border-amber-500/30 hover:border-amber-500/60',
+    accentColor: 'text-amber-400',
+    badgeBg: 'bg-amber-950/60 text-amber-300 border-amber-800/40',
+    description: 'Proyección de plantilla, altas, bajas y sustituciones de cara al mercado estival.',
+  }
+];
+
+const SUBFOLDERS_MENSUALES = [
+  {
+    id: '1rfef' as const,
+    title: 'Campograma Primera RFEF',
+    shortTitle: '1ª RFEF',
+    subtitle: 'Seguimiento y campogramas posicionales de Primera RFEF',
+    icon: Shield,
+    gradient: 'from-blue-600/20 via-indigo-600/10 to-slate-900',
+    borderColor: 'border-blue-500/30 hover:border-blue-500/60',
+    accentColor: 'text-blue-400',
+    badgeBg: 'bg-blue-950/60 text-blue-300 border-blue-800/40',
+    description: 'Campogramas posicionales, cartera y demanda de plantilla para Primera RFEF.',
+  },
+  {
+    id: '2rfef' as const,
+    title: 'Campograma Segunda RFEF',
+    shortTitle: '2ª RFEF',
+    subtitle: 'Seguimiento y campogramas posicionales de Segunda RFEF',
+    icon: Shield,
+    gradient: 'from-emerald-600/20 via-teal-600/10 to-slate-900',
+    borderColor: 'border-emerald-500/30 hover:border-emerald-500/60',
+    accentColor: 'text-emerald-400',
+    badgeBg: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/40',
+    description: 'Campogramas posicionales, cartera y promesas monitorizadas en Segunda RFEF.',
+  }
+];
+
+const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
+  {
+    id: 'c_mensual_principal',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    nombre: 'Campograma Mensual 1ª RFEF',
+    descripcion: 'Evaluación posicional de los mejores perfiles monitorizados en 1ª RFEF',
+    fechaModificacion: '23/07/2026',
+    formation: '4-4-2',
+    monthlyView: true,
+    assignments: {},
+    monthlyAssignments: {
+      'mc_d': ['p_mangel_prendes', 'p_samu_mayo'],
+      'mc_i': ['p_isi_gomez'],
+      'dc_d': ['p_julian_mahicas'],
+      'dc_i': ['p_brais_abelenda'],
+      'mi': ['p_inigo_munoz'],
+      'lti': ['p16']
+    },
+    notes: 'Seguimiento prioritario para reforzar el centro del campo y carril izquierdo.'
+  },
+  {
+    id: 'c_mensual_enero',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    nombre: 'Campograma Enero 2026 - 1ª RFEF',
+    descripcion: 'Mapa posicional mensual de inicio de año',
+    fechaModificacion: '15/01/2026',
+    formation: '4-3-3',
+    monthlyView: true,
+    assignments: {},
+    monthlyAssignments: {
+      'mcd': ['p_mangel_prendes'],
+      'mc_d': ['p_samu_mayo'],
+      'mc_i': ['p_isi_gomez'],
+      'dc': ['p_julian_mahicas'],
+      'ed': ['p_inigo_munoz'],
+      'ei': ['p_brais_abelenda']
+    },
+    notes: ''
+  },
+  {
+    id: 'c_mensual_2rfef_principal',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    nombre: 'Campograma Mensual 2ª RFEF',
+    descripcion: 'Evaluación posicional de perfiles monitorizados en Segunda RFEF',
+    fechaModificacion: '23/07/2026',
+    formation: '4-4-2',
+    monthlyView: true,
+    assignments: {},
+    monthlyAssignments: {
+      'mc_d': ['p_mangel_prendes'],
+      'dc_d': ['p_julian_mahicas']
+    },
+    notes: 'Seguimiento de promesas y oportunidades de mercado en Segunda RFEF.'
+  },
+  {
+    id: 'c_invierno_principal',
+    folderId: 'invierno',
+    nombre: 'Campograma Mercado de Invierno',
+    descripcion: 'Alineación de referencia para la ventana de invierno',
+    fechaModificacion: '20/01/2026',
+    formation: '4-2-3-1',
+    monthlyView: false,
+    assignments: {
+      'mcd_d': 'p_mangel_prendes',
+      'mcd_i': 'p_isi_gomez',
+      'mco': 'p_samu_mayo',
+      'mco_i': 'p_brais_abelenda',
+      'mco_d': 'p_inigo_munoz',
+      'dc': 'p_julian_mahicas',
+      'lti': 'p16'
+    },
+    monthlyAssignments: {},
+    notes: 'Prioridad incorporar pivote defensivo de refresco e interior zurdo.'
+  },
+  {
+    id: 'c_invierno_refuerzos',
+    folderId: 'invierno',
+    nombre: 'Refuerzos Prioritarios Invierno',
+    descripcion: 'Candidatos posicionales para el mercado invernal',
+    fechaModificacion: '18/01/2026',
+    formation: '4-3-3',
+    monthlyView: true,
+    assignments: {},
+    monthlyAssignments: {
+      'mcd': ['p_mangel_prendes', 'p_samu_mayo'],
+      'dc': ['p_julian_mahicas']
+    },
+    notes: ''
+  },
+  {
+    id: 'c_verano_principal',
+    folderId: 'verano',
+    nombre: 'Campograma Mercado de Verano',
+    descripcion: 'Esquema y plantilla objetivo para la próxima temporada',
+    fechaModificacion: '22/07/2026',
+    formation: '4-3-3',
+    monthlyView: false,
+    assignments: {
+      'mcd': 'p_mangel_prendes',
+      'mc_d': 'p_samu_mayo',
+      'mc_i': 'p_isi_gomez',
+      'dc': 'p_julian_mahicas',
+      'ed': 'p_inigo_munoz',
+      'ei': 'p_brais_abelenda'
+    },
+    monthlyAssignments: {},
+    notes: 'Planificación estival para afianzar el bloque competitivo.'
+  },
+  {
+    id: 'c_verano_plantilla',
+    folderId: 'verano',
+    nombre: 'Proyección Plantilla Verano',
+    descripcion: 'Evaluación posicional de hasta 5 candidatos por puesto',
+    fechaModificacion: '23/07/2026',
+    formation: '4-4-2',
+    monthlyView: true,
+    assignments: {},
+    monthlyAssignments: {
+      'mc_d': ['p_mangel_prendes', 'p_samu_mayo'],
+      'mc_i': ['p_isi_gomez'],
+      'dc_d': ['p_julian_mahicas'],
+      'dc_i': ['p_brais_abelenda']
+    },
+    notes: ''
+  }
+];
+
 export default function TacticalBoard({ players, showNotification, onUpdatePlayer }: TacticalBoardProps) {
+  // Folder Navigation State
+  const [currentFolder, setCurrentFolder] = useState<CampogramaFolderId | null>(null);
+  const [currentSubFolder, setCurrentSubFolder] = useState<CampogramaSubFolderId | null>(null);
+  const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
+  const [campogramas, setCampogramas] = useState<CampogramaItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error reading saved campogramas:', e);
+    }
+    return DEFAULT_CAMPOGRAMAS;
+  });
+
+  // Modal States
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newFormation, setNewFormation] = useState<'4-4-2' | '4-3-3' | '4-2-3-1' | '3-5-2' | '5-4-1' | '4-1-4-1'>('4-4-2');
+  const [newMonthlyView, setNewMonthlyView] = useState(true);
+  const [newSubFolder, setNewSubFolder] = useState<CampogramaSubFolderId>('1rfef');
+
+  const [editingCampograma, setEditingCampograma] = useState<CampogramaItem | null>(null);
+  const [editTitleInput, setEditTitleInput] = useState('');
+
+  // Save campogramas to localStorage on change
+  useEffect(() => {
+    localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(campogramas));
+  }, [campogramas]);
+
+  // Active Campograma helper
+  const activeCamp = campogramas.find(c => c.id === activeCampogramaId) || null;
+
+  // Pitch Editor States synchronized with activeCamp
   const [formation, setFormation] = useState<'4-4-2' | '4-3-3' | '4-2-3-1' | '3-5-2' | '5-4-1' | '4-1-4-1'>('4-4-2');
+  const [monthlyView, setMonthlyView] = useState<boolean>(true);
   const [assignments, setAssignments] = useState<AssignedPositions>({});
-  const [monthlyView, setMonthlyView] = useState<boolean>(false);
   const [monthlyAssignments, setMonthlyAssignments] = useState<{ [positionId: string]: string[] }>({});
+  const [notes, setNotes] = useState<string>('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -34,167 +289,209 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [valuationFilter, setValuationFilter] = useState<string>('All');
   const [positionFilter, setPositionFilter] = useState<string>('All');
 
-  // Get all unique positions from the players list dynamically
-  const uniquePositions = Array.from(
-    new Set(players.map(p => p.posicion).filter(Boolean))
-  ).sort();
+  // When activeCamp changes, load its data into Pitch Editor state
+  useEffect(() => {
+    if (activeCamp) {
+      setFormation(activeCamp.formation || '4-4-2');
+      setMonthlyView(activeCamp.monthlyView ?? true);
+      setAssignments(activeCamp.assignments || {});
+      setMonthlyAssignments(activeCamp.monthlyAssignments || {});
+      setNotes(activeCamp.notes || '');
+      setSelectedSlot(null);
+    }
+  }, [activeCampogramaId]);
 
-  // Position definitions for 4-4-2
+  // Helper to save edits back into activeCampograma
+  const saveActiveCampData = (updatedFields: Partial<CampogramaItem>) => {
+    if (!activeCampogramaId) return;
+    setCampogramas(prev => prev.map(item => {
+      if (item.id === activeCampogramaId) {
+        return {
+          ...item,
+          ...updatedFields,
+          fechaModificacion: new Date().toLocaleDateString('es-ES')
+        };
+      }
+      return item;
+    }));
+  };
+
+  // Update assignments & persist
+  const updateAssignments = (newAssignments: AssignedPositions) => {
+    setAssignments(newAssignments);
+    saveActiveCampData({ assignments: newAssignments });
+  };
+
+  const updateMonthlyAssignments = (newMonthly: { [positionId: string]: string[] }) => {
+    setMonthlyAssignments(newMonthly);
+    saveActiveCampData({ monthlyAssignments: newMonthly });
+  };
+
+  const handleFormationChange = (newForm: '4-4-2' | '4-3-3' | '4-2-3-1' | '3-5-2' | '5-4-1' | '4-1-4-1') => {
+    setFormation(newForm);
+    saveActiveCampData({ formation: newForm });
+  };
+
+  const handleMonthlyViewToggle = (val: boolean) => {
+    setMonthlyView(val);
+    saveActiveCampData({ monthlyView: val });
+  };
+
+  const handleNotesChange = (val: string) => {
+    setNotes(val);
+    saveActiveCampData({ notes: val });
+  };
+
+  // Position definitions
   const positions442: PitchPosition[] = [
     { id: 'por', label: 'POR', category: 'Portero', x: 50, y: 88, allowedRoles: ['Portero'] },
-    
     { id: 'ltd', label: 'LTD', category: 'Defensa', x: 15, y: 70, allowedRoles: ['Lateral Derecho', 'Defensa Central'] },
     { id: 'dfc_d', label: 'DFC', category: 'Defensa', x: 38, y: 72, allowedRoles: ['Defensa Central'] },
     { id: 'dfc_i', label: 'DFC', category: 'Defensa', x: 62, y: 72, allowedRoles: ['Defensa Central'] },
     { id: 'lti', label: 'LTI', category: 'Defensa', x: 85, y: 70, allowedRoles: ['Lateral Izquierdo', 'Defensa Central'] },
-    
     { id: 'md', label: 'MD', category: 'Centrocampista', x: 15, y: 44, allowedRoles: ['Extremo Derecho', 'Mediocentro'] },
     { id: 'mc_d', label: 'MC', category: 'Centrocampista', x: 38, y: 46, allowedRoles: ['Mediocentro', 'Mediocentro Defensivo', 'Mediapunta'] },
     { id: 'mc_i', label: 'MC', category: 'Centrocampista', x: 62, y: 46, allowedRoles: ['Mediocentro', 'Mediocentro Defensivo', 'Mediapunta'] },
     { id: 'mi', label: 'MI', category: 'Centrocampista', x: 85, y: 44, allowedRoles: ['Extremo Izquierdo', 'Mediocentro'] },
-    
     { id: 'dc_d', label: 'DC', category: 'Delantero', x: 38, y: 18, allowedRoles: ['Delantero Centro', 'Mediapunta'] },
     { id: 'dc_i', label: 'DC', category: 'Delantero', x: 62, y: 18, allowedRoles: ['Delantero Centro', 'Mediapunta'] },
   ];
 
-  // Position definitions for 4-3-3
   const positions433: PitchPosition[] = [
     { id: 'por', label: 'POR', category: 'Portero', x: 50, y: 88, allowedRoles: ['Portero'] },
-    
     { id: 'ltd', label: 'LTD', category: 'Defensa', x: 15, y: 70, allowedRoles: ['Lateral Derecho', 'Defensa Central'] },
     { id: 'dfc_d', label: 'DFC', category: 'Defensa', x: 38, y: 72, allowedRoles: ['Defensa Central'] },
     { id: 'dfc_i', label: 'DFC', category: 'Defensa', x: 62, y: 72, allowedRoles: ['Defensa Central'] },
     { id: 'lti', label: 'LTI', category: 'Defensa', x: 85, y: 70, allowedRoles: ['Lateral Izquierdo', 'Defensa Central'] },
-    
     { id: 'mcd', label: 'MCD', category: 'Centrocampista', x: 50, y: 56, allowedRoles: ['Mediocentro Defensivo', 'Mediocentro'] },
     { id: 'mc_d', label: 'MC', category: 'Centrocampista', x: 30, y: 40, allowedRoles: ['Mediocentro', 'Mediapunta'] },
     { id: 'mc_i', label: 'MC', category: 'Centrocampista', x: 70, y: 40, allowedRoles: ['Mediocentro', 'Mediapunta'] },
-    
     { id: 'ed', label: 'ED', category: 'Delantero', x: 18, y: 18, allowedRoles: ['Extremo Derecho', 'Delantero Centro'] },
     { id: 'ei', label: 'EI', category: 'Delantero', x: 82, y: 18, allowedRoles: ['Extremo Izquierdo', 'Delantero Centro'] },
     { id: 'dc', label: 'DC', category: 'Delantero', x: 50, y: 15, allowedRoles: ['Delantero Centro', 'Mediapunta'] },
   ];
 
-  // Position definitions for 4-2-3-1
   const positions4231: PitchPosition[] = [
     { id: 'por', label: 'POR', category: 'Portero', x: 50, y: 88, allowedRoles: ['Portero'] },
-    
     { id: 'ltd', label: 'LTD', category: 'Defensa', x: 15, y: 74, allowedRoles: ['Lateral Derecho', 'Defensa Central'] },
     { id: 'dfc_d', label: 'DFC', category: 'Defensa', x: 36, y: 76, allowedRoles: ['Defensa Central'] },
     { id: 'dfc_i', label: 'DFC', category: 'Defensa', x: 64, y: 76, allowedRoles: ['Defensa Central'] },
     { id: 'lti', label: 'LTI', category: 'Defensa', x: 85, y: 74, allowedRoles: ['Lateral Izquierdo', 'Defensa Central'] },
-    
     { id: 'mcd_d', label: 'MCD', category: 'Centrocampista', x: 35, y: 56, allowedRoles: ['Mediocentro Defensivo', 'Mediocentro'] },
     { id: 'mcd_i', label: 'MCD', category: 'Centrocampista', x: 65, y: 56, allowedRoles: ['Mediocentro Defensivo', 'Mediocentro'] },
-    
     { id: 'mco_d', label: 'MCO/ED', category: 'Centrocampista', x: 18, y: 36, allowedRoles: ['Extremo Derecho', 'Mediocentro', 'Mediapunta'] },
     { id: 'mco', label: 'MCO', category: 'Centrocampista', x: 50, y: 34, allowedRoles: ['Mediapunta', 'Mediocentro'] },
     { id: 'mco_i', label: 'MCO/EI', category: 'Centrocampista', x: 82, y: 36, allowedRoles: ['Extremo Izquierdo', 'Mediocentro', 'Mediapunta'] },
-    
     { id: 'dc', label: 'DC', category: 'Delantero', x: 50, y: 16, allowedRoles: ['Delantero Centro'] },
   ];
 
-  // Position definitions for 3-5-2
   const positions352: PitchPosition[] = [
     { id: 'por', label: 'POR', category: 'Portero', x: 50, y: 88, allowedRoles: ['Portero'] },
-    
     { id: 'dfc_d', label: 'DFC', category: 'Defensa', x: 30, y: 74, allowedRoles: ['Defensa Central'] },
     { id: 'dfc_c', label: 'DFC', category: 'Defensa', x: 50, y: 76, allowedRoles: ['Defensa Central'] },
     { id: 'dfc_i', label: 'DFC', category: 'Defensa', x: 70, y: 74, allowedRoles: ['Defensa Central'] },
-    
     { id: 'car_d', label: 'CAD', category: 'Centrocampista', x: 14, y: 48, allowedRoles: ['Lateral Derecho', 'Extremo Derecho', 'Mediocentro'] },
     { id: 'mc_d', label: 'MC', category: 'Centrocampista', x: 34, y: 46, allowedRoles: ['Mediocentro', 'Mediapunta'] },
     { id: 'mcd', label: 'MCD', category: 'Centrocampista', x: 50, y: 58, allowedRoles: ['Mediocentro Defensivo', 'Mediocentro'] },
     { id: 'mc_i', label: 'MC', category: 'Centrocampista', x: 66, y: 46, allowedRoles: ['Mediocentro', 'Mediapunta'] },
     { id: 'car_i', label: 'CAI', category: 'Centrocampista', x: 86, y: 48, allowedRoles: ['Lateral Izquierdo', 'Extremo Izquierdo', 'Mediocentro'] },
-    
     { id: 'dc_d', label: 'DC', category: 'Delantero', x: 38, y: 20, allowedRoles: ['Delantero Centro', 'Mediapunta'] },
     { id: 'dc_i', label: 'DC', category: 'Delantero', x: 62, y: 20, allowedRoles: ['Delantero Centro', 'Mediapunta'] },
   ];
 
-  // Position definitions for 5-4-1
   const positions541: PitchPosition[] = [
     { id: 'por', label: 'POR', category: 'Portero', x: 50, y: 88, allowedRoles: ['Portero'] },
-    
     { id: 'ltd', label: 'LTD', category: 'Defensa', x: 15, y: 73, allowedRoles: ['Lateral Derecho', 'Defensa Central'] },
     { id: 'dfc_d', label: 'DFC', category: 'Defensa', x: 33, y: 75, allowedRoles: ['Defensa Central'] },
     { id: 'dfc_c', label: 'DFC', category: 'Defensa', x: 50, y: 77, allowedRoles: ['Defensa Central'] },
     { id: 'dfc_i', label: 'DFC', category: 'Defensa', x: 67, y: 75, allowedRoles: ['Defensa Central'] },
     { id: 'lti', label: 'LTI', category: 'Defensa', x: 85, y: 73, allowedRoles: ['Lateral Izquierdo', 'Defensa Central'] },
-    
     { id: 'md', label: 'MD', category: 'Centrocampista', x: 18, y: 46, allowedRoles: ['Extremo Derecho', 'Mediocentro'] },
     { id: 'mc_d', label: 'MC', category: 'Centrocampista', x: 38, y: 48, allowedRoles: ['Mediocentro', 'Mediocentro Defensivo'] },
     { id: 'mc_i', label: 'MC', category: 'Centrocampista', x: 62, y: 48, allowedRoles: ['Mediocentro', 'Mediocentro Defensivo'] },
     { id: 'mi', label: 'MI', category: 'Centrocampista', x: 82, y: 46, allowedRoles: ['Extremo Izquierdo', 'Mediocentro'] },
-    
     { id: 'dc', label: 'DC', category: 'Delantero', x: 50, y: 18, allowedRoles: ['Delantero Centro'] },
   ];
 
-  // Position definitions for 4-1-4-1
   const positions4141: PitchPosition[] = [
     { id: 'por', label: 'POR', category: 'Portero', x: 50, y: 88, allowedRoles: ['Portero'] },
-    
     { id: 'ltd', label: 'LTD', category: 'Defensa', x: 15, y: 73, allowedRoles: ['Lateral Derecho', 'Defensa Central'] },
     { id: 'dfc_d', label: 'DFC', category: 'Defensa', x: 38, y: 75, allowedRoles: ['Defensa Central'] },
     { id: 'dfc_i', label: 'DFC', category: 'Defensa', x: 62, y: 75, allowedRoles: ['Defensa Central'] },
     { id: 'lti', label: 'LTI', category: 'Defensa', x: 85, y: 73, allowedRoles: ['Lateral Izquierdo', 'Defensa Central'] },
-    
     { id: 'mcd', label: 'MCD', category: 'Centrocampista', x: 50, y: 58, allowedRoles: ['Mediocentro Defensivo', 'Mediocentro'] },
-    
     { id: 'md', label: 'MD', category: 'Centrocampista', x: 18, y: 38, allowedRoles: ['Extremo Derecho', 'Mediocentro'] },
     { id: 'mc_d', label: 'MC', category: 'Centrocampista', x: 36, y: 36, allowedRoles: ['Mediocentro', 'Mediapunta'] },
     { id: 'mc_i', label: 'MC', category: 'Centrocampista', x: 64, y: 36, allowedRoles: ['Mediocentro', 'Mediapunta'] },
     { id: 'mi', label: 'MI', category: 'Centrocampista', x: 82, y: 38, allowedRoles: ['Extremo Izquierdo', 'Mediocentro'] },
-    
     { id: 'dc', label: 'DC', category: 'Delantero', x: 50, y: 16, allowedRoles: ['Delantero Centro'] },
   ];
 
   const currentPositions = 
-    formation === '4-4-2' ? positions442 :
     formation === '4-3-3' ? positions433 :
     formation === '4-2-3-1' ? positions4231 :
     formation === '3-5-2' ? positions352 :
     formation === '5-4-1' ? positions541 :
-    positions4141;
+    formation === '4-1-4-1' ? positions4141 :
+    positions442;
 
-  // Load assignments from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem(`tactical_lineup_${formation}`);
-    if (saved) {
-      try {
-        setAssignments(JSON.parse(saved));
-      } catch (err) {
-        setAssignments({});
-      }
-    } else {
-      setAssignments({});
-    }
-  }, [formation]);
-
-  // Load monthly assignments from localStorage
-  useEffect(() => {
-    const savedMonthly = localStorage.getItem(`tactical_monthly_${formation}`);
-    if (savedMonthly) {
-      try {
-        setMonthlyAssignments(JSON.parse(savedMonthly));
-      } catch (err) {
-        setMonthlyAssignments({});
-      }
-    } else {
-      setMonthlyAssignments({});
-    }
-  }, [formation]);
-
-  // Save assignments
-  const updateAssignments = (newAssignments: AssignedPositions) => {
-    setAssignments(newAssignments);
-    localStorage.setItem(`tactical_lineup_${formation}`, JSON.stringify(newAssignments));
+  // Drag and Drop
+  const handleDragStart = (e: React.DragEvent, playerId: string) => {
+    e.dataTransfer.setData('playerId', playerId);
+    setDraggingSourcePos(null);
   };
 
-  // Save monthly assignments
-  const updateMonthlyAssignments = (newAssignments: { [positionId: string]: string[] }) => {
-    setMonthlyAssignments(newAssignments);
-    localStorage.setItem(`tactical_monthly_${formation}`, JSON.stringify(newAssignments));
+  const handlePitchPositionDragStart = (e: React.DragEvent, sourcePosId: string, playerId: string) => {
+    e.dataTransfer.setData('playerId', playerId);
+    e.dataTransfer.setData('sourcePosId', sourcePosId);
+    setDraggingSourcePos(sourcePosId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDropOnPosition = (e: React.DragEvent, targetPosId: string) => {
+    e.preventDefault();
+    const playerId = e.dataTransfer.getData('playerId');
+    const sourcePosId = e.dataTransfer.getData('sourcePosId');
+    setDraggingSourcePos(null);
+
+    if (!playerId) return;
+
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    if (monthlyView) {
+      appendPlayerToMonthly(targetPosId, player);
+      return;
+    }
+
+    if (sourcePosId && sourcePosId !== targetPosId) {
+      const updated = { ...assignments };
+      const existingInTarget = updated[targetPosId];
+      updated[targetPosId] = playerId;
+      if (existingInTarget) {
+        updated[sourcePosId] = existingInTarget;
+      } else {
+        delete updated[sourcePosId];
+      }
+      updateAssignments(updated);
+      showNotification(`Posición intercambiada en el campograma`, 'success');
+      return;
+    }
+
+    handleAssignPlayer(targetPosId, player);
+  };
+
+  const handleRemoveDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const sourcePosId = e.dataTransfer.getData('sourcePosId');
+    setDraggingSourcePos(null);
+
+    if (sourcePosId && !monthlyView) {
+      handleAssignPlayer(sourcePosId, null);
+    }
   };
 
   const appendPlayerToMonthly = (slotId: string, player: ScoutedPlayer) => {
@@ -228,7 +525,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
   const handleAssignPlayer = (slotId: string, player: ScoutedPlayer | null) => {
     if (!player) {
-      // Unassign
       const updated = { ...assignments };
       delete updated[slotId];
       updateAssignments(updated);
@@ -236,7 +532,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       return;
     }
 
-    // Check if player is already assigned somewhere on this pitch, if so, move them
     const updated = { ...assignments };
     Object.keys(updated).forEach(key => {
       if (updated[key] === player.id) {
@@ -249,11 +544,9 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     showNotification(`${player.nombre} asignado a posición de ${slotId.toUpperCase()}`, 'success');
   };
 
-  // Clear entire pitch using state-based confirmation instead of modal windows
   const handleClearPitch = () => {
     if (!showClearConfirm) {
       setShowClearConfirm(true);
-      // Auto cancel after 4 seconds of inactivity
       setTimeout(() => setShowClearConfirm(false), 4500);
       return;
     }
@@ -266,7 +559,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     showNotification('Pizarra táctica limpia', 'info');
   };
 
-  // Export tactical board and lineup detail to PDF
+  // Export PDF
   const handleExportPDF = () => {
     try {
       const doc = new jsPDF({
@@ -275,41 +568,38 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         format: 'a4'
       });
 
+      const currentFolderName = FOLDERS.find(f => f.id === activeCamp?.folderId)?.title || 'Campogramas';
+      const campName = activeCamp?.nombre || 'Campograma Táctico';
+
+      doc.setFillColor(37, 99, 235); // Blue-600
+      doc.rect(15, 15, 3, 16, 'F');
+
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.text(`DEPARTAMENTO SCOUTING — ${campName.toUpperCase()}`, 22, 21);
+
+      doc.setTextColor(100, 116, 139);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.text(`CARPETA: ${currentFolderName.toUpperCase()} | SISTEMA: ${formation.toUpperCase()} | ${monthlyView ? 'MODO POSICIONAL (5xPUESTO)' : 'ALINEACIÓN 11'}`, 22, 27);
+
+      const localTimeStr = new Date().toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      doc.setFontSize(8);
+      doc.setTextColor(71, 85, 105);
+      doc.text(`Fecha: ${localTimeStr}`, 195, 21, { align: 'right' });
+
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
+      doc.line(15, 32, 195, 32);
+
       if (monthlyView) {
-        // --- MONTHLY VIEW SPECIFIC PDF REPORT ---
-        doc.setFillColor(37, 99, 235); // Blue-600
-        doc.rect(15, 15, 3, 16, 'F');
-
-        doc.setTextColor(15, 23, 42); // slate-900
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.text('CAMPOGRAMA TÁCTICO MENSUAL DE CARTERA', 22, 21);
-
-        doc.setTextColor(100, 116, 139); // slate-500
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
-        doc.text(`PLANIFICACIÓN MENSUAL DE DEMANDA POSICIONAL: ${formation.toUpperCase()}`, 22, 27);
-
-        const localTimeStr = new Date().toLocaleDateString('es-ES', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-        doc.setFontSize(8);
-        doc.setTextColor(71, 85, 105);
-        doc.text(`Fecha: ${localTimeStr}`, 195, 21, { align: 'right' });
-        doc.text(`Software: Pizarra Táctica Profesional v1.5 API`, 195, 26, { align: 'right' });
-
-        doc.setDrawColor(226, 232, 240); // slate-200
-        doc.setLineWidth(0.5);
-        doc.line(15, 36, 195, 36);
-
-        // Grid coordinates for A4 (Dimensions 210 x 297 mm)
-        // Let's render 11 positions as cards in A4 layout!
         let baseStartX = 15;
-        let baseStartY = 43;
+        let baseStartY = 38;
         
         currentPositions.forEach((pos, index) => {
           const colIndex = index % 2;
@@ -317,14 +607,12 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           const x = baseStartX + colIndex * 93;
           const y = baseStartY + rowIndex * 38;
 
-          // Box container
-          doc.setFillColor(248, 250, 252); // slate-50
-          doc.setDrawColor(203, 213, 225); // slate-300
+          doc.setFillColor(248, 250, 252);
+          doc.setDrawColor(203, 213, 225);
           doc.setLineWidth(0.25);
           doc.rect(x, y, 88, 34, 'FD');
 
-          // Header strip inside box
-          doc.setFillColor(30, 41, 59); // slate-800
+          doc.setFillColor(30, 41, 59);
           doc.rect(x, y, 88, 6.5, 'F');
 
           doc.setTextColor(255, 255, 255);
@@ -332,12 +620,11 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           doc.setFontSize(8.5);
           doc.text(`${pos.label} — ${pos.category.toUpperCase()}`, x + 3.5, y + 4.5);
 
-          // Render player list
           const assignedIds = monthlyAssignments[pos.id] || [];
           let lineY = y + 12;
 
           if (assignedIds.length === 0) {
-            doc.setTextColor(148, 163, 184); // slate-400
+            doc.setTextColor(148, 163, 184);
             doc.setFont('helvetica', 'italic');
             doc.setFontSize(8);
             doc.text('Sin jugadores asignados (Vacante)', x + 5, y + 18);
@@ -345,7 +632,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             assignedIds.forEach((pid, pIdx) => {
               const p = players.find(player => player.id === pid);
               if (p) {
-                doc.setTextColor(15, 23, 42); // slate-900
+                doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(8);
                 const showName = p.nombre.length > 25 ? p.nombre.slice(0, 23) + '..' : p.nombre;
@@ -362,393 +649,81 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             });
           }
         });
-
-        // Main Footer Box and stats
-        doc.setTextColor(148, 163, 184);
-        doc.setFont('Helvetica', 'italic');
-        doc.setFontSize(7.5);
-        doc.text('Página 1 de 1 | Campograma táctico de cartera posicional | Generado automáticamente con AI Studio.', 15, 282);
-
-        doc.save(`Campograma_Mensual_Tactico_${formation.replace('-', '_')}.pdf`);
-        showNotification('¡Campograma mensual de cartera exportado exitosamente en PDF!', 'success');
-        return;
-      }
-      
-      // Left Accent bar on Header
-      doc.setFillColor(37, 99, 235); // Blue-600
-      doc.rect(15, 15, 3, 16, 'F');
-
-      // Title
-      doc.setTextColor(15, 23, 42); // slate-900
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text('INFORME TÁCTICO DE ALINEACIÓN', 22, 21);
-
-      // Subtitle
-      doc.setTextColor(100, 116, 139); // slate-500
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text(`ESQUEMA TÁCTICO: ${formation.toUpperCase()} STANDARD | REGISTRO DIGITAL DE SCOUTING`, 22, 27);
-
-      // Metadata card on top-right
-      const localTimeStr = new Date().toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      doc.setFontSize(8);
-      doc.setTextColor(71, 85, 105); // slate-600
-      doc.text(`Fecha: ${localTimeStr}`, 195, 21, { align: 'right' });
-      doc.text(`Software: Pizarra Táctica v1.0 AI Studio`, 195, 26, { align: 'right' });
-
-      // Solid dividing line
-      doc.setDrawColor(226, 232, 240); // slate-200
-      doc.setLineWidth(0.5);
-      doc.line(15, 36, 195, 36);
-
-      // Pitch dimensions and coordinates
-      const PitchX = 20;
-      const PitchY = 44;
-      const PitchWidth = 170;
-      const PitchHeight = 220;
-
-      // Draw Background Field
-      doc.setFillColor(6, 78, 59); // deep emerald base
-      doc.rect(PitchX, PitchY, PitchWidth, PitchHeight, 'F');
-
-      // Draw horizontal grass stripes for styling
-      doc.setFillColor(5, 46, 22); // darker green stripes
-      const numStripes = 6;
-      const stripeHeight = PitchHeight / numStripes;
-      for (let i = 0; i < numStripes; i += 2) {
-        doc.rect(PitchX, PitchY + (i * stripeHeight), PitchWidth, stripeHeight, 'F');
-      }
-
-      // Draw Field Markings in clean white lines
-      doc.setDrawColor(255, 255, 255);
-      doc.setLineWidth(0.5);
-      
-      // Outer border
-      doc.rect(PitchX, PitchY, PitchWidth, PitchHeight, 'S');
-
-      // Half-field line
-      doc.line(PitchX, PitchY + (PitchHeight / 2), PitchX + PitchWidth, PitchY + (PitchHeight / 2));
-      
-      // Center circle
-      doc.circle(PitchX + (PitchWidth / 2), PitchY + (PitchHeight / 2), 18, 'S');
-      
-      // Center spot
-      doc.setFillColor(255, 255, 255);
-      doc.circle(PitchX + (PitchWidth / 2), PitchY + (PitchHeight / 2), 1, 'FD');
-
-      // Top Goal Area
-      doc.rect(PitchX + (PitchWidth * 0.35), PitchY, PitchWidth * 0.30, PitchHeight * 0.12, 'S');
-      doc.rect(PitchX + (PitchWidth * 0.42), PitchY, PitchWidth * 0.16, PitchHeight * 0.04, 'S');
-      doc.circle(PitchX + (PitchWidth / 2), PitchY + (PitchHeight * 0.09), 0.6, 'FD');
-
-      // Bottom Goal Area
-      doc.rect(PitchX + (PitchWidth * 0.35), PitchY + (PitchHeight * 0.88), PitchWidth * 0.30, PitchHeight * 0.12, 'S');
-      doc.rect(PitchX + (PitchWidth * 0.42), PitchY + (PitchHeight * 0.96), PitchWidth * 0.16, PitchHeight * 0.04, 'S');
-      doc.circle(PitchX + (PitchWidth / 2), PitchY + (PitchHeight * 0.91), 0.6, 'FD');
-
-      // Loop through all active positions on field and render tactical nodes
-      currentPositions.forEach((pos) => {
-        const assignedPlayerId = assignments[pos.id];
-        const player = assignedPlayerId ? players.find(p => p.id === assignedPlayerId) : null;
-        
-        // Calculate coordinate in mm
-        const nodeX = PitchX + (pos.x / 100) * PitchWidth;
-        const nodeY = PitchY + (pos.y / 100) * PitchHeight;
-
-        if (player) {
-          // Circle Background (dark navy/slate circle)
-          doc.setFillColor(15, 23, 42); // `#0f172a`
-          doc.setDrawColor(37, 99, 235); // `#2563eb` - solid blue border
-          doc.setLineWidth(0.8);
-          doc.circle(nodeX, nodeY, 8, 'FD');
-
-          // Position flag label
-          doc.setFillColor(37, 99, 235);
-          doc.rect(nodeX + 3.5, nodeY - 8, 8, 3.8, 'F');
-          doc.setTextColor(255, 255, 255);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(6.5);
-          doc.text(pos.label, nodeX + 7.5, nodeY - 5.2, { align: 'center' });
-
-          // Player initials inside circle
-          const initials = player.nombre ? player.nombre.slice(0, 2).toUpperCase() : pos.label;
-          doc.setTextColor(255, 255, 255);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(10);
-          doc.text(initials, nodeX, nodeY + 1.2, { align: 'center' });
-
-          // Draw name callout background
-          const displayName = player.nombre.split(' ').slice(0, 2).join(' ');
-          doc.setFillColor(30, 41, 59); // `#1e293b`
-          doc.setDrawColor(71, 85, 105); // `#475569`
-          doc.setLineWidth(0.2);
-          doc.rect(nodeX - 15, nodeY + 11, 30, 5, 'FD');
-          
-          doc.setTextColor(255, 255, 255);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(6.5);
-          doc.text(displayName, nodeX, nodeY + 14.5, { align: 'center' });
-
-          // Specific recommendation label under the box
-          if (player.recomendacion) {
-            let recClr = [148, 163, 184]; // gray
-            let labelText = player.recomendacion.toUpperCase();
-            if (labelText === 'FIRMAR' || labelText === 'CONTRATAR') recClr = [16, 185, 129]; // emerald green
-            else if (labelText === 'SEGUIR' || labelText === 'SEGUIMIENTO') recClr = [59, 130, 246]; // blue
-            else if (labelText === 'INTERESANTE' || labelText === 'EVALUAR') recClr = [245, 158, 11]; // amber
-            else if (labelText === 'DESCARTAR') recClr = [239, 68, 68]; // red
-            
-            doc.setFillColor(15, 23, 42); // background behind label
-            doc.rect(nodeX - 11, nodeY + 16.5, 22, 3.5, 'F');
-
-            doc.setTextColor(recClr[0], recClr[1], recClr[2]);
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(5.5);
-            doc.text(labelText, nodeX, nodeY + 19.2, { align: 'center' });
-          }
-        } else {
-          // --- RENDER UNASSIGNED VACANT FLAG ---
-          doc.setFillColor(5, 46, 22); // deep green
-          doc.setDrawColor(16, 185, 129); // emerald green
-          doc.setLineWidth(0.4);
-          doc.circle(nodeX, nodeY, 6.5, 'FD');
-
-          doc.setTextColor(167, 243, 208); // emerald-200
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(8);
-          doc.text(pos.label, nodeX, nodeY + 1, { align: 'center' });
-
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(4.5);
-          doc.setTextColor(110, 231, 183); // emerald-300
-          doc.text('VACÍO', nodeX, nodeY + 4, { align: 'center' });
-        }
-      });
-
-      // Page footer reference
-      doc.setTextColor(148, 163, 184); // slate-400
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(7.5);
-      doc.text('Página 1 de 2 | Informe de scouting generado digitalmente. Confidencial y de uso táctico.', 15, 280);
-
-      // --- PAGE 2: DETAILED TABLE OF PLAYERS ---
-      doc.addPage();
-
-      // Left Accent bar on Header (Page 2)
-      doc.setFillColor(37, 99, 235); // Blue-600
-      doc.rect(15, 15, 3, 16, 'F');
-
-      // Title
-      doc.setTextColor(15, 23, 42); // slate-900
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text('REGISTRO DETALLADO DEL ONCE TÁCTICO', 22, 21);
-
-      // Subtitle
-      doc.setTextColor(100, 116, 139); // slate-500
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text(`ANÁLISIS DE RENDIMIENTO, VALORACIONES Y DATOS CONTRACTUALES`, 22, 27);
-
-      // Solid dividing line
-      doc.setDrawColor(226, 232, 240); // slate-200
-      doc.setLineWidth(0.5);
-      doc.line(15, 34, 195, 34);
-
-      // Render the tabular records of the tactical layout
-      let curY = 46;
-
-      // Table Header Row Background
-      doc.setFillColor(15, 23, 42); // slate-900 background
-      doc.rect(15, curY, 180, 8, 'F');
-
-      // Headers text
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.text('POS', 18, curY + 5.5);
-      doc.text('FUTBOLISTA / NOMBRE', 35, curY + 5.5);
-      doc.text('EQUIPO ORIGEN', 85, curY + 5.5);
-      doc.text('NAC.', 130, curY + 5.5);
-      doc.text('PIE', 145, curY + 5.5);
-      doc.text('VALORACIÓN / DECISIÓN', 160, curY + 5.5);
-
-      curY += 8;
-
-      // Draw rows
-      currentPositions.forEach((pos) => {
-        const assignedPlayerId = assignments[pos.id];
-        const player = assignedPlayerId ? players.find(p => p.id === assignedPlayerId) : null;
-
-        // Draw row backgrounds
-        doc.setFillColor(player ? 250 : 241, player ? 250 : 245, player ? 250 : 249);
-        doc.rect(15, curY, 180, 10, 'F');
-
-        // Draw thin bottom grey line
-        doc.setDrawColor(226, 232, 240); // slate-200
-        doc.setLineWidth(0.2);
-        doc.line(15, curY + 10, 195, curY + 10);
-
-        // Position cell
-        doc.setTextColor(37, 99, 235); // blue
+      } else {
+        // Standard 11 lineup PDF list
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
-        doc.text(pos.label, 18, curY + 6.5);
+        doc.setFontSize(10);
+        doc.setTextColor(15, 23, 42);
+        doc.text('TITULARES Y POSICIONES ASIGNADAS', 15, 42);
 
-        if (player) {
-          // Assigned player fields
-          doc.setTextColor(15, 23, 42); // dark slate
+        let curY = 50;
+        currentPositions.forEach((pos, idx) => {
+          const playerId = assignments[pos.id];
+          const player = players.find(p => p.id === playerId);
+
+          doc.setFillColor(241, 245, 249);
+          doc.rect(15, curY, 180, 14, 'F');
+          doc.setDrawColor(203, 213, 225);
+          doc.rect(15, curY, 180, 14, 'D');
+
           doc.setFont('helvetica', 'bold');
-          doc.setFontSize(8.5);
-          doc.text(player.nombre, 35, curY + 6.5);
+          doc.setFontSize(9);
+          doc.setTextColor(30, 41, 59);
+          doc.text(`${idx + 1}. [${pos.label}] ${pos.category}`, 20, curY + 9);
 
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(8);
-          doc.setTextColor(71, 85, 105); // slate-600
-          doc.text(player.equipo || 'Sin Equipo', 85, curY + 6.5);
-          doc.text(player.anoNacimiento ? String(player.anoNacimiento) : '-', 130, curY + 6.5);
-          doc.text(player.lateralidad ? player.lateralidad.slice(0, 3).toUpperCase() : '-', 145, curY + 6.5);
+          if (player) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9.5);
+            doc.setTextColor(2, 132, 199);
+            doc.text(player.nombre, 80, curY + 9);
 
-          // Valuation recommendation status with text styling
-          if (player.recomendacion) {
-            let labelText = player.recomendacion.toUpperCase();
-            if (labelText === 'FIRMAR' || labelText === 'CONTRATAR') {
-              doc.setTextColor(16, 185, 129); // Green
-              doc.setFont('helvetica', 'bold');
-              doc.text('★ FIRMAR', 160, curY + 6.5);
-            } 
-            else if (labelText === 'SEGUIR' || labelText === 'SEGUIMIENTO') {
-              doc.setTextColor(59, 130, 246); // Blue
-              doc.setFont('helvetica', 'bold');
-              doc.text('★ SEGUIR', 160, curY + 6.5);
-            }
-            else if (labelText === 'INTERESANTE' || labelText === 'EVALUAR') {
-              doc.setTextColor(245, 158, 11); // Amber
-              doc.setFont('helvetica', 'bold');
-              doc.text('★ INTERESANTE', 160, curY + 6.5);
-            }
-            else if (labelText === 'DESCARTAR') {
-              doc.setTextColor(239, 68, 68); // Red
-              doc.setFont('helvetica', 'bold');
-              doc.text('✕ DESCARTAR', 160, curY + 6.5);
-            } else {
-              doc.setTextColor(71, 85, 105);
-              doc.text(player.recomendacion, 160, curY + 6.5);
-            }
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139);
+            doc.text(`${player.equipo || 'Sin equipo'} | Val: ${player.recomendacion || 'S/E'}`, 140, curY + 9);
           } else {
-            doc.setTextColor(148, 163, 184); // slate-400
-            doc.text('Sin Valorar', 160, curY + 6.5);
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(8.5);
+            doc.setTextColor(148, 163, 184);
+            doc.text('Sin asignar', 80, curY + 9);
           }
-        } else {
-          // Empty position fields
-          doc.setTextColor(148, 163, 184); // muted slate
-          doc.setFont('helvetica', 'italic');
-          doc.setFontSize(8.5);
-          doc.text('Posición vacante', 35, curY + 6.5);
-          doc.text('-', 85, curY + 6.5);
-          doc.text('-', 130, curY + 6.5);
-          doc.text('-', 145, curY + 6.5);
-          doc.text('-', 160, curY + 6.5);
-        }
 
-        curY += 10;
-      });
+          curY += 17;
+        });
+      }
 
-      // Visual Summary Box of Placed VS Unassigned positions on page 2
-      const assignedCount = Object.keys(assignments).length;
-      curY += 12;
-      doc.setFillColor(248, 250, 252); // slate-50
-      doc.rect(15, curY, 180, 24, 'F');
-      doc.setDrawColor(203, 213, 225); // slate-300
-      doc.setLineWidth(0.3);
-      doc.rect(15, curY, 180, 24, 'S');
+      if (notes) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(30, 41, 59);
+        doc.text('NOTAS Y OBSERVACIONES TÁCTICAS:', 15, 260);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(71, 85, 105);
+        doc.text(notes.slice(0, 180), 15, 266);
+      }
 
-      // Title in box
-      doc.setTextColor(71, 85, 105); // slate-600
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7.5);
-      doc.text('MÉTRICAS DEL DEPARTAMENTO TÁCTICO DE SCOUTING', 20, curY + 6);
-
-      // Quantities
-      doc.setTextColor(15, 23, 42); // slate-900
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.text(`Jugadores alineados en pizarra: ${assignedCount} / 11`, 20, curY + 14);
-      doc.text(`Fichas vacantes / por evaluar: ${11 - assignedCount} / 11`, 110, curY + 14);
-
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(7.5);
       doc.setTextColor(148, 163, 184);
-      doc.text('Nota: Recuerda mantener el seguimiento periódico sobre los futbolistas con estatus de recomendación SEGUIR.', 20, curY + 20);
-
-      // Page 2 footer reference
-      doc.setTextColor(148, 163, 184); // slate-400
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(7.5);
-      doc.text('Página 2 de 2 | Generado con Pizarra Táctica Profesional - AI Studio.', 15, 280);
+      doc.text(`Página 1 de 1 | Departamento Scouting — ${campName} | Generado automáticamente.`, 15, 282);
 
-      // Save document!
-      doc.save(`Informe_Tactico_Alineacion_${formation.replace('-', '_')}.pdf`);
-      showNotification('¡Informe táctico exportado exitosamente en PDF!', 'success');
-    } catch (error) {
-      console.error('PDF export error:', error);
-      showNotification('Error al exportar en PDF', 'error');
+      doc.save(`Campograma_${campName.replace(/\s+/g, '_')}.pdf`);
+      showNotification(`Campograma '${campName}' exportado exitosamente en PDF`, 'success');
+    } catch (err) {
+      console.error(err);
+      showNotification('Error al exportar PDF del campograma', 'error');
     }
   };
 
-  // HTML5 Drag and Drop handlers
-  const handleDragStart = (e: React.DragEvent, playerId: string) => {
-    e.dataTransfer.setData('text/plain', playerId);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handlePitchDragStart = (e: React.DragEvent, playerId: string, slotId: string) => {
-    e.dataTransfer.setData('text/plain', playerId);
-    e.dataTransfer.setData('source-pos', slotId);
-    e.dataTransfer.effectAllowed = 'move';
-    setDraggingSourcePos(slotId);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleRemoveDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDraggingSourcePos(null);
-    const sourcePos = e.dataTransfer.getData('source-pos');
-    if (sourcePos) {
-      handleAssignPlayer(sourcePos, null);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent, slotId: string) => {
-    e.preventDefault();
-    setDraggingSourcePos(null);
-    const playerId = e.dataTransfer.getData('text/plain');
-    const player = players.find(p => p.id === playerId);
-    if (player) {
-      handleAssignPlayer(slotId, player);
-    }
-  };
-
-  // Filter players for list representation
+  // Filtered player list
   const filteredPlayers = players.filter(p => {
-    // Search query match
-    const query = searchQuery.trim().toLowerCase();
-    const matchesQuery = !query || 
-      p.nombre.toLowerCase().includes(query) ||
-      p.equipo.toLowerCase().includes(query) ||
-      p.posicion.toLowerCase().includes(query);
+    const q = searchQuery.trim().toLowerCase();
+    const matchesQuery = !q ||
+      p.nombre.toLowerCase().includes(q) ||
+      p.posicion.toLowerCase().includes(q) ||
+      p.equipo.toLowerCase().includes(q);
 
-    // Valuation filter match
     const recValue = p.recomendacion ? p.recomendacion.trim().toUpperCase() : '';
     let normRec = '';
     if (recValue === 'FIRMAR' || recValue === 'CONTRATAR') normRec = 'FIRMAR';
@@ -760,13 +735,11 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       (valuationFilter === 'SIN_VALORAR' && !normRec) ||
       (valuationFilter !== 'SIN_VALORAR' && normRec === valuationFilter);
 
-    // Position filter match
     const matchesPosition = positionFilter === 'All' || p.posicion === positionFilter;
 
     return matchesQuery && matchesValuation && matchesPosition;
   });
 
-  // Get recommendations styling
   const getRecTag = (recName?: string) => {
     if (!recName) return null;
     const cleanRec = recName.toUpperCase();
@@ -782,122 +755,722 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     return { text: 'DESCARTAR', bg: 'bg-red-950/40 text-red-400 border-red-900/30' };
   };
 
-  return (
-    <div id="tactical-board-section" className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch h-full">
-      {/* LEFT SIDEBAR: Available Players for Dragging or clicking */}
-      <div 
-        className={`lg:col-span-4 bg-slate-900 border rounded-lg p-4 flex flex-col h-[880px] min-h-[800px] shadow-lg relative transition-all duration-300 ${
-          draggingSourcePos ? 'border-red-500/45 ring-1 ring-red-550/15' : 'border-slate-850'
-        }`}
-        onDragOver={handleDragOver}
-        onDrop={handleRemoveDrop}
-      >
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-1.5">
-            <h3 className="text-sm font-bold font-display tracking-wider text-slate-200 uppercase flex items-center space-x-2">
-              <Users className="w-4 h-4 text-blue-400" />
-              <span>Plantilla Ojeada</span>
-            </h3>
-            <span className="text-[10px] bg-slate-950 px-2 py-0.5 border border-slate-800 rounded-full font-mono text-slate-400">
-              {players.length} Total
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 leading-tight mb-3">
-            Arrastra un jugador hacia un círculo del campo o pulsa el círculo para elegirlo directamente.
-          </p>
+  // Action: Create New Campograma
+  const handleCreateNewCampograma = () => {
+    if (!currentFolder) return;
+    const title = newTitle.trim() || `Nuevo Campograma ${new Date().toLocaleDateString('es-ES')}`;
+    const assignedSubFolder = currentFolder === 'mensuales' ? (newSubFolder || currentSubFolder || '1rfef') : undefined;
+    const newCamp: CampogramaItem = {
+      id: `c_${Date.now()}`,
+      folderId: currentFolder,
+      subFolderId: assignedSubFolder,
+      nombre: title,
+      fechaModificacion: new Date().toLocaleDateString('es-ES'),
+      formation: newFormation,
+      monthlyView: newMonthlyView,
+      assignments: {},
+      monthlyAssignments: {},
+      notes: ''
+    };
+    setCampogramas(prev => [newCamp, ...prev]);
+    setShowCreateModal(false);
+    setNewTitle('');
+    setActiveCampogramaId(newCamp.id);
+    showNotification(`¡Campograma "${title}" creado exitosamente!`, 'success');
+  };
 
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Buscar en cartera..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-950 rounded border border-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-200 placeholder-slate-500 transition-all font-mono"
-            />
-          </div>
+  // Action: Duplicate Campograma
+  const handleDuplicateCampograma = (e: React.MouseEvent, item: CampogramaItem) => {
+    e.stopPropagation();
+    const dup: CampogramaItem = {
+      ...item,
+      id: `c_${Date.now()}`,
+      nombre: `${item.nombre} (Copia)`,
+      fechaModificacion: new Date().toLocaleDateString('es-ES')
+    };
+    setCampogramas(prev => [dup, ...prev]);
+    showNotification(`Campograma duplicado: ${dup.nombre}`, 'info');
+  };
 
-          <div className="grid grid-cols-2 gap-2 mt-2">
+  // Action: Delete Campograma
+  const handleDeleteCampograma = (e: React.MouseEvent, id: string, name: string) => {
+    e.stopPropagation();
+    if (window.confirm(`¿Estás seguro de que deseas eliminar el campograma "${name}"?`)) {
+      setCampogramas(prev => prev.filter(c => c.id !== id));
+      if (activeCampogramaId === id) setActiveCampogramaId(null);
+      showNotification(`Campograma "${name}" eliminado`, 'info');
+    }
+  };
+
+  // Action: Rename Campograma
+  const handleSaveRename = () => {
+    if (!editingCampograma) return;
+    const cleanTitle = editTitleInput.trim() || editingCampograma.nombre;
+    setCampogramas(prev => prev.map(item => {
+      if (item.id === editingCampograma.id) {
+        return {
+          ...item,
+          nombre: cleanTitle,
+          fechaModificacion: new Date().toLocaleDateString('es-ES')
+        };
+      }
+      return item;
+    }));
+    setEditingCampograma(null);
+    showNotification('Nombre del campograma actualizado', 'success');
+  };
+
+  // ==================== RENDER LEVEL 1: CARPETAS DASHBOARD ====================
+  if (currentFolder === null) {
+    return (
+      <div className="space-y-6">
+        {/* Top Banner */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">
-                Valoración
-              </span>
-              <select
-                value={valuationFilter}
-                onChange={(e) => setValuationFilter(e.target.value)}
-                className="w-full text-[10px] px-1.5 py-1 bg-slate-950 border border-slate-800 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500 hover:border-slate-700 transition-colors"
-              >
-                <option value="All">Todas</option>
-                <option value="SIN_VALORAR">Sin valorar</option>
-                <option value="SEGUIR">Seguir</option>
-                <option value="INTERESANTE">Interesante</option>
-                <option value="FIRMAR">Firmar</option>
-                <option value="DESCARTAR">Descartar</option>
-              </select>
+              <div className="flex items-center space-x-2 text-xs font-mono font-bold text-blue-400 uppercase tracking-widest mb-1">
+                <Folder className="w-4 h-4" />
+                <span>DEPARTAMENTO SCOUTING • MÓDULO CAMPOGRAMA</span>
+              </div>
+              <h1 className="text-2xl font-black font-display text-white tracking-wide uppercase">
+                Carpetas de Campogramas Tácticos
+              </h1>
+              <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                Selecciona una carpeta para consultar, organizar y diseñar los campogramas posicionales, alineaciones de mercado e informes tácticos.
+              </p>
             </div>
 
-            <div>
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">
-                Posición
-              </span>
-              <select
-                value={positionFilter}
-                onChange={(e) => setPositionFilter(e.target.value)}
-                className="w-full text-[10px] px-1.5 py-1 bg-slate-950 border border-slate-800 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500 hover:border-slate-700 transition-colors"
-              >
-                <option value="All">Todas</option>
-                {uniquePositions.map((pos) => (
-                  <option key={pos} value={pos}>
-                    {pos}
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center space-x-3 shrink-0">
+              <div className="bg-slate-950 border border-slate-800 px-3 py-2 rounded-lg text-center">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block font-bold">Total Campogramas</span>
+                <span className="text-lg font-bold font-mono text-blue-400">{campogramas.length}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* DRAGGABLE LIST / REMOVE DROPZONE */}
-        {draggingSourcePos ? (
-          <div
-            onDragOver={handleDragOver}
-            onDrop={handleRemoveDrop}
-            className="flex-1 border-2 border-dashed border-red-500/40 bg-red-950/20 rounded-lg flex flex-col items-center justify-center p-6 text-center animate-pulse gap-3.5 z-10"
-          >
-            <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-400">
-              <Trash2 className="w-6 h-6 animate-bounce" />
-            </div>
+        {/* Folders Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {FOLDERS.map((f) => {
+            const Icon = f.icon;
+            const itemsInFolder = campogramas.filter(c => c.folderId === f.id);
+            return (
+              <div
+                key={f.id}
+                onClick={() => setCurrentFolder(f.id)}
+                className={`bg-gradient-to-b ${f.gradient} border ${f.borderColor} rounded-xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center ${f.accentColor} group-hover:scale-110 transition-transform`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full border ${f.badgeBg}`}>
+                      {itemsInFolder.length} {itemsInFolder.length === 1 ? 'Campograma' : 'Campogramas'}
+                    </span>
+                  </div>
+
+                  <h3 className="text-lg font-bold font-display text-white group-hover:text-blue-300 transition-colors uppercase tracking-wide">
+                    {f.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                    {f.description}
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono font-bold">
+                  <span className={`${f.accentColor} flex items-center space-x-1`}>
+                    <span>Entrar a carpeta</span>
+                  </span>
+                  <ChevronRight className={`w-4 h-4 ${f.accentColor} group-hover:translate-x-1 transition-transform`} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Quick Summary list of recent campogramas */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+          <h3 className="text-xs font-bold font-mono uppercase tracking-widest text-slate-300 mb-3 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-blue-400" />
+            <span>Últimos Campogramas Editados</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {campogramas.slice(0, 3).map(c => {
+              const folderObj = FOLDERS.find(f => f.id === c.folderId);
+              return (
+                <div
+                  key={c.id}
+                  onClick={() => {
+                    setCurrentFolder(c.folderId);
+                    setActiveCampogramaId(c.id);
+                  }}
+                  className="bg-slate-950 hover:bg-slate-850/80 border border-slate-800 hover:border-slate-700 p-3.5 rounded-lg cursor-pointer transition-all flex items-center justify-between group"
+                >
+                  <div className="min-w-0 pr-2">
+                    <span className="text-[9px] font-mono font-bold text-blue-400 uppercase bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-900/30">
+                      {folderObj?.shortTitle || 'Campograma'}
+                    </span>
+                    <h4 className="text-xs font-bold text-white group-hover:text-blue-300 truncate mt-1">
+                      {c.nombre}
+                    </h4>
+                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                      Sistema {c.formation} • {c.monthlyView ? 'Posicional' : 'Alineación 11'}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==================== RENDER LEVEL 2: INSIDE A FOLDER (CAMPOGRAMAS LIST / SUBFOLDERS) ====================
+  const folderInfo = FOLDERS.find(f => f.id === currentFolder)!;
+
+  // Level 1.5: If in 'mensuales' folder and no subfolder is selected yet
+  if (currentFolder === 'mensuales' && currentSubFolder === null && activeCampogramaId === null) {
+    const Icon = folderInfo.icon;
+    return (
+      <div className="space-y-6">
+        {/* Header Breadcrumbs & Controls */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => {
+                setCurrentFolder(null);
+                setCurrentSubFolder(null);
+              }}
+              className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-lg text-slate-300 hover:text-white transition-all flex items-center space-x-1 text-xs font-mono"
+              title="Volver a todas las carpetas"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Volver a Carpetas</span>
+            </button>
+
             <div>
-              <p className="text-xs font-extrabold font-mono text-red-200 uppercase tracking-widest leading-none">
-                SUELTE AQUÍ PARA QUITAR
-              </p>
-              <p className="text-[10px] text-slate-400 mt-2 font-sans max-w-[200px] mx-auto leading-normal">
-                El jugador será desasignado del campo y volverá a la cartera.
-              </p>
+              <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-400 uppercase">
+                <span>Carpetas</span>
+                <span>/</span>
+                <span className={folderInfo.accentColor}>{folderInfo.title}</span>
+              </div>
+              <h1 className="text-xl font-black font-display text-white uppercase tracking-wider flex items-center gap-2 mt-0.5">
+                <Icon className={`w-5 h-5 ${folderInfo.accentColor}`} />
+                <span>{folderInfo.title}</span>
+              </h1>
             </div>
           </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+        </div>
+
+        {/* Subfolders Grid for Mensuales */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {SUBFOLDERS_MENSUALES.map((sf) => {
+            const SfIcon = sf.icon;
+            const itemsInSubFolder = campogramas.filter(c => c.folderId === 'mensuales' && (c.subFolderId || '1rfef') === sf.id);
+            return (
+              <div
+                key={sf.id}
+                onClick={() => {
+                  setCurrentSubFolder(sf.id);
+                  setNewSubFolder(sf.id);
+                }}
+                className={`bg-gradient-to-b ${sf.gradient} border ${sf.borderColor} rounded-xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center ${sf.accentColor} group-hover:scale-110 transition-transform`}>
+                      <SfIcon className="w-6 h-6" />
+                    </div>
+                    <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full border ${sf.badgeBg}`}>
+                      {itemsInSubFolder.length} {itemsInSubFolder.length === 1 ? 'Campograma' : 'Campogramas'}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-bold font-display text-white group-hover:text-blue-300 transition-colors uppercase tracking-wide">
+                    {sf.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                    {sf.description}
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono font-bold">
+                  <span className={`${sf.accentColor} flex items-center space-x-1`}>
+                    <span>Entrar en {sf.shortTitle}</span>
+                  </span>
+                  <ChevronRight className={`w-4 h-4 ${sf.accentColor} group-hover:translate-x-1 transition-transform`} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Level 2: List of Campogramas inside current folder or subfolder
+  const currentSubFolderObj = currentFolder === 'mensuales' 
+    ? SUBFOLDERS_MENSUALES.find(s => s.id === (currentSubFolder || '1rfef'))
+    : null;
+
+  const folderItems = campogramas.filter(c => {
+    if (c.folderId !== currentFolder) return false;
+    if (currentFolder === 'mensuales') {
+      return (c.subFolderId || '1rfef') === (currentSubFolder || '1rfef');
+    }
+    return true;
+  });
+
+  if (activeCampogramaId === null) {
+    const Icon = folderInfo.icon;
+    return (
+      <div className="space-y-6">
+        {/* Header Breadcrumbs & Controls */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => {
+                if (currentFolder === 'mensuales') {
+                  setCurrentSubFolder(null);
+                } else {
+                  setCurrentFolder(null);
+                }
+              }}
+              className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-lg text-slate-300 hover:text-white transition-all flex items-center space-x-1 text-xs font-mono"
+              title="Volver"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{currentFolder === 'mensuales' ? 'Volver a Categorías Mensuales' : 'Volver a Carpetas'}</span>
+            </button>
+
+            <div>
+              <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-400 uppercase">
+                <span>Carpetas</span>
+                <span>/</span>
+                <span>{folderInfo.title}</span>
+                {currentSubFolderObj && (
+                  <>
+                    <span>/</span>
+                    <span className={currentSubFolderObj.accentColor}>{currentSubFolderObj.title}</span>
+                  </>
+                )}
+              </div>
+              <h1 className="text-xl font-black font-display text-white uppercase tracking-wider flex items-center gap-2 mt-0.5">
+                {currentSubFolderObj ? (
+                  <>
+                    <Shield className={`w-5 h-5 ${currentSubFolderObj.accentColor}`} />
+                    <span>{currentSubFolderObj.title}</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon className={`w-5 h-5 ${folderInfo.accentColor}`} />
+                    <span>{folderInfo.title}</span>
+                  </>
+                )}
+              </h1>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              const defaultPrefix = currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle;
+              setNewTitle(`${defaultPrefix} - ${new Date().toLocaleDateString('es-ES')}`);
+              if (currentSubFolder) setNewSubFolder(currentSubFolder);
+              setShowCreateModal(true);
+            }}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-blue-600/20 transition-all shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nuevo Campograma</span>
+          </button>
+        </div>
+
+        {/* Campogramas Grid inside this Folder */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {folderItems.map(item => {
+            const placedCount = item.monthlyView 
+              ? Object.values(item.monthlyAssignments || {}).reduce<number>((acc, curr) => acc + ((curr as string[])?.length || 0), 0)
+              : Object.values(item.assignments || {}).filter(Boolean).length;
+
+            return (
+              <div
+                key={item.id}
+                onClick={() => setActiveCampogramaId(item.id)}
+                className="bg-slate-900 border border-slate-850 hover:border-blue-500/50 rounded-xl p-5 shadow-lg hover:shadow-2xl transition-all duration-200 cursor-pointer group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <span className="text-[9px] font-mono font-extrabold uppercase bg-blue-950/60 text-blue-400 border border-blue-900/40 px-2 py-0.5 rounded">
+                      SISTEMA {item.formation}
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-500">
+                      {item.fechaModificacion}
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-bold text-white group-hover:text-blue-300 transition-colors line-clamp-1">
+                    {item.nombre}
+                  </h3>
+                  {item.descripcion && (
+                    <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                      {item.descripcion}
+                    </p>
+                  )}
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                      item.monthlyView ? 'bg-indigo-950/40 text-indigo-300 border-indigo-900/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-900/40'
+                    }`}>
+                      {item.monthlyView ? '📅 Posicional (5xPuesto)' : '⚽ Alineación Standard 11'}
+                    </span>
+                    <span className="text-[10px] font-mono bg-slate-950 text-slate-300 border border-slate-800 px-2 py-0.5 rounded">
+                      {placedCount} {placedCount === 1 ? 'jugador' : 'jugadores'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions bottom */}
+                <div className="mt-6 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-blue-400 group-hover:text-blue-300 flex items-center space-x-1">
+                    <span>Abrir / Editar</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
+
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={(e) => handleDuplicateCampograma(e, item)}
+                      className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors"
+                      title="Duplicar campograma"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingCampograma(item);
+                        setEditTitleInput(item.nombre);
+                      }}
+                      className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors"
+                      title="Cambiar nombre"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteCampograma(e, item.id, item.nombre)}
+                      className="p-1.5 hover:bg-red-950 text-slate-400 hover:text-red-400 rounded transition-colors"
+                      title="Eliminar campograma"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {folderItems.length === 0 && (
+            <div className="col-span-full py-12 text-center bg-slate-900 border border-slate-850 rounded-xl p-8">
+              <Folder className="w-12 h-12 text-slate-700 mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-slate-300 uppercase">No hay campogramas en esta carpeta</h3>
+              <p className="text-xs text-slate-500 mt-1 mb-4">Crea tu primer campograma para empezar la planificación táctica.</p>
+              <button
+                onClick={() => {
+                  const defaultPrefix = currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle;
+                  setNewTitle(`${defaultPrefix} - ${new Date().toLocaleDateString('es-ES')}`);
+                  if (currentSubFolder) setNewSubFolder(currentSubFolder);
+                  setShowCreateModal(true);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-mono font-bold text-xs uppercase"
+              >
+                Crear Primer Campograma
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Modal: Create New Campograma */}
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold font-display uppercase tracking-wide text-white">
+                  Crear Nuevo Campograma
+                </h3>
+                <button 
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {currentFolder === 'mensuales' && (
+                <div>
+                  <label className="text-xs font-mono font-bold text-slate-300 uppercase block mb-1">
+                    Carpeta / Categoría
+                  </label>
+                  <select
+                    value={newSubFolder}
+                    onChange={(e) => setNewSubFolder(e.target.value as CampogramaSubFolderId)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-blue-400 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="1rfef">CAMPOGRAMA PRIMERA RFEF</option>
+                    <option value="2rfef">CAMPOGRAMA SEGUNDA RFEF</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-mono font-bold text-slate-300 uppercase block mb-1">
+                  Nombre del Campograma
+                </label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Ej: Campograma Febrero 2026"
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-mono font-bold text-slate-300 uppercase block mb-1">
+                  Sistema Táctico Inicial
+                </label>
+                <select
+                  value={newFormation}
+                  onChange={(e) => setNewFormation(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-blue-400 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="4-4-2">4-4-2 STANDARD</option>
+                  <option value="4-3-3">4-3-3 ATTACK</option>
+                  <option value="4-2-3-1">4-2-3-1 MODERN</option>
+                  <option value="3-5-2">3-5-2 POSITIONAL</option>
+                  <option value="5-4-1">5-4-1 DEFENSIVE</option>
+                  <option value="4-1-4-1">4-1-4-1 CONTROL</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-mono font-bold text-slate-300 uppercase block mb-1">
+                  Modo de Campograma
+                </label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setNewMonthlyView(true)}
+                    className={`p-2.5 rounded-lg border text-left font-mono text-xs transition-all ${
+                      newMonthlyView ? 'bg-blue-600 border-blue-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    <span className="block font-bold">📅 Posicional</span>
+                    <span className="text-[10px] opacity-80 block mt-0.5">Hasta 5 por posición</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewMonthlyView(false)}
+                    className={`p-2.5 rounded-lg border text-left font-mono text-xs transition-all ${
+                      !newMonthlyView ? 'bg-blue-600 border-blue-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    <span className="block font-bold">⚽ Alineación 11</span>
+                    <span className="text-[10px] opacity-80 block mt-0.5">Un jugador por puesto</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateNewCampograma}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-mono font-bold text-xs uppercase"
+                >
+                  Crear y Editar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Rename Campograma */}
+        {editingCampograma && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+              <h3 className="text-sm font-bold font-display uppercase tracking-wide text-white border-b border-slate-800 pb-2">
+                Cambiar Nombre del Campograma
+              </h3>
+              <input
+                type="text"
+                value={editTitleInput}
+                onChange={(e) => setEditTitleInput(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <div className="flex justify-end space-x-2 pt-2">
+                <button
+                  onClick={() => setEditingCampograma(null)}
+                  className="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded text-xs font-mono text-slate-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveRename}
+                  className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-mono font-bold uppercase"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ==================== RENDER LEVEL 3: EDITING CAMPOGRAMA ON SOCCER PITCH ====================
+  return (
+    <div className="space-y-4">
+      {/* Top Header Navigation bar */}
+      <div className="bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setActiveCampogramaId(null)}
+            className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-lg text-slate-300 hover:text-white transition-all flex items-center space-x-1.5 text-xs font-mono font-bold shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver a {currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle}</span>
+          </button>
+
+          <div className="min-w-0">
+            <div className="flex items-center space-x-1.5 text-[10px] font-mono text-slate-400 uppercase truncate">
+              <span>{folderInfo.title}</span>
+              {currentSubFolderObj && (
+                <>
+                  <span>/</span>
+                  <span>{currentSubFolderObj.shortTitle}</span>
+                </>
+              )}
+              <span>/</span>
+              <span className="text-blue-400 font-bold">{activeCamp?.nombre}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-base font-bold font-display text-white uppercase tracking-wider truncate">
+                {activeCamp?.nombre}
+              </h1>
+              <button
+                onClick={() => {
+                  if (activeCamp) {
+                    setEditingCampograma(activeCamp);
+                    setEditTitleInput(activeCamp.nombre);
+                  }
+                }}
+                className="text-slate-500 hover:text-blue-400 p-1"
+                title="Renombrar campograma"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-3 text-xs font-mono">
+          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-900/40 px-2 py-0.5 rounded flex items-center gap-1">
+            <Check className="w-3 h-3" /> Guardado
+          </span>
+        </div>
+      </div>
+
+      {/* Main Pitch Workspace */}
+      <div id="tactical-board-section" className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch h-full">
+        {/* LEFT SIDEBAR: Available Players */}
+        <div 
+          className={`lg:col-span-4 bg-slate-900 border rounded-lg p-4 flex flex-col h-[880px] min-h-[800px] shadow-lg relative transition-all duration-300 ${
+            draggingSourcePos ? 'border-red-500/45 ring-1 ring-red-550/15' : 'border-slate-850'
+          }`}
+          onDragOver={handleDragOver}
+          onDrop={handleRemoveDrop}
+        >
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <h3 className="text-sm font-bold font-display tracking-wider text-slate-200 uppercase flex items-center space-x-2">
+                <Users className="w-4 h-4 text-blue-400" />
+                <span>Plantilla Ojeada</span>
+              </h3>
+              <span className="text-[10px] bg-slate-950 px-2 py-0.5 border border-slate-800 rounded-full font-mono text-slate-400">
+                {players.length} Total
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-tight mb-3">
+              Arrastra un jugador hacia un círculo del campo o pulsa el círculo para elegirlo directamente.
+            </p>
+
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Buscar en cartera..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-950 rounded border border-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-200 placeholder-slate-500 transition-all font-mono"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <select
+                value={valuationFilter}
+                onChange={(e) => setValuationFilter(e.target.value)}
+                className="bg-slate-950 border border-slate-800 text-[10px] text-slate-300 py-1 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+              >
+                <option value="All">Todas Valoraciones</option>
+                <option value="FIRMAR">⭐ FIRMAR / CONTRATAR</option>
+                <option value="SEGUIR">👀 SEGUIR</option>
+                <option value="INTERESANTE">💡 EVALUAR / INTERESANTE</option>
+                <option value="DESCARTAR">❌ DESCARTAR</option>
+                <option value="SIN_VALORAR">❓ SIN VALORAR</option>
+              </select>
+
+              <select
+                value={positionFilter}
+                onChange={(e) => setPositionFilter(e.target.value)}
+                className="bg-slate-950 border border-slate-800 text-[10px] text-slate-300 py-1 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+              >
+                <option value="All">Todas Posiciones</option>
+                {Array.from(new Set(players.map(p => p.posicion).filter(Boolean))).sort().map(pos => (
+                  <option key={pos} value={pos}>{pos}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Player List */}
+          <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
             {filteredPlayers.map((player) => {
-              // Find if already placed based on view mode
-              const isAssigned = monthlyView
-                ? (selectedSlot ? (monthlyAssignments[selectedSlot] || []).includes(player.id) : false)
-                : Object.values(assignments).includes(player.id);
-              
-              const isAssignedAnywhereInMonthly = monthlyView
-                ? (Object.values(monthlyAssignments) as string[][]).some(list => list.includes(player.id))
-                : false;
+              const isAssigned = Object.values(assignments).includes(player.id);
+              const isAssignedAnywhereInMonthly = Object.values(monthlyAssignments).some(list => (list as string[])?.includes(player.id));
 
               return (
                 <div
                   key={player.id}
-                  draggable={!isAssigned}
+                  draggable
                   onDragStart={(e) => handleDragStart(e, player.id)}
                   onClick={() => {
                     if (monthlyView) {
                       if (selectedSlot) {
                         appendPlayerToMonthly(selectedSlot, player);
+                        setSelectedSlot(null);
                       } else {
-                        showNotification('Pulsa sobre una posición blanca del campo para seleccionarla, luego pulsa en el jugador para añadirlo', 'info');
+                        showNotification('Pulsa en una posición del campo para añadir este jugador', 'info');
                       }
                     } else {
                       if (!isAssigned) {
@@ -908,7 +1481,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                           showNotification('Pulsa en una posición vacía del campo para colocar a este jugador', 'info');
                         }
                       } else {
-                        // find slot and remove
                         const foundSlot = Object.keys(assignments).find(k => assignments[k] === player.id);
                         if (foundSlot) {
                           handleAssignPlayer(foundSlot, null);
@@ -947,12 +1519,9 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                         {player.posicion} • {player.equipo || 'Sin Equipo'}
                       </p>
                       <div className="flex items-center space-x-1.5 mt-1">
-                        <span className="text-[8px] font-mono font-extrabold px-1 py-0.2 bg-slate-900 border border-slate-800 text-blue-400 rounded-xs uppercase">
-                          {player.lateralidad.slice(0, 3)}
-                        </span>
-                        {player.anoNacimiento && (
-                          <span className="text-[8px] font-mono text-slate-400 bg-slate-900 px-1 py-0.2 rounded-xs border border-slate-800">
-                            {player.anoNacimiento}
+                        {player.lateralidad && (
+                          <span className="text-[8px] font-mono font-extrabold px-1 py-0.2 bg-slate-900 border border-slate-800 text-blue-400 rounded-xs uppercase">
+                            {player.lateralidad.slice(0, 3)}
                           </span>
                         )}
                         {player.recomendacion && (
@@ -967,16 +1536,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   <div className="shrink-0 flex flex-col items-end space-y-1 pl-2 font-mono">
                     {isAssigned ? (
                       <span className="text-[8px] uppercase tracking-wider text-blue-400 font-bold bg-blue-950/40 border border-blue-900/40 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                        <UserCheck className="w-2.5 h-2.5" /> {monthlyView ? "EN PUESTO" : "COLOCADO"}
+                        <UserCheck className="w-2.5 h-2.5" /> COLOCADO
                       </span>
                     ) : isAssignedAnywhereInMonthly ? (
                       <span className="text-[8px] uppercase tracking-wider text-emerald-400 font-bold bg-emerald-950/20 border border-emerald-900/40 px-1.5 py-0.5 rounded">
                         ALINEADO
                       </span>
                     ) : (
-                      <span className="text-[10px] text-slate-500 group-hover:text-slate-300">
-                        :::
-                      </span>
+                      <span className="text-[10px] text-slate-500 group-hover:text-slate-300">:::</span>
                     )}
                   </div>
                 </div>
@@ -989,475 +1556,251 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               </div>
             )}
           </div>
-        )}
-        
-        <div className="pt-3 border-t border-slate-850 mt-3 flex items-center justify-between text-[10px] font-mono text-slate-500">
-          <span>PIZARRA VIRTUAL DE ALTO RENDIMIENTO</span>
-          <span>11 / POSICIÓN</span>
         </div>
-      </div>
 
-      {/* RIGHT WORKSPACE: The Real Soccer Pitch (Campograma) */}
-      <div className="lg:col-span-8 bg-slate-900 border border-slate-850 rounded-lg p-5 flex flex-col h-[880px] min-h-[800px] shadow-lg justify-between relative overflow-hidden">
-        {/* Background ambient lighting */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-emerald-650/4 rounded-full blur-3xl pointer-events-none z-0"></div>
-
-        {/* Board Header Actions */}
-        <div className="flex flex-col xl:flex-row items-center justify-between border-b border-slate-800 pb-3 gap-2.5 z-10">
-          <div>
-            <h2 className="text-sm font-black font-display text-white tracking-widest uppercase flex items-center gap-2">
-              <span className="text-blue-500">⚙️</span> {monthlyView ? "CAMPOGRAMA MENSUAL POSICIONAL" : "CAMPOGRAMA COMPLETO DE ALINEACIÓN"}
-            </h2>
-            <p className="text-[10px] font-mono text-slate-400 uppercase mt-0.5">
-              {monthlyView ? "PLANIFICACIÓN DE CARTERA: HASTA 5 NOMBRE POR CADA PUESTO" : "Configura, simula o define el esquema táctico referencial"}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-end gap-2 w-full xl:w-auto">
-            {/* Toggle Monthly View Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setMonthlyView(!monthlyView);
-                setSelectedSlot(null);
-                showNotification(
-                  !monthlyView 
-                    ? "Activado Campograma Mensual. Ahora puedes añadir hasta 5 jugadores por posición elegida." 
-                    : "Activado Campograma de Alineación 11 standard.", 
-                  "info"
-                );
-              }}
-              className={`px-3 py-1.5 border text-[10px] font-mono font-black rounded-lg flex items-center space-x-1.5 transition-all outline-none ${
-                monthlyView 
-                  ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25 font-bold' 
-                  : 'bg-slate-950 hover:bg-slate-850 border-slate-800 hover:border-slate-700 text-blue-400 font-extrabold'
-              }`}
-              title="Cambiar al Campograma Mensual para añadir 5 nombres por posición"
-            >
-              <span>📅 CAMPOGRAMA MENSUAL</span>
-            </button>
-
-            {/* System select dropdown */}
-            <div className="bg-slate-950 p-1 rounded-lg border border-slate-850 flex items-center text-xs font-mono">
-              <span className="text-slate-500 px-1.5 font-bold uppercase text-[8.5px]">SISTEMA:</span>
-              <select
-                value={formation}
-                onChange={(e) => setFormation(e.target.value as any)}
-                className="bg-slate-900 border border-slate-800 text-blue-400 font-extrabold uppercase py-0.5 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 tracking-wider cursor-pointer text-[10px]"
-              >
-                <option value="4-4-2">4-4-2 STANDARD</option>
-                <option value="4-3-3">4-3-3 ATTACK</option>
-                <option value="4-2-3-1">4-2-3-1 MODERN</option>
-                <option value="3-5-2">3-5-2 FLANK DENSITY</option>
-                <option value="5-4-1">5-4-1 SOLID BLOCK</option>
-                <option value="4-1-4-1">4-1-4-1 POSSESSION</option>
-              </select>
+        {/* RIGHT WORKSPACE: Soccer Pitch Canvas */}
+        <div className="lg:col-span-8 bg-slate-900 border border-slate-850 rounded-lg p-5 flex flex-col h-[880px] min-h-[800px] shadow-lg justify-between relative overflow-hidden">
+          {/* Header Actions */}
+          <div className="flex flex-col xl:flex-row items-center justify-between border-b border-slate-800 pb-3 gap-2.5 z-10">
+            <div>
+              <h2 className="text-sm font-black font-display text-white tracking-widest uppercase flex items-center gap-2">
+                <span className="text-blue-500">⚙️</span> {monthlyView ? "CAMPOGRAMA POSICIONAL (HASTA 5 POR PUESTO)" : "CAMPOGRAMA COMPLETO DE ALINEACIÓN 11"}
+              </h2>
+              <p className="text-[10px] font-mono text-slate-400 uppercase mt-0.5">
+                {monthlyView ? "AÑADE Y ORGANIZA CANDIDATOS POR CADA PUESTO TÁCTICO" : "Configura el 11 titular y esquema en el terreno de juego"}
+              </p>
             </div>
 
-            <button
-              type="button"
-              onClick={handleExportPDF}
-              className="px-3 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 text-[11px] font-mono font-black rounded-lg flex items-center space-x-1.5 transition-all outline-none"
-              title="Exportar campograma y alineación en PDF"
-            >
-              <Download className="w-3.5 h-3.5 shrink-0" />
-              <span>EXPORTAR PDF</span>
-            </button>
+            <div className="flex flex-wrap items-center justify-end gap-2 w-full xl:w-auto">
+              {/* Toggle Monthly Mode */}
+              <button
+                type="button"
+                onClick={() => {
+                  const nextVal = !monthlyView;
+                  handleMonthlyViewToggle(nextVal);
+                  setSelectedSlot(null);
+                  showNotification(
+                    nextVal 
+                      ? "Activado Campograma Posicional. Hasta 5 nombres por puesto." 
+                      : "Activado Campograma de Alineación 11 standard.", 
+                    "info"
+                  );
+                }}
+                className={`px-3 py-1.5 border text-[10px] font-mono font-black rounded-lg flex items-center space-x-1.5 transition-all outline-none cursor-pointer ${
+                  monthlyView 
+                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25 font-bold' 
+                    : 'bg-slate-950 hover:bg-slate-850 border-slate-800 hover:border-slate-700 text-blue-400 font-extrabold'
+                }`}
+              >
+                <span>📅 MODO POSICIONAL (5xPUESTO)</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={handleClearPitch}
-              className={`px-3 py-2 border text-[11px] font-mono font-black rounded-lg flex items-center space-x-1.5 transition-all outline-none ${
-                showClearConfirm 
-                  ? 'bg-red-950/90 hover:bg-red-900 text-red-200 border-red-500 animate-pulse'
-                  : 'bg-slate-950 hover:bg-slate-850 border-slate-800 hover:border-slate-700 text-red-400 hover:text-red-300'
-              }`}
-              title={showClearConfirm ? "Haz clic de nuevo para vaciar todo el campograma" : "Borrar todos los jugadores en el campo"}
-            >
-              <Trash2 className="w-3.5 h-3.5 shrink-0" />
-              <span>{showClearConfirm ? '¿CONFIRMAR?' : 'LIMPIAR'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* FIELD CANVAS (CAMPOGRAMA VISUAL) */}
-        <div className="flex-1 relative bg-gradient-to-b from-emerald-800 to-emerald-950 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.035)_50%,transparent_50%)] bg-[size:100%_16.6%] border border-emerald-700/60 rounded-lg overflow-hidden m-1 mt-4 shadow-inner z-10 flex items-center justify-center">
-          {/* Tactical Soccer Pitch Markings (SVG rendering) */}
-          <svg
-            className="absolute inset-0 w-full h-full opacity-[0.55] pointer-events-none"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-          >
-            {/* Outer border & lines */}
-            <rect x="2" y="2" width="96" height="96" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            
-            {/* Half field line */}
-            <line x1="2" y1="50" x2="98" y2="50" stroke="#ffffff" strokeWidth="0.8" />
-            
-            {/* Center circle */}
-            <circle cx="50" cy="50" r="12" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            {/* Center spot */}
-            <circle cx="50" cy="50" r="1.2" fill="#ffffff" />
-
-            {/* Top goal box area */}
-            <rect x="35" y="2" width="30" height="15" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            <rect x="42" y="2" width="16" height="5" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            <circle cx="50" cy="11" r="0.8" fill="#ffffff" />
-            <path d="M 40,17 A 10,10 0 0,0 60,17" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-
-            {/* Bottom goal box area */}
-            <rect x="35" y="83" width="30" height="15" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            <rect x="42" y="93" width="16" height="5" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            <circle cx="50" cy="89" r="0.8" fill="#ffffff" />
-            <path d="M 40,83 A 10,10 0 0,1 60,83" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-
-            {/* Corner spots */}
-            <path d="M 2,5 A 3,3 0 0,0 5,2" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            <path d="M 98,5 A 3,3 0 0,1 95,2" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            <path d="M 2,95 A 3,3 0 0,1 5,98" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-            <path d="M 98,95 A 3,3 0 0,0 95,98" fill="none" stroke="#ffffff" strokeWidth="0.8" />
-          </svg>
-
-          {/* Render Position Nodes */}
-          {currentPositions.map((pos) => {
-            const assignedPlayerId = assignments[pos.id];
-            const player = assignedPlayerId ? players.find(p => p.id === assignedPlayerId) : null;
-            const isSelected = selectedSlot === pos.id;
-
-            if (monthlyView) {
-              const assignedIds = monthlyAssignments[pos.id] || [];
-              return (
-                <div
-                  key={`monthly-${pos.id}`}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, pos.id)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedSlot(isSelected ? null : pos.id);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    left: `${pos.x}%`,
-                    top: `${pos.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                  className="z-20 transition-all"
+              {/* System Dropdown */}
+              <div className="bg-slate-950 p-1 rounded-lg border border-slate-850 flex items-center text-xs font-mono">
+                <span className="text-slate-500 px-1.5 font-bold uppercase text-[8.5px]">SISTEMA:</span>
+                <select
+                  value={formation}
+                  onChange={(e) => handleFormationChange(e.target.value as any)}
+                  className="bg-slate-900 border border-slate-800 text-blue-400 font-extrabold uppercase py-0.5 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 tracking-wider cursor-pointer text-[10px]"
                 >
-                  {/* High Contrast White Card exactly like soccer campogram screenshot */}
-                  <div 
-                    className={`w-[145px] sm:w-[155px] md:w-[165px] bg-white rounded-lg shadow-2xl border flex flex-col p-1.5 text-left relative transition-all ${
-                      isSelected 
-                        ? 'border-blue-600 ring-2 ring-blue-500 ring-offset-1 ring-offset-slate-900 scale-105 z-30' 
-                        : 'border-slate-200/90 hover:scale-[1.02] hover:shadow-2xl'
-                    }`}
-                  >
-                    {/* Header: Position Tag */}
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-1 mb-1 text-[8px] font-mono font-black text-slate-500 uppercase tracking-widest px-1 select-none">
-                      <span className="text-slate-800">{pos.label}</span>
-                      <span className="text-blue-600 bg-blue-50 px-1 py-0.2 rounded-xs">
-                        ({pos.category.slice(0, 3).toUpperCase()})
-                      </span>
-                    </div>
+                  <option value="4-4-2">4-4-2 STANDARD</option>
+                  <option value="4-3-3">4-3-3 ATTACK</option>
+                  <option value="4-2-3-1">4-2-3-1 MODERN</option>
+                  <option value="3-5-2">3-5-2 POSITIONAL</option>
+                  <option value="5-4-1">5-4-1 DEFENSIVE</option>
+                  <option value="4-1-4-1">4-1-4-1 CONTROL</option>
+                </select>
+              </div>
 
-                    {/* Players Stack */}
-                    <div className="space-y-1">
-                      {assignedIds.map((pid, idx) => {
-                        const p = players.find(player => player.id === pid);
-                        if (!p) return null;
-                        
-                        return (
-                          <div 
-                            key={p.id} 
-                            className="group/item flex items-center justify-between py-1 px-1 border-b border-slate-50 last:border-b-0 text-left relative"
-                          >
-                            <div className="flex items-center min-w-0 flex-1">
-                              {p.fotoUrl ? (
-                                <img 
-                                  src={p.fotoUrl} 
-                                  alt={p.nombre} 
-                                  referrerPolicy="no-referrer" 
-                                  className="w-5.5 h-5.5 rounded-full object-cover border border-slate-100 shrink-0" 
-                                />
-                              ) : (
-                                <div className="w-5.5 h-5.5 rounded-full bg-slate-100 text-slate-700 font-extrabold text-[8px] flex items-center justify-center shrink-0 uppercase">
-                                  {p.nombre.slice(0, 2)}
-                                </div>
-                              )}
-                              
-                              <div className="ml-1.5 min-w-0 flex-1 leading-tight">
-                                <p className="text-[9px] font-bold text-slate-900 truncate flex items-center">
-                                  <span className="text-slate-400 text-[8px] mr-1 font-mono">#{idx+1}</span>
-                                  {p.nombre.split(' ').slice(0, 2).join(' ')}
-                                  {p.anoNacimiento && (
-                                    <span className="text-slate-400 font-normal text-[7.5px] ml-0.5">
-                                      '{String(p.anoNacimiento).slice(-2)}
-                                    </span>
-                                  )}
-                                </p>
-                                <p className="text-[7.5px] text-slate-500 font-mono truncate uppercase font-semibold">
-                                  {p.equipo || 'OJEADO'}
-                                  {p.recomendacion && ` • ${p.recomendacion.slice(0,6)}`}
-                                </p>
-                              </div>
-                            </div>
+              {/* Export PDF */}
+              <button
+                type="button"
+                onClick={handleExportPDF}
+                className="px-2.5 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-800/80 text-emerald-400 text-[10px] font-mono font-bold rounded-lg flex items-center space-x-1 transition-all"
+                title="Exportar en PDF"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>PDF</span>
+              </button>
 
-                            {/* Small deletion cross */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removePlayerFromMonthly(pos.id, p.id);
-                              }}
-                              className="w-4 h-4 rounded-full text-slate-300 hover:text-red-650 hover:bg-slate-100 flex items-center justify-center text-[8px] transition-all shrink-0 ml-0.5"
-                              title="Quitar jugador de la lista"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        );
-                      })}
+              {/* Clear */}
+              <button
+                type="button"
+                onClick={handleClearPitch}
+                className={`px-2.5 py-1.5 border text-[10px] font-mono font-bold rounded-lg flex items-center space-x-1 transition-all ${
+                  showClearConfirm
+                    ? 'bg-red-600 text-white border-red-500 font-extrabold animate-pulse'
+                    : 'bg-slate-950 hover:bg-slate-850 border-slate-800 text-slate-400 hover:text-red-400'
+                }`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{showClearConfirm ? "¿CONFIRMAR VACIAR?" : "VACIAR"}</span>
+              </button>
+            </div>
+          </div>
 
-                      {assignedIds.length === 0 && (
-                        <div className="py-3 px-1 text-center text-slate-400 text-[8.5px] font-extrabold font-mono flex flex-col items-center justify-center gap-1 border border-dashed border-slate-200 rounded bg-slate-50 select-none">
-                          <span className="text-blue-500 text-[9px] font-black">+ AÑADIR</span>
-                          <span className="text-[7px] text-slate-400 font-normal">Arrastra o pulsa</span>
-                        </div>
-                      )}
-                    </div>
+          {/* FIELD CANVAS */}
+          <div className="flex-1 my-3 bg-gradient-to-b from-emerald-950/90 via-emerald-900/80 to-emerald-950/90 border-2 border-emerald-800/60 rounded-xl relative overflow-hidden shadow-2xl flex items-center justify-center select-none">
+            {/* Pitch Markings */}
+            <div className="absolute inset-2 border border-emerald-500/25 pointer-events-none"></div>
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-emerald-500/25 -translate-y-1/2 pointer-events-none"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-emerald-500/25 rounded-full pointer-events-none"></div>
+            
+            {/* Top Penalty Area */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[45%] h-[18%] border-b border-x border-emerald-500/25 pointer-events-none"></div>
+            {/* Bottom Penalty Area */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[45%] h-[18%] border-t border-x border-emerald-500/25 pointer-events-none"></div>
 
-                    {/* Small slot capacity counter */}
-                    {assignedIds.length > 0 && (
-                      <div className="mt-1 text-right text-[7px] font-mono text-slate-400 px-0.5 select-none uppercase">
-                        {assignedIds.length} / 5 jugadores
-                      </div>
-                    )}
-                  </div>
+            {/* Positions overlay */}
+            <div className="absolute inset-0 z-20">
+              {currentPositions.map((pos) => {
+                const isSelected = selectedSlot === pos.id;
 
-                  {/* QUICK CHOOSE POPDOWN SEARCH POPUP FOR MONTHLY VIEW */}
-                  {isSelected && (
-                    <div 
-                      className="absolute bottom-[105%] left-1/2 -translate-x-1/2 w-48 bg-slate-950 border border-slate-800 rounded-lg shadow-2xl p-1.5 z-40 animate-fade-in block"
-                      onClick={(e) => e.stopPropagation()}
+                if (monthlyView) {
+                  const assignedPlayerIds = monthlyAssignments[pos.id] || [];
+                  return (
+                    <div
+                      key={pos.id}
+                      style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                      onClick={() => setSelectedSlot(isSelected ? null : pos.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDropOnPosition(e, pos.id)}
+                      className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center transition-all duration-200 z-30 cursor-pointer group ${
+                        isSelected ? 'scale-105 ring-2 ring-blue-400 rounded-lg p-1 bg-slate-950/90' : ''
+                      }`}
                     >
-                      <div className="p-1 border-b border-slate-900 flex justify-between items-center bg-slate-900/30 rounded">
-                        <span className="text-[8px] font-mono font-bold text-slate-400 uppercase">
-                          Búsqueda rápida {pos.label}
-                        </span>
-                        <button
-                          onClick={() => setSelectedSlot(null)}
-                          className="text-[8px] text-red-400 hover:text-white font-extrabold shrink-0"
-                        >
-                          CERRAR
-                        </button>
-                      </div>
+                      <div className="bg-slate-950/90 border border-slate-750/90 rounded-lg p-2 min-w-[130px] max-w-[155px] shadow-2xl backdrop-blur-md">
+                        <div className="flex items-center justify-between border-b border-slate-800/80 pb-1 mb-1">
+                          <span className="text-[9px] font-mono font-black text-blue-400 uppercase tracking-widest">
+                            {pos.label}
+                          </span>
+                          <span className="text-[8px] font-mono text-slate-400">
+                            ({assignedPlayerIds.length}/5)
+                          </span>
+                        </div>
 
-                      <div className="max-h-32 overflow-y-auto mt-1 space-y-1 custom-scrollbar text-left scroll-smooth">
-                        {players
-                          .filter(p => !assignedIds.includes(p.id))
-                          .map(p => {
-                            const isSmartMatch = pos.allowedRoles.includes(p.posicion);
+                        <div className="space-y-1 min-h-[40px]">
+                          {assignedPlayerIds.map((pid, idx) => {
+                            const p = players.find(player => player.id === pid);
+                            if (!p) return null;
                             return (
-                              <button
-                                key={p.id}
-                                onClick={() => {
-                                  appendPlayerToMonthly(pos.id, p);
-                                  setSelectedSlot(null);
-                                }}
-                                className={`w-full p-1 rounded hover:bg-slate-900 text-[10px] flex items-center justify-between group transition-all text-left ${
-                                  isSmartMatch ? 'border-l-2 border-emerald-500 pl-1.5' : 'pl-1 opacity-75'
-                                }`}
+                              <div
+                                key={pid}
+                                className="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded px-1.5 py-0.5 text-[9px] font-bold text-white group/item hover:border-blue-500/50"
                               >
-                                <span className="font-bold text-slate-200 truncate group-hover:text-blue-400">
-                                  {p.nombre}
+                                <span className="truncate pr-1">
+                                  {idx + 1}. {p.nombre.split(' ')[0]}
                                 </span>
-                                <span className="text-[7.5px] text-slate-400 font-mono shrink-0 italic">
-                                  {p.posicion.slice(0, 10)}
-                                </span>
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removePlayerFromMonthly(pos.id, pid);
+                                  }}
+                                  className="text-slate-500 hover:text-red-400 font-extrabold text-[8px] shrink-0"
+                                >
+                                  ✕
+                                </button>
+                              </div>
                             );
                           })}
 
-                        {players.filter(p => !assignedIds.includes(p.id)).length === 0 && (
-                          <p className="text-[8px] text-slate-500 p-2 italic text-center">
-                            No quedan futbolistas
-                          </p>
-                        )}
+                          {assignedPlayerIds.length === 0 && (
+                            <div className="text-[8px] text-slate-500 font-mono italic text-center py-2">
+                              Vacante (+ Añadir)
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              );
-            }
+                  );
+                }
 
-            return (
-              <div
-                key={pos.id}
-                draggable={!!player}
-                onDragStart={(e) => {
-                  if (player) {
-                    handlePitchDragStart(e, player.id, pos.id);
-                  }
-                }}
-                onDragEnd={() => setDraggingSourcePos(null)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, pos.id)}
-                onClick={() => setSelectedSlot(isSelected ? null : pos.id)}
-                style={{
-                  position: 'absolute',
-                  left: `${pos.x}%`,
-                  top: `${pos.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                }}
-                className={`group cursor-pointer select-none transition-all flex flex-col items-center justify-center z-20 ${
-                  player ? 'w-[72px] active:scale-95 active:cursor-grabbing' : 'w-[56px]'
-                }`}
-              >
-                {/* Visual Circle Target */}
-                <div
-                  className={`w-12 h-12 rounded-full flex flex-col items-center justify-center relative transition-all shadow-lg ${
-                    player 
-                      ? 'bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-blue-500/80 hover:scale-105'
-                      : isSelected
-                      ? 'bg-emerald-900/60 border-2 border-dashed border-white animate-pulse scale-105 shadow-white/10'
-                      : 'bg-emerald-950/60 border-2 border-dashed border-emerald-600/40 hover:border-white/65 hover:bg-emerald-950/90 hover:scale-105'
-                  }`}
-                >
-                  {player ? (
-                    <>
-                      {/* Player Circular photo or initials */}
-                      <span className="hidden">.</span>
-                      {player.fotoUrl ? (
-                        <img 
-                          src={player.fotoUrl} 
-                          alt={player.nombre} 
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full rounded-full object-cover" 
-                        />
-                      ) : (
-                        <div className="w-full h-full rounded-full bg-slate-800 flex items-center justify-center font-black font-display text-white text-xs uppercase text-center">
-                          {player.nombre.slice(0, 2)}
-                        </div>
-                      )}
-                      
-                      {/* Positional badge */}
-                      <span className="absolute -top-1.5 -right-1 px-1 bg-blue-600 text-white text-[8px] font-mono rounded font-black border border-slate-900">
-                        {pos.label}
-                      </span>
+                // Standard 11 Lineup Mode
+                const assignedPlayerId = assignments[pos.id];
+                const player = players.find(p => p.id === assignedPlayerId);
 
-                      {/* Small Crest Icon overlay */}
-                      {player.escudoUrl && (
-                        <img
-                          src={player.escudoUrl}
-                          alt="escudo"
-                          referrerPolicy="no-referrer"
-                          className="w-4.5 h-4.5 rounded-full object-contain absolute -bottom-1 -left-1 bg-slate-950 p-[1px] border border-slate-850"
-                        />
-                      )}
-
-                      {/* One click removal button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAssignPlayer(pos.id, null);
-                        }}
-                        className="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full bg-red-650 hover:bg-red-500 text-white hover:scale-110 flex items-center justify-center font-extrabold text-[8px] border border-slate-900 shadow transition-all duration-150 shrink-0"
-                        title="Quitar jugador"
-                      >
-                        ✕
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      {/* Unassigned design */}
-                      <span className="text-[11px] font-extrabold text-emerald-100 font-mono tracking-tight select-none">
-                        {pos.label}
-                      </span>
-                      <span className="text-[8px] text-emerald-350/85 font-mono mt-0.5 block scale-90">
-                        Pulsar
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                {/* Player Metadata Labels under the target */}
-                {player ? (
-                  <div className="mt-1 flex flex-col items-center text-center w-full min-w-[75px]">
-                    <span 
-                      className="text-[9px] font-bold text-slate-100 truncate w-full tracking-tight bg-slate-950/90 px-1 py-0.2 rounded border border-slate-850 shadow-xs block" 
-                      title={player.nombre}
+                return (
+                  <div
+                    key={pos.id}
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                    onClick={() => setSelectedSlot(isSelected ? null : pos.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDropOnPosition(e, pos.id)}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center transition-all duration-200 z-30 cursor-pointer group"
+                  >
+                    <div
+                      draggable={!!player}
+                      onDragStart={(e) => player && handlePitchPositionDragStart(e, pos.id, player.id)}
+                      className={`w-12 h-12 rounded-full border-2 flex flex-col items-center justify-center transition-all duration-200 shadow-xl relative ${
+                        isSelected
+                          ? 'border-blue-400 bg-blue-950 scale-110 ring-4 ring-blue-500/30'
+                          : player
+                          ? 'border-blue-500 bg-slate-900 hover:scale-105'
+                          : 'border-emerald-400/80 bg-emerald-950/80 hover:bg-emerald-900 hover:border-emerald-300'
+                      }`}
                     >
-                      {player.nombre.split(' ').slice(0, 2).join(' ')}
-                    </span>
-                    
-                    {/* Specific recommendation / evaluation text indicator */}
-                    {player.recomendacion && (
-                      <span className={`text-[7px] font-extrabold px-1 rounded-xs mt-0.5 border scale-95 opacity-90 ${getRecTag(player.recomendacion)?.bg || 'bg-slate-950/40 text-slate-400 border-slate-850'}`}>
-                        {getRecTag(player.recomendacion)?.text}
-                      </span>
+                      {player ? (
+                        <>
+                          {player.fotoUrl ? (
+                            <img src={player.fotoUrl} alt={player.nombre} referrerPolicy="no-referrer" className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <span className="text-xs font-bold font-mono text-blue-400 uppercase">
+                              {player.nombre.slice(0, 2)}
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAssignPlayer(pos.id, null);
+                            }}
+                            className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center text-[8px] font-bold"
+                            title="Quitar jugador"
+                          >
+                            ✕
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-[11px] font-extrabold text-emerald-100 font-mono tracking-tight">
+                            {pos.label}
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {player ? (
+                      <div className="mt-1 flex flex-col items-center text-center">
+                        <span className="text-[9px] font-bold text-white bg-slate-950/90 px-1.5 py-0.5 rounded border border-slate-800 shadow truncate max-w-[90px]">
+                          {player.nombre.split(' ')[0]}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-[8px] text-emerald-300/60 font-mono uppercase mt-0.5">Vacío</span>
                     )}
                   </div>
-                ) : (
-                  <span className="text-[8px] text-emerald-300/60 font-mono tracking-wider mt-0.5 uppercase">
-                    Vacío
-                  </span>
-                )}
+                );
+              })}
+            </div>
+          </div>
 
-                {/* POPULAR QUICK DROPDOWN CHOOSE POPUP */}
-                {isSelected && (
-                  <div 
-                    className="absolute bottom-14 left-1/2 -translate-x-1/2 w-48 bg-slate-950 border border-slate-800 rounded-lg shadow-2xl p-1.5 z-40 animate-fade-in block"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="p-1 border-b border-slate-900 flex justify-between items-center bg-slate-900/30 rounded">
-                      <span className="text-[8px] font-mono font-bold text-slate-400 uppercase">
-                        Buscar {pos.label} ({pos.category})
-                      </span>
-                      <button
-                        onClick={() => setSelectedSlot(null)}
-                        className="text-[8px] text-red-400 hover:text-white font-extrabold shrink-0"
-                      >
-                        CERRAR
-                      </button>
-                    </div>
-
-                    <div className="max-h-32 overflow-y-auto mt-1 space-y-1 custom-scrollbar text-left scroll-smooth">
-                      {players
-                        .filter(p => !Object.values(assignments).includes(p.id))
-                        .map(p => {
-                          const isSmartMatch = pos.allowedRoles.includes(p.posicion);
-                          return (
-                            <button
-                              key={p.id}
-                              onClick={() => {
-                                handleAssignPlayer(pos.id, p);
-                                setSelectedSlot(null);
-                              }}
-                              className={`w-full p-1 rounded hover:bg-slate-900 text-[10px] flex items-center justify-between group transition-all text-left ${
-                                isSmartMatch ? 'border-l-2 border-emerald-500 pl-1.5' : 'pl-1 opacity-75'
-                              }`}
-                            >
-                              <span className="font-bold text-slate-200 truncate group-hover:text-blue-400">
-                                {p.nombre}
-                              </span>
-                              <span className="text-[7px] text-slate-400 font-mono shrink-0 italic">
-                                {p.posicion.slice(0, 10)}
-                              </span>
-                            </button>
-                          );
-                        })}
-
-                      {players.filter(p => !Object.values(assignments).includes(p.id)).length === 0 && (
-                        <p className="text-[8px] text-slate-500 p-2 italic text-center">
-                          No quedan futbolistas disponibles
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {/* Notes / Observations Box */}
+          <div className="pt-2 border-t border-slate-800 mt-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-400 flex items-center gap-1">
+                <FileText className="w-3 h-3 text-blue-400" />
+                <span>Notas Tácticas y Observaciones de Mercado</span>
+              </span>
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => handleNotesChange(e.target.value)}
+              placeholder="Escribe aquí anotaciones específicas sobre prioridades de fichaje, acuerdos o variaciones tácticas para este campograma..."
+              className="w-full h-14 bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none custom-scrollbar"
+            />
+          </div>
         </div>
       </div>
     </div>

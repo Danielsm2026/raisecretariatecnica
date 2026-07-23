@@ -7,8 +7,8 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Bilbao Athletic': 'https://cdn.resfu.com/img_data/equipos/348.png?size=120x&lossy=1',
   'Bilbao Ath.': 'https://cdn.resfu.com/img_data/equipos/348.png?size=120x&lossy=1',
   'FC Cartagena': '/escudos/cartagena.svg',
-  'Real Avilés': '/escudos/real-aviles.svg',
-  'Real Avilés Industrial': '/escudos/real-aviles.svg',
+  'Real Avilés': 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1',
+  'Real Avilés Industrial': 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1',
   'Bayern de Múnich': '/escudos/bayern.svg',
   'Bayer Leverkusen': '/escudos/leverkusen.svg',
   'Arsenal FC': '/escudos/arsenal.svg',
@@ -22,6 +22,11 @@ export const ESCUDO_FALLBACK = '/escudos/default.svg'; // a blurred sports turf 
 
 export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   const teamNormal = player.equipo?.trim();
+
+  // If team is Real Avilés or Real Avilés Industrial, always return the 2096 logo
+  if (teamNormal && (teamNormal === 'Real Avilés' || teamNormal === 'Real Avilés Industrial' || teamNormal.toLowerCase().includes('real avilés') || teamNormal.toLowerCase().includes('real aviles'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1';
+  }
 
   // If team is Bilbao Athletic, override the logo explicitly
   if (teamNormal && (teamNormal === 'Bilbao Athletic' || teamNormal === 'Bilbao Ath.')) {
@@ -47,14 +52,14 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
 export function getCategoryEscudoUrl(categoria?: string): string {
   const cat = (categoria || '').toLowerCase().trim();
   if (!cat || cat.includes('primera rfef') || cat.includes('1ª rfef') || cat.includes('1ª federacion') || cat.includes('primera federación') || cat.includes('primera federacion')) {
-    return 'https://images.seeklogo.com/logo-png/49/2/primera-federacion-logo-png_seeklogo-494767.png';
+    return '/escudos/primera-federacion.png';
   }
   if (cat.includes('segunda rfef') || cat.includes('2ª rfef') || cat.includes('segunda federacion') || cat.includes('segunda federación')) {
-    return 'https://images.seeklogo.com/logo-png/49/2/segunda-federacion-rfef-logo-png_seeklogo-494768.png';
+    return '/escudos/segunda-federacion.png';
   }
   if (cat.includes('segunda div') || cat.includes('hypermotion') || cat.includes('smartbank') || cat.includes('laliga2')) {
-    return 'https://images.seeklogo.com/logo-png/42/1/laliga-smartbank-logo-png_seeklogo-428616.png';
+    return 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/LaLiga_Hypermotion_2023_logo.svg/500px-LaLiga_Hypermotion_2023_logo.svg.png';
   }
   // Default fallback
-  return 'https://images.seeklogo.com/logo-png/49/2/primera-federacion-logo-png_seeklogo-494767.png';
+  return '/escudos/primera-federacion.png';
 }

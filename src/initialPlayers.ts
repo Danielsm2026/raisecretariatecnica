@@ -239,7 +239,7 @@ const RAW_PLAYERS: ScoutedPlayer[] = [
     enSuEquipo: 'Es la referencia de contención y equilibrio táctico en el centro del campo del Real Avilés Industrial.',
     enPocasPalabras: 'DESPLIEGUE FÍSICO.\nJERARQUÍA TÁCTICA.\nRECUPERACIÓN EN MEDULAR.\nEQUILIBRIO DEFENSIVO.',
     tieneValorPor: 'EXPERIENCIA EN LA CATEGORÍA.\nCUALIDADES FÍSICO-TÁCTICAS.\nLIDERAZGO Y PRESENCIA EN ZONA MEDIA.',
-    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2099.png?size=120x&lossy=1'
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1'
   },
   {
     id: 'p_samu_mayo',
@@ -268,7 +268,123 @@ const RAW_PLAYERS: ScoutedPlayer[] = [
     enSuEquipo: 'Eje organizador del Real Avilés Industrial encargado de dar fluidez al ritmo de juego.',
     enPocasPalabras: 'CIRCULACIÓN FLUIDA.\nVISIÓN Y PASE.\nINTELIGENCIA POSICIONAL.\nORGANIZADOR DINÁMICO.',
     tieneValorPor: 'EQUILIBRIO EN CREACIÓN.\nMADUREZ COMPETITIVA.\nPERFIL ORGANIZADOR COMPLETO.',
-    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2099.png?size=120x&lossy=1'
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1'
+  },
+  {
+    id: 'p_isi_gomez',
+    nombre: 'Isi Gómez',
+    equipo: 'Real Avilés Industrial',
+    categoria: 'Primera RFEF',
+    posicion: 'Mediocentro',
+    anoNacimiento: 1995,
+    lateralidad: 'Diestro',
+    valorMercado: 250000,
+    calificacion: 4,
+    notas: 'Mediocentro organizador de gran calidad técnica, visión de juego y jerarquía. Excelente criterio en la distribución y manejo de tiempos.',
+    atributos: {
+      fisico: 7,
+      tecnica: 8,
+      tactica: 8,
+      mental: 8
+    },
+    fechaRegistro: '2026-07-23',
+    altura: '1.71 m',
+    recomendacion: 'FIRMAR',
+    recomendacionComentario: 'Centrocampista experimentado con gran capacidad para canalizar el juego y aportar equilibrio en medular.',
+    descripcionGeneral: 'Isi Gómez (28/10/1995, 30 años, 1,71 m) es un mediocentro organizador del Real Avilés Industrial. Se distingue por su templanza en el pase, lectura entre líneas y capacidad para marcar el ritmo del partido.',
+    fortalezas: 'Excelente calidad técnica y primer control orientado.\nVisión panorámica y precisión de pase filtrado.\nCriterio para acelerar o pausar la circulación de balón.\nLiderazgo táctico y temple bajo presión.',
+    debilidades: 'Estatura (1,71 m) que le limita en duelos de juego aéreo.\nRitmo de retorno en transiciones defensivas de ida y vuelta.',
+    enSuEquipo: 'Eje canalizador del juego del Real Avilés Industrial, asegurando posesión y dinamismo.',
+    enPocasPalabras: 'CALIDAD TÉCNICA.\nVISIÓN Y PASE.\nORGANIZACIÓN Y TEMPO.\nLIDERAZGO EN MEDULAR.',
+    tieneValorPor: 'CONTROL Y CIRCULACIÓN.\nEXPERIENCIA EN LA CATEGORÍA.\nTOMA DE DECISIONES.',
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1'
+  },
+  {
+    id: 'p_brais_abelenda',
+    nombre: 'Brais Abelenda',
+    equipo: 'Real Avilés Industrial',
+    categoria: 'Primera RFEF',
+    posicion: 'Extremo Derecho',
+    anoNacimiento: 1995,
+    lateralidad: 'Diestro',
+    valorMercado: 300000,
+    calificacion: 4,
+    notas: 'Atacante polivalente (extremo, mediapunta o segundo punta) con gran movilidad, olfato de gol y llegada al área rival.',
+    atributos: {
+      fisico: 8,
+      tecnica: 8,
+      tactica: 8,
+      mental: 8
+    },
+    fechaRegistro: '2026-07-23',
+    altura: '1.79 m',
+    recomendacion: 'SEGUIR',
+    recomendacionComentario: 'Jugador ofensivo muy versátil y con capacidad de finalización en Primera RFEF.',
+    descripcionGeneral: 'Brais Abelenda (27/10/1995, 30 años, 1,79 m) es un delantero/extremo del Real Avilés Industrial. Aporta desmarques continuos, llegada a zonas de remate y trabajo incansable en presión.',
+    fortalezas: 'Polivalencia para actuar en cualquier perfil de ataque.\nExcelente lectura de espacios libres a la espalda de la zaga.\nLlegada desde segunda línea y buena pegada a puerta.\nIntensidad y compromiso en la presión tras pérdida.',
+    debilidades: 'Propenso al desgaste por su alto despliegue físico.\nSensible a altibajos de cara a puerta en tramos de temporada.',
+    enSuEquipo: 'Amenaza constante en el ataque del Real Avilés Industrial por su dinamismo y gol.',
+    enPocasPalabras: 'POLIVALENCIA OFENSIVA.\nDESMARQUE Y LLEGADA.\nOLFATO GOLEADOR.\nPRESIÓN INTENSA.',
+    tieneValorPor: 'VERSATILIDAD EN ATAQUE.\nLLEGADA A GOL.\nMADUREZ COMPETITIVA.',
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1'
+  },
+  {
+    id: 'p_inigo_munoz',
+    nombre: 'Íñigo Muñoz',
+    equipo: 'Real Avilés Industrial',
+    categoria: 'Primera RFEF',
+    posicion: 'Extremo Derecho',
+    anoNacimiento: 1996,
+    lateralidad: 'Diestro',
+    valorMercado: 250000,
+    calificacion: 4,
+    notas: 'Extremo explosivo y regateador de 1,65 m. Gran aceleración en banda, desborde en 1vs1 y calidad en los centros al área.',
+    atributos: {
+      fisico: 8,
+      tecnica: 8,
+      tactica: 7,
+      mental: 8
+    },
+    fechaRegistro: '2026-07-23',
+    altura: '1.65 m',
+    recomendacion: 'SEGUIR',
+    recomendacionComentario: 'Extremo punzante especialista en desborde exterior y centros medidos.',
+    descripcionGeneral: 'Íñigo Muñoz (16/12/1996, 29 años, 1,65 m) es un extremo derecho del Real Avilés Industrial. Su bajo centro de gravedad y explosividad le convierten en una pesadilla en los duelos individuales por banda.',
+    fortalezas: 'Habilidad desequilibrante en el 1vs1 en espacio reducido.\nAceleración y cambio de ritmo en los primeros metros.\nPrecisión en el centro lateral en carrera.\nProvoca constantes faltas y amarillas en la defensa rival.',
+    debilidades: 'Limitación física evidente en juego aéreo (1,65 m).\nSufre ante marcajes dobles con contacto físico continuado.',
+    enSuEquipo: 'Suministrador de balones al área y desatascador en banda del Real Avilés Industrial.',
+    enPocasPalabras: 'DESBORDE Y 1VS1.\nAGILIDAD EXPLOSIVA.\nCENTROS MEDIDOS.\nELECTRIZANTE EN BANDA.',
+    tieneValorPor: 'DESEQUILIBRIO INDIVIDUAL.\nVELOCIDAD Y GIRO.\nGENERACIÓN DE CENTROS.',
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1'
+  },
+  {
+    id: 'p_julian_mahicas',
+    nombre: 'Julián Mahicas',
+    equipo: 'Real Avilés Industrial',
+    categoria: 'Primera RFEF',
+    posicion: 'Delantero Centro',
+    anoNacimiento: 2001,
+    lateralidad: 'Diestro',
+    valorMercado: 200000,
+    calificacion: 4,
+    notas: 'Delantero centro referencia de 1,80 m. Gran intuición rematadora en área, fijación de centrales y movilidad en zona de gol.',
+    atributos: {
+      fisico: 8,
+      tecnica: 7,
+      tactica: 8,
+      mental: 8
+    },
+    fechaRegistro: '2026-07-23',
+    altura: '1.80 m',
+    recomendacion: 'SEGUIR',
+    recomendacionComentario: 'Ariete joven con buen instinto rematador y constante trabajo de fijación.',
+    descripcionGeneral: 'Julián Mahicas (14/07/2001, 25 años, 1,80 m) es un ariete del Real Avilés Industrial. Se distingue por su combatividad en el área, remate rápido de primera intención y agresividad en la presión alta.',
+    fortalezas: 'Instinto de remate y posicionamiento en el área de meta.\nFijación y cuerpeo constante frente a centrales.\nTrabajo incesante de presión sobre la salida del adversario.\nDesmarques de ruptura oportunos.',
+    debilidades: 'Margen de mejora en la asociación limpia fuera del área.\nNecesita mayor regularidad en la efectividad del disparo.',
+    enSuEquipo: 'Punta de lanza del Real Avilés Industrial encargada de fijar y rematar las acciones de ataque.',
+    enPocasPalabras: 'INSTINTO REMATADOR.\nPRESENCIA EN ÁREA.\nCOMBATIVIDAD Y FIJACIÓN.\nPRESIÓN ALTA.',
+    tieneValorPor: 'CAPACIDAD ANOTADORA.\nJUVENTUD Y AMBICIÓN.\nTRABAJO PARA EL EQUIPO.',
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1'
   },
   {
     id: 'p12',
@@ -2520,7 +2636,12 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
-    return { ...player, equipo: 'Real Avilés Industrial', categoria: 'Primera RFEF' };
+    return {
+      ...player,
+      equipo: 'Real Avilés Industrial',
+      categoria: 'Primera RFEF',
+      escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1'
+    };
   }
   return player;
 });

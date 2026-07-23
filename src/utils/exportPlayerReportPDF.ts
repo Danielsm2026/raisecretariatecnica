@@ -130,61 +130,121 @@ export async function exportPlayerReportPDF(
 
   // --- Top Header Bar ---
   doc.setFillColor(15, 23, 42); // slate-900
-  doc.rect(0, 0, 210, 22, 'F');
+  doc.rect(0, 0, 210, 13, 'F');
 
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.text('DEPARTAMENTO DE SCOUTING', 12, 10);
+  doc.setFontSize(7.5);
+  doc.text('DEPARTAMENTO DE SCOUTING', 12, 5.5);
 
-  doc.setFontSize(11);
-  doc.text('REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL', 198, 10, { align: 'right' });
+  doc.setFontSize(8);
+  doc.text('REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL', 198, 5.5, { align: 'right' });
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(5.5);
   doc.setTextColor(148, 163, 184); // slate-400
-  doc.text(`EXPEDIENTE DEPORTIVO • ID: ${player.id} • FECHA: ${new Date().toLocaleDateString('es-ES')}`, 12, 17);
+  doc.text(`EXPEDIENTE DEPORTIVO • ID: ${player.id} • FECHA: ${new Date().toLocaleDateString('es-ES')}`, 12, 9.8);
 
-  let y = 28;
+  let y = 19;
 
   // --- Category Logo (Left side) ---
   if (categoryData) {
     try {
-      doc.addImage(categoryData, 'PNG', 12, y - 7, 36, 16);
+      doc.addImage(categoryData, 'PNG', 12, y - 5.5, 8.5, 12.8);
     } catch {
       // Fallback text if image rendering fails
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setTextColor(30, 41, 59);
       doc.text(player.categoria || 'Primera RFEF', 12, y);
     }
   } else {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setTextColor(30, 41, 59);
     doc.text(player.categoria || 'Primera RFEF', 12, y);
   }
 
   // --- Document Title (Centered) ---
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
+  doc.setFontSize(12);
   doc.setTextColor(15, 23, 42);
   doc.text('INFORME DESCRIPTIVO', 105, y, { align: 'center' });
 
-  // Recommendation Badge Box
-  doc.setFillColor(15, 23, 42);
-  doc.roundedRect(135, y - 6, 63, 12, 1.5, 1.5, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
+  // Recommendation Badge Box (Compact dark UI badge with vector star & subtext)
+  const recUpper = recomendacion.trim().toUpperCase();
+
+  const getRecColor = (rec: string): [number, number, number] => {
+    if (rec.includes('FIRMAR') || rec.includes('CONTRATAR')) return [74, 222, 128]; // green-400
+    if (rec.includes('SEGUIR') || rec.includes('SEGUIMIENTO')) return [96, 165, 250]; // blue-400
+    if (rec.includes('EVALUAR') || rec.includes('INTERESANTE')) return [251, 191, 36]; // amber-400
+    if (rec.includes('DESCARTAR')) return [239, 68, 68]; // red-500
+    return [96, 165, 250]; // default blue-400
+  };
+
+  const getDefaultSubtext = (rec: string) => {
+    if (rec.includes('FIRMAR') || rec.includes('CONTRATAR')) return 'Con nivel y experiencia en la categoría.';
+    if (rec.includes('SEGUIR') || rec.includes('SEGUIMIENTO')) return 'Monitorear su progresión de forma regular.';
+    if (rec.includes('EVALUAR') || rec.includes('INTERESANTE')) return 'Jugador útil para complementar fondo de armario.';
+    if (rec.includes('DESCARTAR')) return 'No cumple los requerimientos actuales del club.';
+    return 'Monitorear su progresión de forma regular.';
+  };
+
+  const subtext = recomendacionComentario || getDefaultSubtext(recUpper);
+
+  // Smaller, compact box dimensions
+  const recBoxW = 44;
+  const recBoxH = 9.5;
+  const recBoxX = 195 - recBoxW; // 151 mm
+  const recBoxY = y - 5.5;
+
+  // Dark slate-950 background with border
+  doc.setFillColor(2, 6, 23); // bg-slate-950
+  doc.setDrawColor(30, 41, 59); // border-slate-800
+  doc.setLineWidth(0.3);
+  doc.roundedRect(recBoxX, recBoxY, recBoxW, recBoxH, 1.2, 1.2, 'FD');
+
+  const [recR, recG, recB] = getRecColor(recUpper);
+  const cleanTitle = recUpper.replace(/^[★&]\s*/, '');
+
+  // Draw crisp vector star icon instead of text star (prevents jsPDF font encoding issues)
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
-  doc.text(`★ RECOMENDACIÓN: ${recomendacion}`, 166.5, y - 1, { align: 'center' });
-  if (recomendacionComentario) {
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(203, 213, 225);
-    const splitCom = doc.splitTextToSize(recomendacionComentario, 60);
-    doc.text(splitCom[0] || '', 166.5, y + 3, { align: 'center' });
-  }
+  const titleWidth = doc.getTextWidth(cleanTitle);
+  const totalHeaderW = titleWidth + 3.2;
+  const startX = recBoxX + (recBoxW - totalHeaderW) / 2;
+
+  // Star icon using overlapping triangles (crisp vector star in jsPDF)
+  doc.setFillColor(recR, recG, recB);
+  const starCX = startX + 0.8;
+  const starCY = recBoxY + 3.3;
+  const sR = 0.9;
+
+  // Upward triangle
+  doc.triangle(
+    starCX, starCY - sR,
+    starCX - sR * 0.866, starCY + sR * 0.5,
+    starCX + sR * 0.866, starCY + sR * 0.5,
+    'F'
+  );
+  // Downward triangle
+  doc.triangle(
+    starCX, starCY + sR,
+    starCX - sR * 0.866, starCY - sR * 0.5,
+    starCX + sR * 0.866, starCY - sR * 0.5,
+    'F'
+  );
+
+  // Title Text
+  doc.setTextColor(recR, recG, recB);
+  doc.text(cleanTitle, startX + 2.8, recBoxY + 4.1);
+
+  // Subtitle / comment line
+  doc.setFontSize(5.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225); // slate-300
+  const splitCom = doc.splitTextToSize(subtext, recBoxW - 2);
+  doc.text(splitCom[0] || '', recBoxX + recBoxW / 2, recBoxY + 7.4, { align: 'center' });
 
   y += 12;
 
@@ -248,17 +308,19 @@ export async function exportPlayerReportPDF(
   // Player Name & Position (Next to photo)
   const infoX = 43;
   doc.setTextColor(220, 38, 38); // red-600
-  doc.setFontSize(7);
+  doc.setFontSize(6.5);
   doc.setFont('helvetica', 'bold');
-  doc.text('FICHA JUGADOR', infoX, y + 7);
+  doc.text('FICHA JUGADOR', infoX, y + 6);
 
   doc.setTextColor(15, 23, 42);
-  doc.setFontSize(11);
-  doc.text(player.nombre.toUpperCase(), infoX, y + 13.5);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text(player.nombre.toUpperCase(), infoX, y + 11.5);
 
-  doc.setFontSize(8);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(71, 85, 105);
-  doc.text(`POSICIÓN: ${player.posicion.toUpperCase()}`, infoX, y + 19.5);
+  doc.text(`POSICIÓN: ${player.posicion.toUpperCase()}`, infoX, y + 16.5);
 
   // Table Data on Middle of Main Card Box with Team Escudo
   const middleX = 88;
@@ -283,10 +345,10 @@ export async function exportPlayerReportPDF(
   doc.text(`Pie / Altura: ${player.lateralidad} / ${altura}`, middleX, y + 20);
 
   // --- Right Side: Tactical Pitch (Campo de Fútbol) ---
-  const pBoxX = 143;
-  const pBoxY = y + 2.5;
-  const pBoxW = 52;
-  const pBoxH = 26;
+  const pBoxW = 38;
+  const pBoxH = 19;
+  const pBoxX = 195 - pBoxW; // 157 mm
+  const pBoxY = y + 3.5;
 
   // Pitch Container Outer Box
   doc.setFillColor(241, 245, 249); // slate-100
@@ -296,15 +358,15 @@ export async function exportPlayerReportPDF(
 
   // Box Title
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6);
+  doc.setFontSize(5.5);
   doc.setTextColor(220, 38, 38); // red-600
-  doc.text('POSICIÓN TÁCTICA', pBoxX + pBoxW / 2, pBoxY + 3.5, { align: 'center' });
+  doc.text('POSICIÓN TÁCTICA', pBoxX + pBoxW / 2, pBoxY + 2.8, { align: 'center' });
 
   // Field Pitch Rectangle
-  const pitchXPos = pBoxX + 2;
-  const pitchYPos = pBoxY + 4.5;
-  const pitchW = pBoxW - 4; // 48 mm
-  const pitchH = pBoxH - 6; // 20 mm
+  const pitchXPos = pBoxX + 1.5;
+  const pitchYPos = pBoxY + 3.5;
+  const pitchW = pBoxW - 3; // 35 mm
+  const pitchH = pBoxH - 4.5; // 14.5 mm
 
   // Green Pitch Background
   doc.setFillColor(240, 253, 244); // emerald-50
@@ -313,7 +375,7 @@ export async function exportPlayerReportPDF(
   doc.rect(pitchXPos, pitchYPos, pitchW, pitchH, 'FD');
 
   // Outer yard line
-  const pPad = 0.8;
+  const pPad = 0.5;
   const fX = pitchXPos + pPad;
   const fY = pitchYPos + pPad;
   const fW = pitchW - (pPad * 2);
@@ -327,9 +389,9 @@ export async function exportPlayerReportPDF(
   doc.line(midX, fY, midX, fY + fH);
 
   // Center Circle & Dot
-  doc.circle(midX, fY + fH / 2, 2.8, 'S');
+  doc.circle(midX, fY + fH / 2, 1.8, 'S');
   doc.setFillColor(5, 150, 105);
-  doc.circle(midX, fY + fH / 2, 0.35, 'F');
+  doc.circle(midX, fY + fH / 2, 0.25, 'F');
 
   // Left Penalty Area
   doc.rect(fX, fY + fH * 0.2, fW * 0.16, fH * 0.6, 'S');
@@ -351,12 +413,12 @@ export async function exportPlayerReportPDF(
   // Outer ring (Amber-500)
   doc.setFillColor(245, 158, 11); // amber-500
   doc.setDrawColor(15, 23, 42); // slate-900
-  doc.setLineWidth(0.3);
-  doc.circle(markerX, markerY, 1.8, 'FD');
+  doc.setLineWidth(0.25);
+  doc.circle(markerX, markerY, 1.3, 'FD');
 
   // Inner center dot
   doc.setFillColor(15, 23, 42);
-  doc.circle(markerX, markerY, 0.5, 'F');
+  doc.circle(markerX, markerY, 0.35, 'F');
 
   y += mainCardHeight + 6;
 

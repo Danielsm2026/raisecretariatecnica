@@ -1,5 +1,5 @@
 {
-  "name": "Scouting de Fútbol",
+  "name": "Departamento Scouting",
   "description": "Base de datos y panel de control para scouting y seguimiento de futbolistas.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

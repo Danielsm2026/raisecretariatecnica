@@ -226,6 +226,11 @@ export default function App() {
               current.categoria = 'Primera RFEF';
               updated = true;
             }
+            const targetAvilesEscudo = 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetAvilesEscudo) {
+              current.escudoUrl = targetAvilesEscudo;
+              updated = true;
+            }
           }
           if (current.id === 'p16' && current.nombre !== 'Osky Menéndez') {
             const freshOsky = INITIAL_PLAYERS.find(pl => pl.id === 'p16');
@@ -438,6 +443,11 @@ export default function App() {
             if (current.equipo === 'Real Avilés' || current.categoria !== 'Primera RFEF') {
               current.equipo = 'Real Avilés Industrial';
               current.categoria = 'Primera RFEF';
+              updated = true;
+            }
+            const targetAvilesEscudo = 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetAvilesEscudo) {
+              current.escudoUrl = targetAvilesEscudo;
               updated = true;
             }
           }
@@ -1119,7 +1129,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-lg font-bold font-display text-white tracking-widest uppercase">
-                ARENA SCOUT <span className="text-[10px] font-mono text-blue-400 px-1.5 py-0.5 bg-slate-800 rounded ml-2 font-normal">V2.4.0</span>
+                DEPARTAMENTO SCOUTING <span className="text-[10px] font-mono text-blue-400 px-1.5 py-0.5 bg-slate-800 rounded ml-2 font-normal">V2.4.0</span>
               </h1>
               <p className="text-[10px] text-slate-500 font-mono uppercase font-semibold">
                 SISTEMA INTEGRADO DE PROSPECCIÓN DEPORTIVA
@@ -1224,7 +1234,7 @@ export default function App() {
                 : 'border-transparent text-slate-400 hover:text-white hover:border-slate-800'
             }`}
           >
-            <span>📋 Campograma Táctico</span>
+            <span>📋 Campograma</span>
           </button>
 
           <button

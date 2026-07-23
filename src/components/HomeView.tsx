@@ -102,7 +102,7 @@ export default function HomeView({ players, matchReports, setActiveTab, onAddPla
     },
     {
       id: 'tactical' as const,
-      title: 'Campograma Táctico',
+      title: 'Campograma',
       subtitle: 'TACTICAL BOARD',
       badge: 'Pizarra interactiva',
       description: 'Herramienta de diseño estratégico. Configura alineaciones en tiempo real, ensaya movimientos, arrastra fichas y personaliza anotaciones visuales.',
