@@ -227,6 +227,40 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     notes: 'Planificación estival para afianzar el bloque competitivo.'
   },
   {
+    id: 'c_agosto_2026_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    nombre: 'AGOSTO 2026 - PRIMERA RFEF GRUPO II',
+    descripcion: 'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo II',
+    fechaModificacion: '24/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {
+      'mc_d': 'p_mangel_prendes',
+      'mc_i': 'p_isi_gomez',
+      'dc_d': 'p_julian_mahicas',
+      'dc_i': 'p_brais_abelenda'
+    },
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para la ventana de Agosto 2026.'
+  },
+  {
+    id: 'c_enero_2026_2rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO I - ENERO 2026',
+    descripcion: 'Campograma mensual posicional y alineación para Segunda RFEF Grupo I',
+    fechaModificacion: '24/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {
+      'mc_d': 'p_samu_mayo',
+      'dc_d': 'p_julian_mahicas'
+    },
+    monthlyAssignments: {},
+    notes: 'Seguimiento de promesas en Segunda RFEF Grupo I.'
+  },
+  {
     id: 'c_verano_plantilla',
     folderId: 'verano',
     nombre: 'Proyección Plantilla Verano',
@@ -255,7 +289,12 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge defaults that might not exist in saved array
+          const existingIds = new Set(parsed.map((c: CampogramaItem) => c.id));
+          const missingDefaults = DEFAULT_CAMPOGRAMAS.filter(d => !existingIds.has(d.id));
+          return missingDefaults.length > 0 ? [...parsed, ...missingDefaults] : parsed;
+        }
       }
     } catch (e) {
       console.error('Error reading saved campogramas:', e);
