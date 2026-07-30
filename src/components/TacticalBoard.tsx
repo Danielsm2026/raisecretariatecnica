@@ -117,46 +117,6 @@ const SUBFOLDERS_MENSUALES = [
 
 const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
   {
-    id: 'c_mensual_principal',
-    folderId: 'mensuales',
-    subFolderId: '1rfef',
-    nombre: 'Campograma Mensual 1ª RFEF',
-    descripcion: 'Evaluación posicional de los mejores perfiles monitorizados en 1ª RFEF',
-    fechaModificacion: '23/07/2026',
-    formation: '4-4-2',
-    monthlyView: true,
-    assignments: {},
-    monthlyAssignments: {
-      'mc_d': ['p_mangel_prendes', 'p_samu_mayo'],
-      'mc_i': ['p_isi_gomez'],
-      'dc_d': ['p_julian_mahicas'],
-      'dc_i': ['p_brais_abelenda'],
-      'mi': ['p_inigo_munoz'],
-      'lti': ['p16']
-    },
-    notes: 'Seguimiento prioritario para reforzar el centro del campo y carril izquierdo.'
-  },
-  {
-    id: 'c_mensual_enero',
-    folderId: 'mensuales',
-    subFolderId: '1rfef',
-    nombre: 'Campograma Enero 2026 - 1ª RFEF',
-    descripcion: 'Mapa posicional mensual de inicio de año',
-    fechaModificacion: '15/01/2026',
-    formation: '4-3-3',
-    monthlyView: true,
-    assignments: {},
-    monthlyAssignments: {
-      'mcd': ['p_mangel_prendes'],
-      'mc_d': ['p_samu_mayo'],
-      'mc_i': ['p_isi_gomez'],
-      'dc': ['p_julian_mahicas'],
-      'ed': ['p_inigo_munoz'],
-      'ei': ['p_brais_abelenda']
-    },
-    notes: ''
-  },
-  {
     id: 'c_mensual_2rfef_principal',
     folderId: 'mensuales',
     subFolderId: '2rfef',
@@ -285,15 +245,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentSubFolder, setCurrentSubFolder] = useState<CampogramaSubFolderId | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [campogramas, setCampogramas] = useState<CampogramaItem[]>(() => {
+    const deletedIds = new Set(['c_mensual_principal', 'c_mensual_enero']);
     try {
       const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge defaults that might not exist in saved array
-          const existingIds = new Set(parsed.map((c: CampogramaItem) => c.id));
+          // Filter out explicitly removed default campogramas
+          const filtered = parsed.filter((c: CampogramaItem) => !deletedIds.has(c.id));
+          const existingIds = new Set(filtered.map((c: CampogramaItem) => c.id));
           const missingDefaults = DEFAULT_CAMPOGRAMAS.filter(d => !existingIds.has(d.id));
-          return missingDefaults.length > 0 ? [...parsed, ...missingDefaults] : parsed;
+          const result = missingDefaults.length > 0 ? [...filtered, ...missingDefaults] : filtered;
+          localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(result));
+          return result;
         }
       }
     } catch (e) {
