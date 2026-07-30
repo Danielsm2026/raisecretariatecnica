@@ -55,6 +55,9 @@ export function getCategoryEscudoUrl(categoria?: string): string {
   if (cat.includes('segunda rfef') || cat.includes('2ª rfef') || cat.includes('2ª federacion') || cat.includes('segunda federacion') || cat.includes('segunda federación') || cat.includes('2ª federación')) {
     return '/escudos/segunda-federacion.png';
   }
+  if (cat.includes('primera rfef') || cat.includes('1ª rfef') || cat.includes('1ª federacion') || cat.includes('primera federacion') || cat.includes('primera federación') || cat.includes('1ª federación')) {
+    return '/escudos/primera-federacion.png';
+  }
   if (cat.includes('segunda div') || cat.includes('hypermotion') || cat.includes('smartbank') || cat.includes('laliga2') || cat.includes('2ª división') || cat.includes('2ª division')) {
     return 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/LaLiga_Hypermotion_2023_logo.svg/500px-LaLiga_Hypermotion_2023_logo.svg.png';
   }

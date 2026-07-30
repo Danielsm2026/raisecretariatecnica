@@ -351,6 +351,17 @@ export default function PlayerReportModal({
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch my-3.5">
               {/* Left Column: Avatar & Name */}
               <div className="md:col-span-3 flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded">
+                {/* Category Logo (Primera RFEF / Segunda RFEF) above FICHA JUGADOR */}
+                <div className="mb-1.5 flex items-center justify-center">
+                  <img 
+                    src={getCategoryEscudoUrl(player.categoria)} 
+                    alt={player.categoria || 'Categoría'} 
+                    className="h-10 w-auto max-w-[90px] object-contain drop-shadow-sm"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
                 <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider block text-center mb-1 font-mono">
                   FICHA JUGADOR
                 </span>
