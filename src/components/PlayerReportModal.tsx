@@ -15,7 +15,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { ensureReportFields } from '../utils/reportDefaults';
-import { getPlayerEscudoUrl, getCategoryEscudoUrl } from '../utils/escudoHelper';
+import { getPlayerEscudoUrl } from '../utils/escudoHelper';
 import ImageUploadInput from './ImageUploadInput';
 import { exportPlayerReportPDF } from '../utils/exportPlayerReportPDF';
 
@@ -285,27 +285,25 @@ export default function PlayerReportModal({
               <span className="bg-slate-950 text-white font-mono font-bold text-[9px] px-2.5 py-1 tracking-widest uppercase rounded-sm">
                 DEPARTAMENTO DE SCOUTING
               </span>
-              <div className="text-right">
-                <span className="text-[13px] font-extrabold font-sans tracking-wide text-slate-850">
+              <div className="flex items-center justify-end space-x-2.5 text-right">
+                <span className="text-[13px] sm:text-[14px] font-extrabold font-sans tracking-wide text-slate-850">
                   REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL
                 </span>
+                <img
+                  src="https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1"
+                  alt="Real Avilés Industrial"
+                  className="h-7 sm:h-8 w-auto max-h-8 object-contain drop-shadow-sm flex-shrink-0"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
               </div>
             </div>
 
             {/* Document Title bar */}
             <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-3 my-4">
-              <div className="flex items-center space-x-2">
-                <div className="h-14 sm:h-16 w-auto max-w-[200px] flex items-center justify-start py-1">
-                  <img
-                    src={getCategoryEscudoUrl(player.categoria)}
-                    alt={player.categoria || 'Categoría'}
-                    className="h-12 sm:h-14 max-h-14 w-auto object-contain drop-shadow-md"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                </div>
+              <div className="flex items-center justify-start space-x-2">
               </div>
               
               <div className="text-center">
@@ -324,6 +322,7 @@ export default function PlayerReportModal({
                       onChange={(e) => setRecomendacion(e.target.value)}
                       className="w-full text-3xs font-mono font-bold bg-slate-900 text-white border border-slate-750 rounded px-1 py-0.5 focus:outline-none"
                     >
+                      <option value="SIN VALORAR">★ SIN VALORAR</option>
                       <option value="FIRMAR">★ FIRMAR</option>
                       <option value="SEGUIR">★ SEGUIR</option>
                       <option value="INTERESANTE">★ INTERESANTE</option>
@@ -343,12 +342,17 @@ export default function PlayerReportModal({
                     <p className={`text-center font-extrabold text-xs tracking-widest uppercase transition-colors ${
                       (recomendacion === 'FIRMAR' || recomendacion === 'CONTRATAR') ? 'text-green-400' :
                       (recomendacion === 'SEGUIR' || recomendacion === 'SEGUIMIENTO') ? 'text-blue-400' :
-                      (recomendacion === 'EVALUAR' || recomendacion === 'INTERESANTE') ? 'text-amber-400' : 'text-red-500'
+                      (recomendacion === 'EVALUAR' || recomendacion === 'INTERESANTE') ? 'text-amber-400' :
+                      (recomendacion === 'SIN VALORAR' || recomendacion === 'SIN_VALORAR') ? 'text-slate-400' : 'text-red-500'
                     }`}>
-                      ★ {recomendacion}
+                      ★ {recomendacion || 'SIN VALORAR'}
                     </p>
                     <p className="text-[8px] font-sans text-slate-300 leading-tight mt-0.5 text-center truncate" title={recomendacionComentario}>
-                      {recomendacionComentario || 'Monitoreo de rendimiento constante.'}
+                      {recomendacionComentario || (
+                        (recomendacion === 'SIN VALORAR' || recomendacion === 'SIN_VALORAR')
+                          ? 'Pendiente de evaluación por el departamento.'
+                          : 'Monitoreo de rendimiento constante.'
+                      )}
                     </p>
                   </div>
                 )}
@@ -414,17 +418,7 @@ export default function PlayerReportModal({
                         Categoría:
                       </td>
                       <td className="px-2.5 py-1.5 text-slate-900 font-semibold text-[11px] text-center align-middle">
-                        <div className="flex items-center justify-center gap-1.5 w-full mx-auto">
-                          <img 
-                            src={getCategoryEscudoUrl(player.categoria)} 
-                            alt={player.categoria || 'Categoría'} 
-                            className="h-5 w-auto max-w-[24px] object-contain shrink-0"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                          <span>{player.categoria || 'Primera RFEF'}</span>
-                        </div>
+                        <div className="text-center w-full">{player.categoria || 'Primera RFEF'}</div>
                       </td>
                     </tr>
                     <tr className="border-b border-slate-200">
@@ -432,15 +426,7 @@ export default function PlayerReportModal({
                         Equipo:
                       </td>
                       <td className="px-2.5 py-1.5 text-slate-900 font-semibold text-[11px] text-center align-middle">
-                        <div className="flex items-center justify-center gap-1.5 w-full mx-auto">
-                          <img 
-                            src={getPlayerEscudoUrl(player)} 
-                            alt="Escudo" 
-                            className="w-5 h-5 object-contain shrink-0"
-                            onError={(e) => {
-                              e.currentTarget.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(player.equipo || 'FC')}&radius=10&backgroundColor=1e293b&fontSize=45`;
-                            }}
-                          />
+                        <div className="text-center w-full">
                           {isEditing ? (
                             <input
                               type="text"
@@ -673,11 +659,9 @@ export default function PlayerReportModal({
 
             </div>
 
-            {/* Document Seal Footer */}
-            <div className="flex items-center justify-between text-[7.5px] text-slate-400 font-mono mt-6 pt-3.5 border-t border-slate-200">
-              <span>DOCUMENTO OFICIAL REF: REAL_AVILES_OJEADOS_{player.id}</span>
-              <span>LFP OFICIAL DEPARTAMENTO SCOUTING REGLAMENTO DEPORTIVO</span>
-              <span>FIRMADO ELECTRÓNICAMENTE</span>
+            {/* Document Footer */}
+            <div className="flex items-center justify-center text-[8px] text-slate-400 font-mono mt-6 pt-3.5 border-t border-slate-200">
+              <span>Departamento de scouting Real Avilés Industrial</span>
             </div>
 
           </div>

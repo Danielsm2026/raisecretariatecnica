@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { ScoutedPlayer } from '../types';
-import { getPlayerEscudoUrl, getCategoryEscudoUrl } from './escudoHelper';
+import { getPlayerEscudoUrl } from './escudoHelper';
 
 async function urlToDataUrl(url: string): Promise<string | null> {
   if (!url) return null;
@@ -116,14 +116,12 @@ export async function exportPlayerReportPDF(
   const tieneValorPor = reportData?.tieneValorPor || player.tieneValorPor || '';
 
   const playerPhotoUrl = reportData?.fotoUrl || player.fotoUrl || '';
-  const escudoUrl = reportData?.escudoUrl || getPlayerEscudoUrl(player);
-  const categoryEscudoUrl = getCategoryEscudoUrl(player.categoria);
+  const realAvilesLogoUrl = 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1';
 
-  // Preload player photo, team escudo, and category escudo as Data URLs for jsPDF
-  const [playerPhotoData, escudoData, categoryData] = await Promise.all([
+  // Preload player photo and real aviles escudo as Data URLs for jsPDF
+  const [playerPhotoData, realAvilesData] = await Promise.all([
     urlToDataUrl(playerPhotoUrl),
-    urlToDataUrl(escudoUrl),
-    urlToDataUrl(categoryEscudoUrl)
+    urlToDataUrl(realAvilesLogoUrl)
   ]);
 
   const age = player.anoNacimiento ? new Date().getFullYear() - player.anoNacimiento : '-';
@@ -138,7 +136,14 @@ export async function exportPlayerReportPDF(
   doc.text('DEPARTAMENTO DE SCOUTING', 12, 5.5);
 
   doc.setFontSize(8);
-  doc.text('REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL', 198, 5.5, { align: 'right' });
+  doc.text('REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL', 188, 5.5, { align: 'right' });
+  if (realAvilesData) {
+    try {
+      doc.addImage(realAvilesData, 'PNG', 190.5, 1.5, 7.5, 9.5);
+    } catch {
+      // ignore
+    }
+  }
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(5.5);
@@ -146,24 +151,6 @@ export async function exportPlayerReportPDF(
   doc.text(`EXPEDIENTE DEPORTIVO • ID: ${player.id} • FECHA: ${new Date().toLocaleDateString('es-ES')}`, 12, 9.8);
 
   let y = 19;
-
-  // --- Category Logo (Left side) ---
-  if (categoryData) {
-    try {
-      doc.addImage(categoryData, 'PNG', 12, y - 5.5, 8.5, 12.8);
-    } catch {
-      // Fallback text if image rendering fails
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(30, 41, 59);
-      doc.text(player.categoria || 'Primera RFEF', 12, y);
-    }
-  } else {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(30, 41, 59);
-    doc.text(player.categoria || 'Primera RFEF', 12, y);
-  }
 
   // --- Document Title (Centered) ---
   doc.setFont('helvetica', 'bold');
@@ -178,6 +165,7 @@ export async function exportPlayerReportPDF(
     if (rec.includes('FIRMAR') || rec.includes('CONTRATAR')) return [74, 222, 128]; // green-400
     if (rec.includes('SEGUIR') || rec.includes('SEGUIMIENTO')) return [96, 165, 250]; // blue-400
     if (rec.includes('EVALUAR') || rec.includes('INTERESANTE')) return [251, 191, 36]; // amber-400
+    if (rec.includes('SIN VALORAR') || rec.includes('SIN_VALORAR') || rec.includes('SIN VALORACION')) return [148, 163, 184]; // slate-400
     if (rec.includes('DESCARTAR')) return [239, 68, 68]; // red-500
     return [96, 165, 250]; // default blue-400
   };
@@ -186,6 +174,7 @@ export async function exportPlayerReportPDF(
     if (rec.includes('FIRMAR') || rec.includes('CONTRATAR')) return 'Con nivel y experiencia en la categoría.';
     if (rec.includes('SEGUIR') || rec.includes('SEGUIMIENTO')) return 'Monitorear su progresión de forma regular.';
     if (rec.includes('EVALUAR') || rec.includes('INTERESANTE')) return 'Jugador útil para complementar fondo de armario.';
+    if (rec.includes('SIN VALORAR') || rec.includes('SIN_VALORAR') || rec.includes('SIN VALORACION')) return 'Pendiente de evaluación por el departamento.';
     if (rec.includes('DESCARTAR')) return 'No cumple los requerimientos actuales del club.';
     return 'Monitorear su progresión de forma regular.';
   };
@@ -322,25 +311,13 @@ export async function exportPlayerReportPDF(
   doc.setTextColor(71, 85, 105);
   doc.text(`POSICIÓN: ${player.posicion.toUpperCase()}`, infoX, y + 16.5);
 
-  // Table Data on Middle of Main Card Box with Team Escudo
+  // Table Data on Middle of Main Card Box
   const middleX = 88;
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 41, 59);
 
-  // Team Crest rendering
-  let equipoTextX = middleX;
-  if (escudoData) {
-    try {
-      const escudoSize = 6.5;
-      doc.addImage(escudoData, 'PNG', middleX, y + 3.5, escudoSize, escudoSize);
-      equipoTextX = middleX + escudoSize + 2;
-    } catch {
-      equipoTextX = middleX;
-    }
-  }
-
-  doc.text(`Equipo: ${equipo}`, equipoTextX, y + 6);
+  doc.text(`Equipo: ${equipo}`, middleX, y + 6);
   doc.text(`Categoría: ${player.categoria || 'Primera RFEF'}`, middleX, y + 12);
   doc.text(`Año Nac. / Edad: ${player.anoNacimiento} (${age} a.)`, middleX, y + 18);
   doc.text(`Pie / Altura: ${player.lateralidad} / ${altura}`, middleX, y + 24);
@@ -615,11 +592,9 @@ export async function exportPlayerReportPDF(
   doc.line(12, footerY - 3, 198, footerY - 3);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
-  doc.text(`DOCUMENTO OFICIAL REF: REAL_AVILES_OJEADOS_${player.id}`, 12, footerY);
-  doc.text('DEPARTAMENTO DE SCOUTING • REAL AVILÉS INDUSTRIAL CF', 105, footerY, { align: 'center' });
-  doc.text('FIRMADO ELECTRÓNICAMENTE', 198, footerY, { align: 'right' });
+  doc.text('Departamento de scouting Real Avilés Industrial', 105, footerY, { align: 'center' });
 
   // Save the PDF
   const filename = `Informe_${player.nombre.replace(/\s+/g, '_')}_RealAviles.pdf`;
