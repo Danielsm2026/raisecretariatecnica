@@ -83,7 +83,7 @@ const FOLDERS = [
   }
 ];
 
-const LOGO_PRIMERA_RFEF = 'https://cdn.resfu.com/media/img/league_logos/primera-federacion.png?size=120x&lossy=1';
+const LOGO_PRIMERA_RFEF = 'https://assets.football-logos.cc/logos/spain/1500x1500/primera-federacion--no-text.88bef19f.png';
 const LOGO_SEGUNDA_RFEF = 'https://cdn.resfu.com/media/img/league_logos/segunda_rfef.png?size=120x&lossy=1';
 
 const SUBFOLDERS_MENSUALES = [
