@@ -189,6 +189,19 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     notes: 'Campograma de seguimiento para la ventana de Agosto 2026.'
   },
   {
+    id: 'c_agosto_2026_2rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO I - AGOSTO 2026',
+    descripcion: 'Campograma mensual y alineación para Segunda RFEF Grupo I',
+    fechaModificacion: '24/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I.'
+  },
+  {
     id: 'c_verano_plantilla',
     folderId: 'verano',
     nombre: 'Proyección Plantilla Verano',
