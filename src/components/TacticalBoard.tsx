@@ -117,22 +117,6 @@ const SUBFOLDERS_MENSUALES = [
 
 const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
   {
-    id: 'c_mensual_2rfef_principal',
-    folderId: 'mensuales',
-    subFolderId: '2rfef',
-    nombre: 'Campograma Mensual 2ª RFEF',
-    descripcion: 'Evaluación posicional de perfiles monitorizados en Segunda RFEF',
-    fechaModificacion: '23/07/2026',
-    formation: '4-4-2',
-    monthlyView: true,
-    assignments: {},
-    monthlyAssignments: {
-      'mc_d': ['p_mangel_prendes'],
-      'dc_d': ['p_julian_mahicas']
-    },
-    notes: 'Seguimiento de promesas y oportunidades de mercado en Segunda RFEF.'
-  },
-  {
     id: 'c_invierno_principal',
     folderId: 'invierno',
     nombre: 'Campograma Mercado de Invierno',
@@ -205,22 +189,6 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     notes: 'Campograma de seguimiento para la ventana de Agosto 2026.'
   },
   {
-    id: 'c_enero_2026_2rfef_g1',
-    folderId: 'mensuales',
-    subFolderId: '2rfef',
-    nombre: 'SEGUNDA RFEF GRUPO I - ENERO 2026',
-    descripcion: 'Campograma mensual posicional y alineación para Segunda RFEF Grupo I',
-    fechaModificacion: '24/07/2026',
-    formation: '4-4-2',
-    monthlyView: false,
-    assignments: {
-      'mc_d': 'p_samu_mayo',
-      'dc_d': 'p_julian_mahicas'
-    },
-    monthlyAssignments: {},
-    notes: 'Seguimiento de promesas en Segunda RFEF Grupo I.'
-  },
-  {
     id: 'c_verano_plantilla',
     folderId: 'verano',
     nombre: 'Proyección Plantilla Verano',
@@ -245,7 +213,12 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentSubFolder, setCurrentSubFolder] = useState<CampogramaSubFolderId | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [campogramas, setCampogramas] = useState<CampogramaItem[]>(() => {
-    const deletedIds = new Set(['c_mensual_principal', 'c_mensual_enero']);
+    const deletedIds = new Set([
+      'c_mensual_principal', 
+      'c_mensual_enero', 
+      'c_mensual_2rfef_principal', 
+      'c_enero_2026_2rfef_g1'
+    ]);
     try {
       const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2');
       if (saved) {
