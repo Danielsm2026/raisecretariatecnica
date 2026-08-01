@@ -909,13 +909,14 @@ const RAW_PLAYERS: ScoutedPlayer[] = [
   {
     id: 'p_neskes',
     nombre: 'Neskes',
-    equipo: 'Real Avilés',
+    equipo: 'Real Avilés Industrial',
+    categoria: 'Primera RFEF',
     posicion: 'Mediapunta',
     anoNacimiento: 2001,
     lateralidad: 'Diestro',
     valorMercado: 250000,
     calificacion: 4,
-    notas: 'Centrocampista ofensivo y mediapunta de gran talento técnico, visión de juego periférica y excelente conducción del balón. Muy habilidoso asociándose en tres cuartos de campo y filtrando pases clave.',
+    notas: 'Mediocentro ofensivo / mediapunta de gran talento técnico, visión de juego periférica y excelente conducción del balón. Muy habilidoso asociándose en tres cuartos de campo y filtrando pases clave.',
     atributos: {
       fisico: 7,
       tecnica: 8,
@@ -925,13 +926,14 @@ const RAW_PLAYERS: ScoutedPlayer[] = [
     fechaRegistro: '2026-07-05',
     altura: '1.78 m',
     recomendacion: 'SEGUIR',
-    recomendacionComentario: 'Jugador creativo de enorme proyección técnica y juventud (24 años). Aporta dinamismo, visión y capacidad de generar peligro constante entre líneas.',
-    descripcionGeneral: 'Neskes es un mediocentro ofensivo dotado de un gran control orientado, dinamismo para superar bloques rivales y criterio para asociarse en la creación.',
-    fortalezas: 'Visión periférica y distribución entre líneas.\nExcelente conducción de balón y primer toque.\nInteligencia táctica para ocupar espacios libres.\nGran golpeo de media distancia.',
+    recomendacionComentario: 'Jugador creativo de enorme proyección técnica y juventud (24 años, 22/11/2001). Aporta dinamismo, visión y capacidad de generar peligro constante entre líneas.',
+    descripcionGeneral: 'Neskes (22/11/2001, 24 años, 1.78 m) es un mediocentro ofensivo / mediapunta diestro de gran calidad técnica y creatividad que milita en el Real Avilés Industrial en Primera RFEF.',
+    fortalezas: 'Visión periférica y distribución entre líneas.\nExcelente conducción de balón y primer toque.\nInteligencia táctica para ocupar espacios libres.\nGran golpeo de media distancia con la pierna derecha.',
     debilidades: 'Puede mejorar en la intensidad del repliegue defensivo.\nDisputas aéreas divididas.',
-    enSuEquipo: 'Aporta dinamismo técnico y capacidad asociativa en la mediapunta para desatascar partidos cerrados.',
-    enPocasPalabras: 'CENTROCAMPISTA TALENTOSO.\nVISIÓN ENTRE LÍNEAS.\nCONDUCCIÓN DINÁMICA.\nJUEGO CON CRITERIO.',
-    tieneValorPor: 'JUVENTUD Y PROYECCIÓN.\nTALENTO TÉCNICO DIFERENCIAL.\nCREATIVIDAD ASOCIATIVA.'
+    enSuEquipo: 'Aporta dinamismo técnico y capacidad asociativa en la mediapunta para desatascar partidos cerrados en el Real Avilés Industrial.',
+    enPocasPalabras: 'MEDIACENTRO OFENSIVO.\nVISIÓN ENTRE LÍNEAS.\nPIE DERECHO TÉCNICO.\nJUEGO CON CRITERIO.',
+    tieneValorPor: 'JUVENTUD Y PROYECCIÓN.\nTALENTO TÉCNICO DIFERENCIAL.\nCREATIVIDAD ASOCIATIVA.',
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1'
   },
   {
     id: 'p_sillero',
