@@ -1,4 +1,6 @@
 import { ScoutedPlayer } from '../types';
+import primeraLogoAsset from '../assets/images/primera_rfef_logo_1784843710889.jpg';
+import segundaLogoAsset from '../assets/images/segunda_rfef_logo_1784843722537.jpg';
 
 export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'FC Barcelona': '/escudos/barcelona.svg',
@@ -52,11 +54,11 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
 export function getCategoryEscudoUrl(categoria?: string): string {
   const cat = (categoria || '').toLowerCase().trim();
   
-  if (cat.includes('segunda rfef') || cat.includes('2ª rfef') || cat.includes('2ª federacion') || cat.includes('segunda federacion') || cat.includes('segunda federación') || cat.includes('2ª federación')) {
-    return '/escudos/segunda-federacion.png';
+  if (cat.includes('segunda rfef') || cat.includes('2ª rfef') || cat.includes('2ª federacion') || cat.includes('segunda federacion') || cat.includes('segunda federación') || cat.includes('2ª federación') || cat.includes('segunda')) {
+    return segundaLogoAsset || '/escudos/segunda-federacion.png';
   }
-  if (cat.includes('primera rfef') || cat.includes('1ª rfef') || cat.includes('1ª federacion') || cat.includes('primera federacion') || cat.includes('primera federación') || cat.includes('1ª federación')) {
-    return '/escudos/primera-federacion.png';
+  if (cat.includes('primera rfef') || cat.includes('1ª rfef') || cat.includes('1ª federacion') || cat.includes('primera federacion') || cat.includes('primera federación') || cat.includes('1ª federación') || cat.includes('primera')) {
+    return primeraLogoAsset || '/escudos/primera-federacion.png';
   }
   if (cat.includes('segunda div') || cat.includes('hypermotion') || cat.includes('smartbank') || cat.includes('laliga2') || cat.includes('2ª división') || cat.includes('2ª division')) {
     return 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/LaLiga_Hypermotion_2023_logo.svg/500px-LaLiga_Hypermotion_2023_logo.svg.png';
@@ -68,6 +70,6 @@ export function getCategoryEscudoUrl(categoria?: string): string {
     return 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_EA_Sports_2023_logo.svg/500px-LaLiga_EA_Sports_2023_logo.svg.png';
   }
 
-  // Default / Primera Federación
-  return '/escudos/primera-federacion.png';
+  // Default to Primera RFEF
+  return primeraLogoAsset || '/escudos/primera-federacion.png';
 }
