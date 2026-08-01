@@ -44,6 +44,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
   const [altura, setAltura] = useState<string>('');
   const [escudoUrl, setEscudoUrl] = useState<string>('');
   const [fotoUrl, setFotoUrl] = useState<string>('');
+  const [besoccerUrl, setBesoccerUrl] = useState<string>('');
   
   // Attributes
   const [fisico, setFisico] = useState<number>(8);
@@ -77,6 +78,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       setAltura(playerToEdit.altura || '');
       setEscudoUrl(playerToEdit.escudoUrl || '');
       setFotoUrl(playerToEdit.fotoUrl || '');
+      setBesoccerUrl(playerToEdit.besoccerUrl || '');
       setValoracionFisica(playerToEdit.valoracionFisica || {});
     } else {
       // Clear for new player
@@ -97,6 +99,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       setAltura('');
       setEscudoUrl('');
       setFotoUrl('');
+      setBesoccerUrl('');
       setValoracionFisica({});
     }
     setErrors({});
@@ -142,6 +145,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       altura: altura.trim() || undefined,
       escudoUrl: escudoUrl.trim() || undefined,
       fotoUrl: fotoUrl.trim() || undefined,
+      besoccerUrl: besoccerUrl.trim() || undefined,
       valoracionFisica
     });
 
@@ -364,6 +368,21 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                 folderName="player_photos"
                 placeholder="Ej: https://images.unsplash.com/... o url"
               />
+
+              {/* URL BeSoccer */}
+              <div>
+                <label htmlFor="input-player-besoccerUrl" className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  URL de BeSoccer
+                </label>
+                <input
+                  id="input-player-besoccerUrl"
+                  type="url"
+                  placeholder="Ej: https://es.besoccer.com/jugador/..."
+                  value={besoccerUrl}
+                  onChange={(e) => setBesoccerUrl(e.target.value)}
+                  className="w-full text-xs px-3 py-2 bg-slate-850 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
 
             </div>
           </div>

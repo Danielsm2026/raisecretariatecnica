@@ -47,6 +47,7 @@ export interface ScoutedPlayer {
   elo?: number; // ELO rating
   escudoUrl?: string; // URL to team crest/shield
   fotoUrl?: string; // URL to player's picture
+  besoccerUrl?: string; // URL to BeSoccer player profile
   valoracionFisica?: Record<string, number>; // ratings by position (1-10)
   fichajeFecha?: string; // e.g. '2026-07-01'
   fichajeDetalles?: string; // e.g. 'Fichaje gratis.'

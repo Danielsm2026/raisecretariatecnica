@@ -16,7 +16,8 @@ import {
   Compass, 
   User,
   Download,
-  ArrowLeft 
+  ArrowLeft,
+  ExternalLink
 } from 'lucide-react';
 import { ensureReportFields } from '../utils/reportDefaults';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
@@ -112,6 +113,7 @@ export default function PlayerDetails({
   const [equipo, setEquipo] = useState('');
   const [escudoUrl, setEscudoUrl] = useState('');
   const [fotoUrl, setFotoUrl] = useState('');
+  const [besoccerUrl, setBesoccerUrl] = useState('');
   const [altura, setAltura] = useState('1.78 m');
   const [recomendacion, setRecomendacion] = useState('FIRMAR');
   const [recomendacionComentario, setRecomendacionComentario] = useState('');
@@ -143,6 +145,7 @@ export default function PlayerDetails({
       setPitchY(fullReport.pitchY);
       setEscudoUrl(player.escudoUrl || '');
       setFotoUrl(player.fotoUrl || '');
+      setBesoccerUrl(player.besoccerUrl || '');
     }
     setIsEditingReport(false);
   }, [player]);
@@ -216,7 +219,8 @@ export default function PlayerDetails({
       pitchX,
       pitchY,
       escudoUrl: escudoUrl.trim() || undefined,
-      fotoUrl: fotoUrl.trim() || undefined
+      fotoUrl: fotoUrl.trim() || undefined,
+      besoccerUrl: besoccerUrl.trim() || undefined
     };
 
     onSaveReport(updatedPlayer);
@@ -659,6 +663,34 @@ export default function PlayerDetails({
                             <span className="text-slate-600">{altura}</span>
                           )}
                         </div>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-slate-200">
+                      <td className="px-2.5 py-2 font-bold bg-slate-100 text-slate-700 border-r border-slate-200 text-center align-middle">
+                        URL BeSoccer:
+                      </td>
+                      <td className="px-2.5 py-1.5 text-slate-900 font-mono text-center align-middle">
+                        {isEditingReport ? (
+                          <input
+                            type="text"
+                            value={besoccerUrl}
+                            onChange={(e) => setBesoccerUrl(e.target.value)}
+                            className="w-full bg-slate-50 text-[10px] border border-slate-300 rounded px-1.5 py-0.5 focus:outline-none text-left"
+                            placeholder="https://es.besoccer.com/jugador/..."
+                          />
+                        ) : besoccerUrl ? (
+                          <a
+                            href={besoccerUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-semibold underline text-[10px]"
+                          >
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                            <span>Perfil BeSoccer</span>
+                          </a>
+                        ) : (
+                          <span className="text-slate-400 italic text-[10px]">No indicada</span>
+                        )}
                       </td>
                     </tr>
                   </tbody>

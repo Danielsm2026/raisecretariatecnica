@@ -21,7 +21,8 @@ import {
   FileText,
   Trash2,
   FileDown,
-  Activity
+  Activity,
+  ExternalLink
 } from 'lucide-react';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
 import PlayerSeguimientoModal from './PlayerSeguimientoModal';
@@ -617,9 +618,21 @@ export default function PlayerTable({
                         </div>
                       )}
                       <div>
-                        <div className="font-bold text-white text-[12.5px] leading-snug group-hover/name:text-blue-400 transition-colors flex items-center gap-1">
+                        <div className="font-bold text-white text-[12.5px] leading-snug group-hover/name:text-blue-400 transition-colors flex items-center gap-1.5">
                           {player.nombre}
                           <Edit className="w-2.5 h-2.5 opacity-0 group-hover/name:opacity-100 text-blue-400 transition-opacity" />
+                          {player.besoccerUrl && (
+                            <a
+                              href={player.besoccerUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              title="Abrir perfil de BeSoccer en una nueva pestaña"
+                              className="inline-flex items-center text-emerald-400 hover:text-emerald-300 p-0.5"
+                            >
+                              <ExternalLink className="w-3 h-3 shrink-0" />
+                            </a>
+                          )}
                         </div>
                         <div className="text-[10px] text-slate-500 font-mono">Rating: {player.calificacion} ★</div>
                       </div>

@@ -56,6 +56,8 @@ ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS fichaje_origen TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "fichajeOrigen" TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS es_fichaje_verano_2026 BOOLEAN;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "esFichajeVerano2026" BOOLEAN;
+ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS besoccer_url TEXT;
+ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "besoccerUrl" TEXT;
 ALTER TABLE scouting_match_reports ADD COLUMN IF NOT EXISTS categoria TEXT;
 
 -- Forzar la recarga del esquema en Supabase (PostgREST)

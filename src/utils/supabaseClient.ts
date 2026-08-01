@@ -70,6 +70,7 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
       elo: row.elo !== undefined ? row.elo : undefined,
       escudoUrl: row.escudoUrl || row.escudo_url || undefined,
       fotoUrl: row.fotoUrl || row.foto_url || undefined,
+      besoccerUrl: row.besoccer_url || row.besoccerUrl || rawAtributos.besoccerUrl || undefined,
       valoracionFisica: row.valoracion_fisica || row.valoracionFisica || nestedFisica || undefined,
       fichajeFecha: row.fichaje_fecha || row.fichajeFecha || rawAtributos.fichajeFecha || undefined,
       fichajeDetalles: row.fichaje_detalles || row.fichajeDetalles || rawAtributos.fichajeDetalles || undefined,
@@ -195,7 +196,8 @@ export async function dbSavePlayer(player: ScoutedPlayer): Promise<void> {
       fichajeFecha: player.fichajeFecha,
       fichajeDetalles: player.fichajeDetalles,
       fichajeOrigen: player.fichajeOrigen,
-      esFichajeVerano2026: player.esFichajeVerano2026
+      esFichajeVerano2026: player.esFichajeVerano2026,
+      besoccerUrl: player.besoccerUrl
     },
     fecha_registro: player.fechaRegistro,
     fechaRegistro: player.fechaRegistro,
@@ -223,6 +225,8 @@ export async function dbSavePlayer(player: ScoutedPlayer): Promise<void> {
     escudoUrl: player.escudoUrl,
     foto_url: player.fotoUrl,
     fotoUrl: player.fotoUrl,
+    besoccer_url: player.besoccerUrl,
+    besoccerUrl: player.besoccerUrl,
     valoracion_fisica: player.valoracionFisica,
     valoracionFisica: player.valoracionFisica,
     fichaje_fecha: player.fichajeFecha,
@@ -289,7 +293,8 @@ export async function dbBulkUpsert(players: ScoutedPlayer[]): Promise<void> {
       fichajeFecha: player.fichajeFecha,
       fichajeDetalles: player.fichajeDetalles,
       fichajeOrigen: player.fichajeOrigen,
-      esFichajeVerano2026: player.esFichajeVerano2026
+      esFichajeVerano2026: player.esFichajeVerano2026,
+      besoccerUrl: player.besoccerUrl
     },
     fecha_registro: player.fechaRegistro,
     fechaRegistro: player.fechaRegistro,
@@ -317,6 +322,8 @@ export async function dbBulkUpsert(players: ScoutedPlayer[]): Promise<void> {
     escudoUrl: player.escudoUrl,
     foto_url: player.fotoUrl,
     fotoUrl: player.fotoUrl,
+    besoccer_url: player.besoccerUrl,
+    besoccerUrl: player.besoccerUrl,
     valoracion_fisica: player.valoracionFisica,
     valoracionFisica: player.valoracionFisica,
     fichaje_fecha: player.fichajeFecha,
@@ -530,6 +537,8 @@ ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS fichaje_origen TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "fichajeOrigen" TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS es_fichaje_verano_2026 BOOLEAN;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "esFichajeVerano2026" BOOLEAN;
+ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS besoccer_url TEXT;
+ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "besoccerUrl" TEXT;
 ALTER TABLE scouting_match_reports ADD COLUMN IF NOT EXISTS categoria TEXT;
 
 -- Forzar recarga de cache del esquema en Supabase (PostgREST)
@@ -577,6 +586,8 @@ CREATE TABLE IF NOT EXISTS scouting_players (
   "escudoUrl" TEXT,
   foto_url TEXT,
   "fotoUrl" TEXT,
+  besoccer_url TEXT,
+  "besoccerUrl" TEXT,
   valoracion_fisica JSONB,
   "valoracionFisica" JSONB,
   fichaje_fecha TEXT,
