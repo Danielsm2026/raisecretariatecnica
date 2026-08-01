@@ -15,7 +15,8 @@ import {
   Sparkles, 
   Compass, 
   User,
-  Download 
+  Download,
+  ArrowLeft 
 } from 'lucide-react';
 import { ensureReportFields } from '../utils/reportDefaults';
 import { getPlayerEscudoUrl, getCategoryEscudoUrl } from '../utils/escudoHelper';
@@ -27,6 +28,7 @@ interface PlayerDetailsProps {
   onEdit: (player: ScoutedPlayer) => void;
   onDelete: (id: string) => void;
   onSaveReport?: (player: ScoutedPlayer) => void;
+  onBack?: () => void;
 }
 
 // Interactive Mini-Soccer Pitch
@@ -99,7 +101,8 @@ export default function PlayerDetails({
   player, 
   onEdit, 
   onDelete, 
-  onSaveReport 
+  onSaveReport,
+  onBack
 }: PlayerDetailsProps) {
   const [activeTab, setActiveTab] = useState<'radar' | 'document'>('document');
   const [isEditingReport, setIsEditingReport] = useState(false);
@@ -430,9 +433,20 @@ export default function PlayerDetails({
             
             {/* Header Plate border line */}
             <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2 mb-3">
-              <span className="bg-slate-950 text-white font-mono font-bold text-[9px] px-2 py-1 tracking-widest uppercase">
-                DEPARTAMENTO DE SCOUTING
-              </span>
+              <div className="flex items-center space-x-2">
+                {onBack && (
+                  <button
+                    onClick={onBack}
+                    className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-950 text-white hover:bg-slate-800 transition-all flex items-center justify-center shrink-0 shadow active:scale-95 cursor-pointer mr-1 print:hidden group"
+                    title="Volver a la pantalla anterior"
+                  >
+                    <ArrowLeft className="w-4 h-4 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+                  </button>
+                )}
+                <span className="bg-slate-950 text-white font-mono font-bold text-[9px] px-2 py-1 tracking-widest uppercase">
+                  DEPARTAMENTO DE SCOUTING
+                </span>
+              </div>
               <div className="text-right">
                 <span className="text-xs font-bold font-sans tracking-wide text-slate-700">
                   REAL AVILÉS INDUSTRIAL CLUB DE FÚTBOL

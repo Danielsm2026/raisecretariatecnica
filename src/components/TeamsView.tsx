@@ -967,10 +967,10 @@ export default function TeamsView({
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-850">
             <button
               onClick={() => setSelectedTeam(null)}
-              className="inline-flex items-center space-x-2 text-xs font-mono font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase bg-slate-900/50 hover:bg-slate-900 border border-slate-800 py-1.5 px-3 rounded"
+              className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
+              title="Volver a Carpetas de Equipos"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>📁 Volver a Carpetas de Equipos</span>
+              <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform text-blue-400" />
             </button>
 
             {/* Path indicator & View Toggle */}

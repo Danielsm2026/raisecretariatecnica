@@ -800,10 +800,10 @@ export default function DataReportsView({ players, matchReports }: DataReportsVi
         {selectedFolder && (
           <button
             onClick={() => setSelectedFolder(null)}
-            className="inline-flex items-center space-x-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-xs font-mono font-bold transition-all border border-slate-700 shadow shrink-0"
+            className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
+            title="Volver a Carpetas"
           >
-            <ArrowLeft className="w-4 h-4 text-blue-400" />
-            <span>Volver a Carpetas</span>
+            <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform text-blue-400" />
           </button>
         )}
       </div>

@@ -11,7 +11,8 @@ import {
   Calendar, 
   Flag,
   Sparkles,
-  Download
+  Download,
+  ArrowLeft
 } from 'lucide-react';
 import { ensureReportFields } from '../utils/reportDefaults';
 import { getPlayerEscudoUrl, getCategoryEscudoUrl } from '../utils/escudoHelper';
@@ -231,6 +232,13 @@ export default function PlayerReportModal({
         {/* Head Bar */}
         <div className="bg-slate-950 px-6 py-4 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center space-x-2.5">
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center shrink-0 shadow-md transition-all active:scale-95 group mr-1 cursor-pointer"
+              title="Volver a la pantalla anterior"
+            >
+              <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+            </button>
             <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/15">
               <FileText className="w-5 h-5 flex-shrink-0" />
             </div>

@@ -15,6 +15,7 @@ import {
   Minimize2,
   Star,
   Activity,
+  ArrowLeft,
 } from "lucide-react";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { getPlayerEscudoUrl } from "../utils/escudoHelper";
@@ -1102,7 +1103,14 @@ export default function MatchReportModal({
         >
           {/* Modal Toolbar (hidden in print) */}
           <div className="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700/80 print:hidden">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2.5">
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full border border-slate-600 bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center transition-all shrink-0 shadow active:scale-95 group cursor-pointer mr-0.5"
+                title="Volver"
+              >
+                <ArrowLeft className="w-4 h-4 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+              </button>
               <span className="p-1 px-2 text-[10px] uppercase font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-555 rounded-sm">
                 TÁCTICO LA LIGA
               </span>
