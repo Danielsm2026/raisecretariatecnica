@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ScoutedPlayer, Position, Footedness } from '../types';
-import { X, Award, Info, Trash2 } from 'lucide-react';
+import { X, Info, Trash2 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 
 interface PlayerFormModalProps {
@@ -387,131 +387,17 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
             </div>
           </div>
 
-          <hr className="border-slate-800" />
-
-          {/* Section 2: Attributes matrix */}
+          {/* Section 2: Comments & Notes */}
           <div>
-            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center italic">
-              <Award className="w-4 h-4 text-blue-500 mr-1.5" /> ATRIBUTOS CLAVE (1 AL 10)
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              
-              {/* Fisico */}
-              <div>
-                <div className="flex justify-between items-center text-[11px] font-semibold text-slate-400 mb-1 font-mono">
-                  <span>Físico</span>
-                  <span className="text-blue-400 font-bold text-xs">{fisico}</span>
-                </div>
-                <input
-                  id="slider-attribute-fisico"
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={fisico}
-                  onChange={(e) => setFisico(parseInt(e.target.value))}
-                  className="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-blue-500"
-                />
-              </div>
-
-              {/* Tecnica */}
-              <div>
-                <div className="flex justify-between items-center text-[11px] font-semibold text-slate-400 mb-1 font-mono">
-                  <span>Técnica</span>
-                  <span className="text-blue-400 font-bold text-xs">{tecnica}</span>
-                </div>
-                <input
-                  id="slider-attribute-tecnica"
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={tecnica}
-                  onChange={(e) => setTecnica(parseInt(e.target.value))}
-                  className="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-blue-500"
-                />
-              </div>
-
-              {/* Tactica */}
-              <div>
-                <div className="flex justify-between items-center text-[11px] font-semibold text-slate-400 mb-1 font-mono">
-                  <span>Táctica</span>
-                  <span className="text-blue-400 font-bold text-xs">{tactica}</span>
-                </div>
-                <input
-                  id="slider-attribute-tactica"
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={tactica}
-                  onChange={(e) => setTactica(parseInt(e.target.value))}
-                  className="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-blue-500"
-                />
-              </div>
-
-              {/* Mental */}
-              <div>
-                <div className="flex justify-between items-center text-[11px] font-semibold text-slate-400 mb-1 font-mono">
-                  <span>Mental</span>
-                  <span className="text-blue-400 font-bold text-xs">{mental}</span>
-                </div>
-                <input
-                  id="slider-attribute-mental"
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={mental}
-                  onChange={(e) => setMental(parseInt(e.target.value))}
-                  className="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Overall & Comments */}
-          <div className="space-y-4">
-            {/* Calificacion global */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider italic">Calificación Global de Ojeador *</label>
-              <div id="star-rating-selector" className="flex items-center space-x-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <button
-                    id={`btn-star-rating-${i + 1}`}
-                    key={i}
-                    type="button"
-                    onClick={() => setCalificacion(i + 1)}
-                    className="focus:outline-none p-1 hover:scale-110 transition-transform"
-                    title={`${i + 1} de 5 Estrellas`}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className={`w-6 h-6 stroke-amber-400 stroke-[1.5] ${
-                        i < calificacion ? 'fill-amber-400 text-amber-400' : 'fill-none text-slate-700'
-                      }`}
-                    >
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                  </button>
-                ))}
-                <span className="text-[11px] font-mono font-bold text-slate-400 ml-2">
-                  {calificacion === 5 ? 'Elite Mundial' :
-                   calificacion === 4 ? 'Excelente prospecto' :
-                   calificacion === 3 ? 'Rol titular potencial' :
-                   calificacion === 2 ? 'Jugador de rotación' : 'A prueba'}
-                </span>
-              </div>
-            </div>
-
-            {/* Notas / Informe */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider italic font-sans">Informe Técnico / Observaciones complementarias</label>
-              <textarea
-                id="textarea-player-notas"
-                rows={3}
-                placeholder="Redacta puntos clave: velocidad de decisión, polivalencia táctica, fortaleza mental..."
-                value={notas}
-                onChange={(e) => setNotas(e.target.value)}
-                className="w-full text-xs px-3 py-2 bg-slate-850 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans placeholder-slate-500"
-              />
-            </div>
+            <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider italic font-sans">Informe Técnico / Observaciones complementarias</label>
+            <textarea
+              id="textarea-player-notas"
+              rows={3}
+              placeholder="Redacta puntos clave: velocidad de decisión, polivalencia táctica, fortaleza mental..."
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
+              className="w-full text-xs px-3 py-2 bg-slate-850 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans placeholder-slate-500"
+            />
           </div>
 
           {/* Buttons footer inside form */}

@@ -1275,7 +1275,7 @@ export default function TeamsView({
 
                               {/* Avatar */}
                               <div 
-                                className="w-10 h-10 rounded bg-slate-950/60 border border-slate-850 overflow-hidden shrink-0 flex items-center justify-center p-0.5 cursor-pointer"
+                                className="w-14 h-14 rounded-md bg-slate-950/60 border border-slate-850 overflow-hidden shrink-0 flex items-center justify-center p-0.5 cursor-pointer"
                                 onClick={() => onSelectPlayer(player)}
                               >
                                 {player.fotoUrl ? (
@@ -1286,7 +1286,7 @@ export default function TeamsView({
                                     className="w-full h-full object-cover" 
                                   />
                                 ) : (
-                                  <User className="w-4 h-4 text-slate-600 group-hover:text-blue-500 transition-colors" />
+                                  <User className="w-6 h-6 text-slate-600 group-hover:text-blue-500 transition-colors" />
                                 )}
                               </div>
 
@@ -1307,34 +1307,6 @@ export default function TeamsView({
                                   {edad} años ({player.anoNacimiento}) • {player.lateralidad} • {player.altura || 'N/D'}
                                 </div>
                               </div>
-                            </div>
-
-                            {/* Attributes cluster row format */}
-                            <div className="flex items-center gap-3 bg-slate-950/40 px-3 py-1.5 rounded border border-slate-850/50 font-mono text-[11px] shrink-0">
-                              <div className="flex items-center space-x-1">
-                                <span className="text-slate-500 text-[9px] font-bold">FÍS</span>
-                                <span className="font-bold text-emerald-400">{player.atributos?.fisico ?? '0'}</span>
-                              </div>
-                              <div className="text-slate-800">|</div>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-slate-500 text-[9px] font-bold">TÉC</span>
-                                <span className="font-bold text-blue-400">{player.atributos?.tecnica ?? '0'}</span>
-                              </div>
-                              <div className="text-slate-800">|</div>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-slate-500 text-[9px] font-bold">TÁC</span>
-                                <span className="font-bold text-amber-500">{player.atributos?.tactica ?? '0'}</span>
-                              </div>
-                              <div className="text-slate-800">|</div>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-slate-500 text-[9px] font-bold">MEN</span>
-                                <span className="font-bold text-purple-400">{player.atributos?.mental ?? '0'}</span>
-                              </div>
-                            </div>
-
-                            {/* Rating stars level */}
-                            <div className="text-amber-500 text-[10px] shrink-0 font-mono font-bold bg-slate-950/60 px-2 py-1 rounded border border-slate-850 flex items-center">
-                              {'★'.repeat(player.calificacion)}
                             </div>
 
                             {/* Action Recommendation */}
@@ -1406,7 +1378,10 @@ export default function TeamsView({
                               <PositionBadge code={posCode} size="sm" />
 
                               {/* Face image or avatar placeholder */}
-                              <div className="w-11 h-11 rounded bg-slate-950/60 border border-slate-850 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                              <div 
+                                className="w-18 h-18 rounded-lg bg-slate-950/60 border-2 border-slate-800 overflow-hidden shrink-0 flex items-center justify-center p-0.5 cursor-pointer hover:border-blue-500/50 transition-colors shadow-sm"
+                                onClick={() => onSelectPlayer(player)}
+                              >
                                 {player.fotoUrl ? (
                                   <img 
                                     src={player.fotoUrl} 
@@ -1415,7 +1390,7 @@ export default function TeamsView({
                                     className="w-full h-full object-cover" 
                                   />
                                 ) : (
-                                  <User className="w-5 h-5 text-slate-600 group-hover:text-blue-500 transition-colors" />
+                                  <User className="w-8 h-8 text-slate-600 group-hover:text-blue-500 transition-colors" />
                                 )}
                               </div>
 
@@ -1432,10 +1407,6 @@ export default function TeamsView({
                                 </div>
                               </div>
 
-                              {/* Quick Stars Badge on top right */}
-                              <div className="text-amber-500 text-xs tracking-tighter shrink-0 font-bold bg-slate-950 px-1.5 py-0.5 rounded border border-slate-850 font-mono flex items-center">
-                                {'★'.repeat(player.calificacion)}
-                              </div>
                             </div>
 
                             {/* Bottom action panel */}
