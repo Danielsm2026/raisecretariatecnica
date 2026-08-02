@@ -254,6 +254,13 @@ export default function App() {
               updated = true;
             }
           }
+          if (teamName.toLowerCase().includes('cacereño') || teamName.toLowerCase().includes('cacereno')) {
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(console.error);
@@ -468,6 +475,13 @@ export default function App() {
           const teamName = current.equipo ? current.equipo.trim() : '';
           if (teamName === 'Bilbao Ath.' || teamName === 'Bilbao Athletic') {
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/348.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('cacereño') || teamName.toLowerCase().includes('cacereno')) {
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;

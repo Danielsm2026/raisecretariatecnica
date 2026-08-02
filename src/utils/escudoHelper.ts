@@ -17,6 +17,8 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Manchester City': '/escudos/manchester-city.svg',
   'FC Porto': '/escudos/porto.svg',
   'CF Talavera': '/escudos/talavera.svg',
+  'CP Cacereño': 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1',
+  'Cacereño': 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -33,6 +35,11 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is Bilbao Athletic, override the logo explicitly
   if (teamNormal && (teamNormal === 'Bilbao Athletic' || teamNormal === 'Bilbao Ath.')) {
     return 'https://cdn.resfu.com/img_data/equipos/348.png?size=120x&lossy=1';
+  }
+
+  // If team is CP Cacereño, override the logo explicitly with 602.png
+  if (teamNormal && (teamNormal === 'CP Cacereño' || teamNormal === 'Cacereño' || teamNormal.toLowerCase().includes('cacereño') || teamNormal.toLowerCase().includes('cacereno'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {

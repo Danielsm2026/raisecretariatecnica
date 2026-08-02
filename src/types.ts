@@ -34,6 +34,7 @@ export interface ScoutedPlayer {
   fechaRegistro: string; // ISO date
   // New detailed scouting report fields (LaLiga paper style)
   altura?: string;
+  dorsal?: number;
   recomendacion?: string; // e.g. "FIRMAR"
   recomendacionComentario?: string; // e.g. "Con nivel y experiencia en la categoría."
   descripcionGeneral?: string;
