@@ -20,6 +20,8 @@ import {
 import { ConfirmationModal } from "./ConfirmationModal";
 import { getPlayerEscudoUrl } from "../utils/escudoHelper";
 
+const SCOUT_OPTIONS = ["Daniel", "Carlos", "Nico", "Antonio", "Miguel"];
+
 interface MatchReportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -97,7 +99,7 @@ export default function MatchReportModal({
       setFecha(report.fecha || "");
       setPartido(report.partido || "");
       setFechaHoraDetallada(report.fechaHoraDetallada || "");
-      setAutor(report.autor || "ScoutingRealAvilésCF");
+      setAutor(report.autor || "Daniel");
       setEquipoLocal(report.equipoLocal || "");
       setEquipoVisitante(report.equipoVisitante || "");
       setGolesLocal(report.golesLocal !== undefined ? report.golesLocal : 0);
@@ -119,7 +121,7 @@ export default function MatchReportModal({
       setFecha(new Date().toISOString().split("T")[0]);
       setPartido("Equipo Local vs Equipo Visitante");
       setFechaHoraDetallada("Domingo, 10 de Mayo de 2026 - 11:30");
-      setAutor("ScoutingRealAvilésCF");
+      setAutor("Daniel");
       setEquipoLocal("Getafe B");
       setEquipoVisitante("UD Logroñés");
       setGolesLocal(0);
@@ -770,7 +772,7 @@ export default function MatchReportModal({
       fecha,
       partido: `${equipoLocal} vs ${equipoVisitante}`.trim(),
       competicion: competicion.trim() || "Amistoso",
-      autor: autor.trim() || "ScoutingRealAvilésCF",
+      autor: autor.trim() || "Daniel",
       equipoLocal: equipoLocal.trim() || "Local",
       equipoVisitante: equipoVisitante.trim() || "Visitante",
       golesLocal,
@@ -1122,16 +1124,6 @@ export default function MatchReportModal({
             <div className="flex items-center space-x-2">
               <button
                 type="button"
-                onClick={handleLoadTemplatePlayers}
-                className="flex items-center space-x-1 px-2.5 py-1 text-[11px] font-bold text-slate-300 hover:text-white bg-slate-700 rounded active:scale-95 transition-all w-fit"
-                title="Cargar alineaciones Getafe B - Logroñés del partido de Playoffs"
-              >
-                <RefreshCw className="w-3 h-3 text-emerald-400" />
-                <span>Plantilla Demo (Foto)</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setIsFullscreen(!isFullscreen)}
                 className="flex items-center space-x-1 px-2.5 py-1 text-[11px] font-bold text-slate-300 hover:text-white bg-slate-700 rounded hover:bg-slate-650 active:scale-95 transition-all"
                 title={
@@ -1247,13 +1239,20 @@ export default function MatchReportModal({
                   <label className="block text-[10px] font-mono text-slate-500 uppercase print:hidden">
                     Ojeador / Autor
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={autor}
                     onChange={(e) => setAutor(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white font-mono focus:border-blue-500 focus:outline-none print:border-none print:bg-transparent print:text-slate-700 print:text-[9px] print:text-right"
-                    placeholder="Ej: ScoutingRealAvilésCF"
-                  />
+                    className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white font-mono focus:border-blue-500 focus:outline-none cursor-pointer print:border-none print:bg-transparent print:text-slate-700 print:text-[9px] print:text-right print:appearance-none"
+                  >
+                    {!SCOUT_OPTIONS.includes(autor) && autor && (
+                      <option value={autor}>{autor}</option>
+                    )}
+                    {SCOUT_OPTIONS.map((scoutName) => (
+                      <option key={scoutName} value={scoutName}>
+                        {scoutName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Local Team vs Visitante Score Board */}
