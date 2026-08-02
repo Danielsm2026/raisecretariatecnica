@@ -43,7 +43,7 @@ interface PlayerTableProps {
   onUpdateMatchReport?: (report: MatchReport) => void;
 }
 
-type SortField = 'nombre' | 'equipo' | 'categoria' | 'posicion' | 'anoNacimiento' | 'lateralidad' | 'valorMercado' | 'notas';
+type SortField = 'nombre' | 'equipo' | 'categoria' | 'posicion' | 'anoNacimiento' | 'lateralidad' | 'valorMercado' | 'notas' | 'besoccerUrl';
 type SortOrder = 'asc' | 'desc';
 
 export default function PlayerTable({
@@ -183,6 +183,7 @@ export default function PlayerTable({
         p.posicion,
         `${p.anoNacimiento} (${edad} años)`,
         p.lateralidad,
+        p.besoccerUrl || 'N/D',
         p.elo !== undefined ? `${p.elo}` : 'N/D',
         `${p.atributos?.fisico ?? 0}/10`,
         `${p.atributos?.tecnica ?? 0}/10`,
@@ -200,6 +201,7 @@ export default function PlayerTable({
       'Posición',
       'Año (Edad)',
       'Pie',
+      'Perfil BeSoccer',
       'ELO',
       'FÍS',
       'TÉC',
@@ -566,6 +568,12 @@ export default function PlayerTable({
               >
                 Pie {renderSortIndicator('lateralidad')}
               </th>
+              <th 
+                onClick={() => handleSort('besoccerUrl')}
+                className="px-2 py-2 cursor-pointer hover:bg-slate-800 select-none text-center transition-colors italic"
+              >
+                Perfil BeSoccer {renderSortIndicator('besoccerUrl')}
+              </th>
               <th className="px-2 py-2 text-center italic">
                 Informe
               </th>
@@ -681,6 +689,24 @@ export default function PlayerTable({
                     </span>
                   </td>
 
+                  {/* Perfil BeSoccer Column */}
+                  <td className="px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                    {player.besoccerUrl ? (
+                      <a
+                        href={player.besoccerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 text-[10.5px] font-bold border border-emerald-500/20 transition-all hover:scale-105"
+                        title={player.besoccerUrl}
+                      >
+                        <ExternalLink className="w-3 h-3 shrink-0" />
+                        <span>BeSoccer</span>
+                      </a>
+                    ) : (
+                      <span className="text-slate-600 italic text-[11px]">—</span>
+                    )}
+                  </td>
+
 
 
                   {/* Informe Column: launches official report editor document */}
@@ -748,7 +774,7 @@ export default function PlayerTable({
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="px-6 py-12 text-center text-slate-500 bg-slate-900/40">
+                <td colSpan={10} className="px-6 py-12 text-center text-slate-500 bg-slate-900/40">
                   Ningún prospecto deportivo coincide con los filtros de búsqueda.
                 </td>
               </tr>
