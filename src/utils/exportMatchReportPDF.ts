@@ -107,6 +107,129 @@ export async function exportMatchReportPDF(data: ExportMatchReportOptions) {
 
   y += 28;
 
+  // --- TACTICAL PITCHES SECTION ---
+  const startersLocal = jugadoresLocal.filter((p) => p.isTitular);
+  const startersVisitante = jugadoresVisitante.filter((p) => p.isTitular);
+
+  const drawTacticalPitch = (
+    startX: number,
+    startY: number,
+    width: number,
+    height: number,
+    teamName: string,
+    players: MatchPlayer[],
+    badgeColor: [number, number, number],
+    accentTitleColor: [number, number, number]
+  ) => {
+    // Pitch header banner
+    doc.setFillColor(accentTitleColor[0], accentTitleColor[1], accentTitleColor[2]);
+    doc.rect(startX, startY, width, 5.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`TÁCTICA: ${teamName.toUpperCase()}`, startX + width / 2, startY + 3.8, { align: 'center' });
+
+    const pitchYStart = startY + 5.5;
+    const pitchH = height - 5.5;
+
+    // Dark emerald green pitch background
+    doc.setFillColor(6, 78, 59); // emerald-900
+    doc.setDrawColor(16, 185, 129); // emerald-500 line accent
+    doc.setLineWidth(0.3);
+    doc.roundedRect(startX, pitchYStart, width, pitchH, 1.5, 1.5, 'FD');
+
+    // Outer boundary line
+    const pad = 2.5;
+    const fieldX = startX + pad;
+    const fieldY = pitchYStart + pad;
+    const fieldW = width - pad * 2;
+    const fieldH = pitchH - pad * 2;
+
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(0.25);
+    doc.rect(fieldX, fieldY, fieldW, fieldH, 'D');
+
+    // Halfway line
+    doc.line(fieldX, fieldY + fieldH / 2, fieldX + fieldW, fieldY + fieldH / 2);
+
+    // Center circle
+    const centerRadius = fieldW * 0.16;
+    doc.circle(fieldX + fieldW / 2, fieldY + fieldH / 2, centerRadius, 'D');
+    doc.setFillColor(255, 255, 255);
+    doc.circle(fieldX + fieldW / 2, fieldY + fieldH / 2, 0.5, 'F');
+
+    // Penalty Boxes
+    const boxW = fieldW * 0.52;
+    const boxH = fieldH * 0.16;
+    const goalAreaW = fieldW * 0.28;
+    const goalAreaH = fieldH * 0.07;
+
+    // Top Box
+    doc.rect(fieldX + (fieldW - boxW) / 2, fieldY, boxW, boxH, 'D');
+    doc.rect(fieldX + (fieldW - goalAreaW) / 2, fieldY, goalAreaW, goalAreaH, 'D');
+
+    // Bottom Box
+    doc.rect(fieldX + (fieldW - boxW) / 2, fieldY + fieldH - boxH, boxW, boxH, 'D');
+    doc.rect(fieldX + (fieldW - goalAreaW) / 2, fieldY + fieldH - goalAreaH, goalAreaW, goalAreaH, 'D');
+
+    // Render starters on pitch
+    players.forEach((p) => {
+      const rawX = typeof p.pitchX === 'number' ? p.pitchX : 50;
+      const rawY = typeof p.pitchY === 'number' ? p.pitchY : 50;
+
+      // Convert percentage coordinates to mm inside pitch
+      const px = fieldX + (rawX / 100) * fieldW;
+      const py = fieldY + (rawY / 100) * fieldH;
+
+      // Player Badge (Circle)
+      doc.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
+      doc.setDrawColor(255, 255, 255);
+      doc.setLineWidth(0.3);
+      doc.circle(px, py, 2.8, 'FD');
+
+      // Dorsal
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.5);
+      doc.setTextColor(255, 255, 255);
+      const dorsalStr = p.dorsal !== undefined && p.dorsal !== null && String(p.dorsal).trim() !== '' ? String(p.dorsal) : '';
+      doc.text(dorsalStr, px, py + 0.9, { align: 'center' });
+
+      // Pts Badge if present
+      if (p.pts && String(p.pts).trim() !== '' && String(p.pts) !== '-') {
+        doc.setFillColor(234, 179, 8); // Yellow 500
+        doc.circle(px + 2.4, py - 2.0, 1.3, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(4);
+        doc.setTextColor(15, 23, 42);
+        doc.text(String(p.pts), px + 2.4, py - 1.4, { align: 'center' });
+      }
+
+      // Name Label box below player
+      doc.setFillColor(15, 23, 42); // slate 900
+      doc.roundedRect(px - 7.5, py + 3.1, 15, 3.2, 0.5, 0.5, 'F');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(4.8);
+      doc.setTextColor(255, 255, 255);
+      const shortName = p.nombre.length > 11 ? p.nombre.slice(0, 9) + '..' : p.nombre;
+      doc.text(shortName, px, py + 5.2, { align: 'center' });
+
+      // Position label below box
+      if (p.posicion) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(4);
+        doc.setTextColor(203, 213, 225); // slate 300
+        doc.text(p.posicion.toUpperCase(), px, py + 7.3, { align: 'center' });
+      }
+    });
+  };
+
+  const pitchHeight = 88;
+  drawTacticalPitch(14, y, 86, pitchHeight, locName, startersLocal, [37, 99, 235], [30, 41, 59]);
+  drawTacticalPitch(110, y, 86, pitchHeight, visName, startersVisitante, [16, 185, 129], [30, 41, 59]);
+
+  y += pitchHeight + 6;
+
   // Helper function to format table data
   const formatPlayersTable = (players: MatchPlayer[]) => {
     return players.map((p) => {
@@ -136,7 +259,6 @@ export async function exportMatchReportPDF(data: ExportMatchReportOptions) {
 
   y += 9;
 
-  const startersLocal = jugadoresLocal.filter((p) => p.isTitular);
   const subsLocal = jugadoresLocal.filter((p) => !p.isTitular);
 
   autoTable(doc, {
@@ -228,7 +350,6 @@ export async function exportMatchReportPDF(data: ExportMatchReportOptions) {
 
   y += 9;
 
-  const startersVisitante = jugadoresVisitante.filter((p) => p.isTitular);
   const subsVisitante = jugadoresVisitante.filter((p) => !p.isTitular);
 
   autoTable(doc, {

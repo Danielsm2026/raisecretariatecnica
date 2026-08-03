@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { ScoutedPlayer, MatchReport } from './types';
 import { INITIAL_PLAYERS } from './initialPlayers';
 import { INITIAL_MATCH_REPORTS } from './utils/initialMatchReports';
@@ -30,6 +30,16 @@ export default function App() {
   // Match Reports States
   const [matchReports, setMatchReports] = useState<MatchReport[]>([]);
   const [matchReportsFilterComp, setMatchReportsFilterComp] = useState<string>('All');
+  const [matchReportsFilterTeam, setMatchReportsFilterTeam] = useState<string>('All');
+
+  const availableMatchTeams = useMemo(() => {
+    const teamsSet = new Set<string>();
+    matchReports.forEach((r) => {
+      if (r.equipoLocal && r.equipoLocal.trim()) teamsSet.add(r.equipoLocal.trim());
+      if (r.equipoVisitante && r.equipoVisitante.trim()) teamsSet.add(r.equipoVisitante.trim());
+    });
+    return Array.from(teamsSet).sort((a, b) => a.localeCompare(b, 'es'));
+  }, [matchReports]);
   const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'inicio' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports'>('inicio');
@@ -1106,30 +1116,43 @@ export default function App() {
   };
 
   const filteredMatchReports = matchReports.filter(report => {
-    if (matchReportsFilterComp === 'All') return true;
-    
-    const compValue = (report.competicion || '').toLowerCase();
-    const filterValue = matchReportsFilterComp.toLowerCase();
-    
     const normalize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    
-    const normComp = normalize(compValue);
-    const normFilter = normalize(filterValue);
-    
-    if (normFilter.includes("segunda rfef")) {
-      return normComp.includes("segunda rfef") || normComp.includes("segunda federacion") || normComp.includes("2a rfef") || normComp.includes("2ª");
-    }
-    if (normFilter.includes("primera rfef")) {
-      return normComp.includes("primera rfef") || normComp.includes("primera federacion") || normComp.includes("1a rfef") || normComp.includes("1ª");
-    }
-    if (normFilter.includes("tercera rfef")) {
-      return normComp.includes("tercera rfef") || normComp.includes("tercera federacion") || normComp.includes("3a rfef") || normComp.includes("3ª");
-    }
-    if (normFilter.includes("segunda division")) {
-      return normComp.includes("segunda division") || normComp.includes("la liga hypermotion") || normComp.includes("laliga hypermotion") || normComp.includes("2a division");
+
+    // 1. Competition Filter
+    if (matchReportsFilterComp !== 'All') {
+      const compValue = (report.competicion || '').toLowerCase();
+      const filterValue = matchReportsFilterComp.toLowerCase();
+      const normComp = normalize(compValue);
+      const normFilter = normalize(filterValue);
+      
+      let compMatch = false;
+      if (normFilter.includes("segunda rfef")) {
+        compMatch = normComp.includes("segunda rfef") || normComp.includes("segunda federacion") || normComp.includes("2a rfef") || normComp.includes("2ª");
+      } else if (normFilter.includes("primera rfef")) {
+        compMatch = normComp.includes("primera rfef") || normComp.includes("primera federacion") || normComp.includes("1a rfef") || normComp.includes("1ª");
+      } else if (normFilter.includes("tercera rfef")) {
+        compMatch = normComp.includes("tercera rfef") || normComp.includes("tercera federacion") || normComp.includes("3a rfef") || normComp.includes("3ª");
+      } else if (normFilter.includes("segunda division")) {
+        compMatch = normComp.includes("segunda division") || normComp.includes("la liga hypermotion") || normComp.includes("laliga hypermotion") || normComp.includes("2a division");
+      } else {
+        compMatch = normComp.includes(normFilter);
+      }
+
+      if (!compMatch) return false;
     }
 
-    return normComp.includes(normFilter);
+    // 2. Team Filter
+    if (matchReportsFilterTeam !== 'All') {
+      const normTeamFilter = normalize(matchReportsFilterTeam);
+      const normLocal = normalize(report.equipoLocal || '');
+      const normVisitante = normalize(report.equipoVisitante || '');
+      const normPartido = normalize(report.partido || '');
+
+      const teamMatch = normLocal.includes(normTeamFilter) || normVisitante.includes(normTeamFilter) || normPartido.includes(normTeamFilter);
+      if (!teamMatch) return false;
+    }
+
+    return true;
   });
 
   return (
@@ -1349,25 +1372,45 @@ export default function App() {
             </div>
 
             {/* Filter controls */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-950/40 p-3 rounded-lg border border-slate-800/60">
-              <div className="flex items-center space-x-3.5">
-                <span className="text-[10px] font-bold font-mono text-slate-400 uppercase tracking-wider shrink-0">
-                  🔍 Filtrar Competición:
-                </span>
-                <select
-                  value={matchReportsFilterComp}
-                  onChange={(e) => setMatchReportsFilterComp(e.target.value)}
-                  className="bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-100 rounded px-2.5 py-1 text-xs font-semibold font-sans focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
-                >
-                  <option value="All">-- Todas las Competiciones --</option>
-                  <option value="Segunda División">Segunda División</option>
-                  <option value="Primera RFEF">Primera RFEF</option>
-                  <option value="Segunda RFEF">Segunda RFEF</option>
-                  <option value="Tercera RFEF">Tercera RFEF</option>
-                </select>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-slate-950/40 p-3 rounded-lg border border-slate-800/60">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-bold font-mono text-slate-400 uppercase tracking-wider shrink-0">
+                    🔍 Competición:
+                  </span>
+                  <select
+                    value={matchReportsFilterComp}
+                    onChange={(e) => setMatchReportsFilterComp(e.target.value)}
+                    className="bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-100 rounded px-2.5 py-1 text-xs font-semibold font-sans focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                  >
+                    <option value="All">-- Todas las Competiciones --</option>
+                    <option value="Segunda División">Segunda División</option>
+                    <option value="Primera RFEF">Primera RFEF</option>
+                    <option value="Segunda RFEF">Segunda RFEF</option>
+                    <option value="Tercera RFEF">Tercera RFEF</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-bold font-mono text-slate-400 uppercase tracking-wider shrink-0">
+                    🛡️ Equipo:
+                  </span>
+                  <select
+                    value={matchReportsFilterTeam}
+                    onChange={(e) => setMatchReportsFilterTeam(e.target.value)}
+                    className="bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-100 rounded px-2.5 py-1 text-xs font-semibold font-sans focus:border-blue-500 focus:outline-none transition-all cursor-pointer max-w-[210px] truncate"
+                  >
+                    <option value="All">-- Todos los Equipos --</option>
+                    {availableMatchTeams.map((team) => (
+                      <option key={team} value={team}>
+                        {team}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">
+              <div className="text-[10px] text-slate-500 font-mono uppercase tracking-wider shrink-0">
                 Mostrando {filteredMatchReports.length} de {matchReports.length} actas
               </div>
             </div>

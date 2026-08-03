@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ScoutedPlayer, Position } from '../types';
 import { ConfirmationModal } from './ConfirmationModal';
 import { 
@@ -254,30 +254,39 @@ const getPositionLabelPlural = (title: string) => {
 };
 
 const getCandidatesForPosition = (title: string, allPlayers: ScoutedPlayer[]) => {
-  switch (title) {
-    case 'PORTERO':
-      return allPlayers.filter(p => p.posicion === 'Portero');
-    case 'LATERAL IZQUIERDO':
-      return allPlayers.filter(p => p.posicion === 'Lateral Izquierdo');
-    case 'LATERAL DERECHO':
-      return allPlayers.filter(p => p.posicion === 'Lateral Derecho');
-    case 'CENTRAL IZQUIERDO':
-    case 'CENTRAL DERECHO':
-      return allPlayers.filter(p => p.posicion === 'Defensa Central');
-    case 'MEDIOCENTRO':
-      return allPlayers.filter(p => p.posicion === 'Mediocentro Defensivo' || p.posicion === 'Mediocentro');
-    case 'INTERIOR IZQUIERDO':
-    case 'INTERIOR DERECHO':
-      return allPlayers.filter(p => p.posicion === 'Mediocentro' || p.posicion === 'Mediapunta');
-    case 'EXTREMO IZQUIERDO':
-      return allPlayers.filter(p => p.posicion === 'Extremo Izquierdo');
-    case 'EXTREMO DERECHO':
-      return allPlayers.filter(p => p.posicion === 'Extremo Derecho');
-    case 'DELANTERO':
-      return allPlayers.filter(p => p.posicion === 'Delantero Centro');
-    default:
-      return [];
-  }
+  const isNaturalMatch = (p: ScoutedPlayer) => {
+    switch (title) {
+      case 'PORTERO':
+        return p.posicion === 'Portero';
+      case 'LATERAL IZQUIERDO':
+        return p.posicion === 'Lateral Izquierdo';
+      case 'LATERAL DERECHO':
+        return p.posicion === 'Lateral Derecho';
+      case 'CENTRAL IZQUIERDO':
+      case 'CENTRAL DERECHO':
+        return p.posicion === 'Defensa Central';
+      case 'MEDIOCENTRO':
+        return p.posicion === 'Mediocentro Defensivo' || p.posicion === 'Mediocentro';
+      case 'INTERIOR IZQUIERDO':
+      case 'INTERIOR DERECHO':
+        return p.posicion === 'Mediocentro' || p.posicion === 'Mediapunta';
+      case 'EXTREMO IZQUIERDO':
+        return p.posicion === 'Extremo Izquierdo';
+      case 'EXTREMO DERECHO':
+        return p.posicion === 'Extremo Derecho';
+      case 'DELANTERO':
+        return p.posicion === 'Delantero Centro';
+      default:
+        return false;
+    }
+  };
+
+  return [...allPlayers].sort((a, b) => {
+    const matchA = isNaturalMatch(a) ? 1 : 0;
+    const matchB = isNaturalMatch(b) ? 1 : 0;
+    if (matchA !== matchB) return matchB - matchA;
+    return a.nombre.localeCompare(b.nombre, 'es');
+  });
 };
 
 interface PitchRow {
@@ -644,11 +653,41 @@ export default function TeamsView({
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'campograma'>('campograma');
   const [playerToDelete, setPlayerToDelete] = useState<ScoutedPlayer | null>(null);
   
-  // Custom interactive lineups stored by team name
-  const [customLineups, setCustomLineups] = useState<Record<string, Record<string, string[]>>>({});
+  // Custom interactive lineups stored by team name with localStorage persistence
+  const [customLineups, setCustomLineups] = useState<Record<string, Record<string, string[]>>>(() => {
+    try {
+      const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_TEAMS_CUSTOM_LINEUPS_V2');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('DEPARTAMENTO_SCOUTING_TEAMS_CUSTOM_LINEUPS_V2', JSON.stringify(customLineups));
+    } catch (e) {
+      console.error('Error saving custom lineups:', e);
+    }
+  }, [customLineups]);
   
-  // Custom tactical systems per team
-  const [teamSystems, setTeamSystems] = useState<Record<string, string>>({});
+  // Custom tactical systems per team with localStorage persistence
+  const [teamSystems, setTeamSystems] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_TEAMS_SYSTEMS_V2');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('DEPARTAMENTO_SCOUTING_TEAMS_SYSTEMS_V2', JSON.stringify(teamSystems));
+    } catch (e) {
+      console.error('Error saving team systems:', e);
+    }
+  }, [teamSystems]);
 
   // Group players by team dynamically
   const teamsData = useMemo(() => {
@@ -788,22 +827,41 @@ export default function TeamsView({
     const teamCustom = customLineups[selectedTeam];
     if (!teamCustom) return campogramaData;
 
-    const teamObj = teamsData.find(t => t.name === selectedTeam);
+    const teamObj = teamsData.find((t) => t.name === selectedTeam);
     const roster = teamObj?.players || [];
-    const getPlayersByIds = (ids: string[]) => ids.map(id => roster.find(p => p.id === id)).filter(Boolean) as ScoutedPlayer[];
+    const getPlayersByIds = (ids: string[]) =>
+      ids.map((id) => roster.find((p) => p.id === id)).filter(Boolean) as ScoutedPlayer[];
+
+    // Collect all player IDs present anywhere in teamCustom
+    const assignedPlayerIds = new Set<string>();
+    Object.values(teamCustom).forEach((ids) => {
+      if (Array.isArray(ids)) {
+        ids.forEach((id) => assignedPlayerIds.add(id));
+      }
+    });
+
+    const buildBoxPlayers = (posKey: string, defaultBoxPlayers: ScoutedPlayer[]) => {
+      const customAssigned = getPlayersByIds(teamCustom[posKey] || []);
+      const unassignedForBox = defaultBoxPlayers.filter((p) => !assignedPlayerIds.has(p.id));
+
+      const mergedMap = new Map<string, ScoutedPlayer>();
+      customAssigned.forEach((p) => mergedMap.set(p.id, p));
+      unassignedForBox.forEach((p) => mergedMap.set(p.id, p));
+      return Array.from(mergedMap.values());
+    };
 
     return {
-      porteroBoxPlayers: getPlayersByIds(teamCustom['PORTERO'] || []),
-      lateralIzquierdoBoxPlayers: getPlayersByIds(teamCustom['LATERAL IZQUIERDO'] || []),
-      lateralDerechoBoxPlayers: getPlayersByIds(teamCustom['LATERAL DERECHO'] || []),
-      centralIzquierdoBoxPlayers: getPlayersByIds(teamCustom['CENTRAL IZQUIERDO'] || []),
-      centralDerechoBoxPlayers: getPlayersByIds(teamCustom['CENTRAL DERECHO'] || []),
-      mediocentroBoxPlayers: getPlayersByIds(teamCustom['MEDIOCENTRO'] || []),
-      interiorIzquierdoBoxPlayers: getPlayersByIds(teamCustom['INTERIOR IZQUIERDO'] || []),
-      interiorDerechoBoxPlayers: getPlayersByIds(teamCustom['INTERIOR DERECHO'] || []),
-      extremoIzquierdoBoxPlayers: getPlayersByIds(teamCustom['EXTREMO IZQUIERDO'] || []),
-      extremoDerechoBoxPlayers: getPlayersByIds(teamCustom['EXTREMO DERECHO'] || []),
-      delanteroBoxPlayers: getPlayersByIds(teamCustom['DELANTERO'] || []),
+      porteroBoxPlayers: buildBoxPlayers('PORTERO', campogramaData.porteroBoxPlayers),
+      lateralIzquierdoBoxPlayers: buildBoxPlayers('LATERAL IZQUIERDO', campogramaData.lateralIzquierdoBoxPlayers),
+      lateralDerechoBoxPlayers: buildBoxPlayers('LATERAL DERECHO', campogramaData.lateralDerechoBoxPlayers),
+      centralIzquierdoBoxPlayers: buildBoxPlayers('CENTRAL IZQUIERDO', campogramaData.centralIzquierdoBoxPlayers),
+      centralDerechoBoxPlayers: buildBoxPlayers('CENTRAL DERECHO', campogramaData.centralDerechoBoxPlayers),
+      mediocentroBoxPlayers: buildBoxPlayers('MEDIOCENTRO', campogramaData.mediocentroBoxPlayers),
+      interiorIzquierdoBoxPlayers: buildBoxPlayers('INTERIOR IZQUIERDO', campogramaData.interiorIzquierdoBoxPlayers),
+      interiorDerechoBoxPlayers: buildBoxPlayers('INTERIOR DERECHO', campogramaData.interiorDerechoBoxPlayers),
+      extremoIzquierdoBoxPlayers: buildBoxPlayers('EXTREMO IZQUIERDO', campogramaData.extremoIzquierdoBoxPlayers),
+      extremoDerechoBoxPlayers: buildBoxPlayers('EXTREMO DERECHO', campogramaData.extremoDerechoBoxPlayers),
+      delanteroBoxPlayers: buildBoxPlayers('DELANTERO', campogramaData.delanteroBoxPlayers),
     };
   }, [selectedTeam, campogramaData, customLineups, teamsData]);
 
@@ -1176,8 +1234,20 @@ export default function TeamsView({
                       ))}
                     </div>
                   </div>
-                  <div className="text-[10px] font-mono text-slate-400">
-                    Formación: <span className="font-bold text-emerald-400">{activeSystem}</span>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-[10px] font-mono text-slate-400">
+                      Formación: <span className="font-bold text-emerald-400">{activeSystem}</span>
+                    </div>
+                    {selectedTeam && customLineups[selectedTeam] && (
+                      <button
+                        type="button"
+                        onClick={resetLineup}
+                        className="text-[9.5px] font-mono font-bold bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded border border-slate-800 transition-colors cursor-pointer"
+                        title="Restablecer posiciones por defecto en el campograma"
+                      >
+                        🔄 Restablecer Posiciones
+                      </button>
+                    )}
                   </div>
                 </div>
 

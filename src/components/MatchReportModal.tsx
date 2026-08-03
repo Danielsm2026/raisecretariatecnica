@@ -881,7 +881,7 @@ export default function MatchReportModal({
       posicion: "CM",
       pie: "D",
       pts: "7",
-      isTitular: true,
+      isTitular: false,
       pitchX: 50,
       pitchY: 50,
       comentarios: "",
@@ -1235,7 +1235,7 @@ export default function MatchReportModal({
             <div className="bg-slate-950/45 p-4 rounded border border-slate-800/60 print:bg-white print:border-none print:p-0">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-end">
                 {/* Competition and Date Grid */}
-                <div className="md:col-span-4 space-y-1">
+                <div className="md:col-span-5 space-y-1">
                   <label className="block text-[10px] font-mono text-slate-500 uppercase print:hidden">
                     Competición
                   </label>
@@ -1257,7 +1257,7 @@ export default function MatchReportModal({
                   </select>
                 </div>
 
-                <div className="md:col-span-2 space-y-1">
+                <div className="md:col-span-3 space-y-1">
                   <label className="block text-[10px] font-mono text-slate-500 uppercase print:hidden">
                     Fecha de Calendario
                   </label>
@@ -1269,22 +1269,9 @@ export default function MatchReportModal({
                   />
                 </div>
 
-                <div className="md:col-span-3 space-y-1">
+                <div className="md:col-span-4 space-y-1">
                   <label className="block text-[10px] font-mono text-slate-500 uppercase print:hidden">
-                    Fecha y Hora Legible
-                  </label>
-                  <input
-                    type="text"
-                    value={fechaHoraDetallada}
-                    onChange={(e) => setFechaHoraDetallada(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white font-mono focus:border-blue-500 focus:outline-none print:border-none print:bg-transparent print:text-slate-650 print:text-[10px] print:text-center"
-                    placeholder="Ej: Domingo, 10 MAYO 2026 - 11:30"
-                  />
-                </div>
-
-                <div className="md:col-span-3 space-y-1">
-                  <label className="block text-[10px] font-mono text-slate-500 uppercase print:hidden">
-                    Ojeador / Autor
+                    Ojeador
                   </label>
                   <select
                     value={autor}
