@@ -6,6 +6,7 @@ import {
   Plus,
   Trash2,
   Printer,
+  FileDown,
   Edit2,
   Shield,
   User,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { getPlayerEscudoUrl } from "../utils/escudoHelper";
+import { exportMatchReportPDF } from "../utils/exportMatchReportPDF";
 
 const SCOUT_OPTIONS = ["Daniel", "Carlos", "Nico", "Antonio", "Miguel"];
 
@@ -93,6 +95,8 @@ export default function MatchReportModal({
     nombre: string;
   } | null>(null);
 
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+
   useEffect(() => {
     if (report) {
       setCompeticion(report.competicion || "");
@@ -138,6 +142,18 @@ export default function MatchReportModal({
       setIsFullscreen(false);
     }
   }, [report, isOpen]);
+
+  useEffect(() => {
+    if (editingPlayerId) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById("editar-ficha-jugador");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [editingPlayerId]);
 
   // Dynamic Drag & Drop / Team selector states
   const [draggingSourceTeamLocal, setDraggingSourceTeamLocal] = useState("");
@@ -811,6 +827,13 @@ export default function MatchReportModal({
     setCatalogFilterTeam(teamName);
     setCatalogFilterPosition("");
     setCatalogSelectedPlayerId("");
+
+    setTimeout(() => {
+      const el = document.getElementById("editar-ficha-jugador");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 60);
   };
 
   const cancelEditPlayer = () => {
@@ -1069,8 +1092,31 @@ export default function MatchReportModal({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      await exportMatchReportPDF({
+        competicion,
+        fecha,
+        partido: `${equipoLocal} vs ${equipoVisitante}`.trim(),
+        fechaHoraDetallada,
+        autor,
+        equipoLocal,
+        equipoVisitante,
+        golesLocal,
+        golesVisitante,
+        comentariosLocal,
+        comentariosVisitante,
+        jugadoresLocal,
+        jugadoresVisitante,
+        escudoLocal,
+        escudoVisitante,
+      });
+    } catch (err) {
+      console.error("Error al exportar PDF de partido:", err);
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
   const startersLocal = jugadoresLocal.filter((p) => p.isTitular);
@@ -1144,12 +1190,13 @@ export default function MatchReportModal({
 
               <button
                 type="button"
-                onClick={handlePrint}
-                className="flex items-center space-x-1 px-2.5 py-1 text-[11px] font-bold text-slate-300 hover:text-white bg-slate-700 rounded hover:bg-slate-650 active:scale-95 transition-all"
-                title="Imprimir visualizador o guardar como PDF"
+                onClick={handleExportPDF}
+                disabled={isExportingPDF}
+                className="flex items-center space-x-1 px-2.5 py-1 text-[11px] font-bold text-slate-200 hover:text-white bg-slate-700 hover:bg-slate-650 rounded active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                title="Exportar informe de partido en PDF (Descargar PDF)"
               >
-                <Printer className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Imprimir</span>
+                <FileDown className="w-3.5 h-3.5 text-red-400" />
+                <span>{isExportingPDF ? "Generando..." : "PDF"}</span>
               </button>
 
               <button
@@ -1737,7 +1784,10 @@ export default function MatchReportModal({
 
             {/* Quick inline overlay element to edit a single player node when selected */}
             {editingPlayerId && (
-              <div className="bg-slate-950 border border-blue-500 p-4 rounded-lg relative shadow-xl space-y-3 print:hidden">
+              <div
+                id="editar-ficha-jugador"
+                className="bg-slate-950 border border-blue-500 p-4 rounded-lg relative shadow-xl space-y-3 print:hidden transition-all animate-fade-in"
+              >
                 <button
                   onClick={cancelEditPlayer}
                   className="absolute top-2.5 right-2.5 text-slate-400 hover:text-white"
