@@ -26,6 +26,7 @@ export interface CampogramaItem {
   nombre: string;
   descripcion?: string;
   fechaModificacion: string;
+  updatedAt?: number;
   formation: '4-4-2' | '4-3-3' | '4-2-3-1' | '3-5-2' | '5-4-1' | '4-1-4-1';
   monthlyView: boolean;
   assignments: { [positionId: string]: string | null };
@@ -364,9 +365,20 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         DEFAULT_CAMPOGRAMAS.forEach(d => map.set(d.id, d));
         // Merge current local state
         prev.forEach(c => map.set(c.id, c));
-        // Merge remote items from Supabase
+        // Merge remote items from Supabase smartly
         if (Array.isArray(remote) && remote.length > 0) {
-          remote.forEach(c => map.set(c.id, c));
+          remote.forEach(remoteItem => {
+            const localItem = map.get(remoteItem.id);
+            if (!localItem) {
+              map.set(remoteItem.id, remoteItem);
+            } else {
+              const localTime = localItem.updatedAt || 0;
+              const remoteTime = remoteItem.updatedAt || 0;
+              if (remoteTime >= localTime) {
+                map.set(remoteItem.id, remoteItem);
+              }
+            }
+          });
         }
         // Ensure all DEFAULT_CAMPOGRAMAS items are guaranteed to exist
         DEFAULT_CAMPOGRAMAS.forEach(d => {
@@ -428,7 +440,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         return {
           ...item,
           ...updatedFields,
-          fechaModificacion: new Date().toLocaleDateString('es-ES')
+          fechaModificacion: new Date().toLocaleDateString('es-ES'),
+          updatedAt: Date.now()
         };
       }
       return item;
@@ -886,6 +899,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       monthFolderId: currentFolder === 'mensuales' ? (currentMonthFolder || 'agosto') : undefined,
       nombre: title,
       fechaModificacion: new Date().toLocaleDateString('es-ES'),
+      updatedAt: Date.now(),
       formation: newFormation,
       monthlyView: newMonthlyView,
       assignments: {},
@@ -906,7 +920,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       ...item,
       id: `c_${Date.now()}`,
       nombre: `${item.nombre} (Copia)`,
-      fechaModificacion: new Date().toLocaleDateString('es-ES')
+      fechaModificacion: new Date().toLocaleDateString('es-ES'),
+      updatedAt: Date.now()
     };
     setCampogramas(prev => [dup, ...prev]);
     showNotification(`Campograma duplicado: ${dup.nombre}`, 'info');
@@ -936,7 +951,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         return {
           ...item,
           nombre: cleanTitle,
-          fechaModificacion: new Date().toLocaleDateString('es-ES')
+          fechaModificacion: new Date().toLocaleDateString('es-ES'),
+          updatedAt: Date.now()
         };
       }
       return item;

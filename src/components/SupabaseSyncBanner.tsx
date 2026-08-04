@@ -60,6 +60,15 @@ ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS besoccer_url TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "besoccerUrl" TEXT;
 ALTER TABLE scouting_match_reports ADD COLUMN IF NOT EXISTS categoria TEXT;
 
+CREATE TABLE IF NOT EXISTS scouting_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
+CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
+
 -- Forzar la recarga del esquema en Supabase (PostgREST)
 NOTIFY pgrst, 'reload schema';`;
     navigator.clipboard.writeText(patchSql);

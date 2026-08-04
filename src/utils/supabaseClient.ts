@@ -566,8 +566,7 @@ export async function dbFetchSetting<T>(key: string, defaultValue: T): Promise<T
 
     if (error || !data) return defaultValue;
     return (data.value !== undefined && data.value !== null) ? (data.value as T) : defaultValue;
-  } catch (e) {
-    console.warn(`Could not fetch setting "${key}" from Supabase:`, e);
+  } catch {
     return defaultValue;
   }
 }
@@ -584,8 +583,8 @@ export async function dbSaveSetting(key: string, value: any): Promise<void> {
       updated_at: new Date().toISOString()
     };
     await safeUpsert('scouting_settings', payload, 'key');
-  } catch (err) {
-    console.warn(`Could not save setting "${key}" to Supabase:`, err);
+  } catch {
+    // Silent fail if scouting_settings table is missing in Supabase. Local storage remains active.
   }
 }
 
