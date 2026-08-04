@@ -28,32 +28,64 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
     throw new Error('Supabase URL or Anon Key is missing in environment variables.');
   }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('scouting_players')
     .select('*')
     .order('fechaRegistro', { ascending: false });
 
   if (error) {
-    console.error('Error fetching players from Supabase:', error);
-    throw error;
+    // Fallback 1: Try ordering by snake_case fecha_registro
+    const res2 = await supabase
+      .from('scouting_players')
+      .select('*')
+      .order('fecha_registro', { ascending: false });
+
+    if (!res2.error) {
+      data = res2.data;
+      error = null;
+    } else {
+      // Fallback 2: Select without ordering if order column does not exist
+      const res3 = await supabase
+        .from('scouting_players')
+        .select('*');
+
+      if (!res3.error) {
+        data = res3.data;
+        error = null;
+      }
+    }
+  }
+
+  if (error) {
+    console.warn('Error fetching players from Supabase:', error.message || error);
+    throw new Error(error.message || 'Error al obtener jugadores de Supabase. Revisa que la tabla "scouting_players" exista.');
   }
 
   // Format incoming database rows back to ScoutedPlayer structure (specifically the JSON fields if needed)
   return (data || []).map((row: any) => {
-    const rawAtributos = typeof row.atributos === 'string' ? JSON.parse(row.atributos) : (row.atributos || { fisico: 5, tecnica: 5, tactica: 5, mental: 5 });
-    // Safe extraction of nested physical evaluation
-    const { valoracionFisica: nestedFisica, ...cleanAtributos } = rawAtributos;
+    let rawAtributos: any = { fisico: 5, tecnica: 5, tactica: 5, mental: 5 };
+    if (typeof row.atributos === 'string') {
+      try {
+        rawAtributos = JSON.parse(row.atributos);
+      } catch (e) {
+        // Safe fallback
+      }
+    } else if (row.atributos && typeof row.atributos === 'object') {
+      rawAtributos = row.atributos;
+    }
+
+    const { valoracionFisica: nestedFisica, ...cleanAtributos } = rawAtributos || {};
     return {
       id: row.id,
-      nombre: row.nombre,
-      equipo: row.equipo,
-      posicion: row.posicion,
+      nombre: row.nombre || 'Sin nombre',
+      equipo: row.equipo || '',
+      posicion: row.posicion || 'Portero',
       anoNacimiento: row.ano_nacimiento || row.anoNacimiento || 2000,
-      lateralidad: row.lateralidad,
+      lateralidad: row.lateralidad || 'Diestro',
       valorMercado: row.valor_mercado !== undefined ? row.valor_mercado : (row.valorMercado || 0),
       calificacion: row.calificacion || 3,
       notas: row.notas || '',
-      atributos: cleanAtributos.fisico !== undefined ? cleanAtributos : rawAtributos,
+      atributos: cleanAtributos.fisico !== undefined ? cleanAtributos : (rawAtributos || { fisico: 5, tecnica: 5, tactica: 5, mental: 5 }),
       fechaRegistro: row.fecha_registro || row.fechaRegistro || new Date().toISOString().split('T')[0],
       categoria: row.categoria || '',
       altura: row.altura,
