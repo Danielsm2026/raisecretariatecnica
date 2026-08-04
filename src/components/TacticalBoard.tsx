@@ -358,14 +358,26 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   // Load campogramas from cloud (Supabase) on mount if available
   useEffect(() => {
     dbFetchSetting<CampogramaItem[]>('campogramas', []).then((remote) => {
-      if (Array.isArray(remote) && remote.length > 0) {
-        setCampogramas((prev) => {
-          const map = new Map<string, CampogramaItem>();
-          prev.forEach(c => map.set(c.id, c));
+      setCampogramas((prev) => {
+        const map = new Map<string, CampogramaItem>();
+        // Start with default campogramas
+        DEFAULT_CAMPOGRAMAS.forEach(d => map.set(d.id, d));
+        // Merge current local state
+        prev.forEach(c => map.set(c.id, c));
+        // Merge remote items from Supabase
+        if (Array.isArray(remote) && remote.length > 0) {
           remote.forEach(c => map.set(c.id, c));
-          return Array.from(map.values());
+        }
+        // Ensure all DEFAULT_CAMPOGRAMAS items are guaranteed to exist
+        DEFAULT_CAMPOGRAMAS.forEach(d => {
+          if (!map.has(d.id)) {
+            map.set(d.id, d);
+          }
         });
-      }
+        const finalCampogramas = Array.from(map.values());
+        dbSaveSetting('campogramas', finalCampogramas);
+        return finalCampogramas;
+      });
     });
   }, []);
 
