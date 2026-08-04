@@ -20,6 +20,7 @@ import {
   List
 } from 'lucide-react';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
+import { dbFetchSetting, dbSaveSetting } from '../utils/supabaseClient';
 
 // Helper to map any position string to one of the 5 position codes
 export function getPositionCode(posicion: string): 'POR' | 'DF' | 'MED' | 'EXT' | 'DEL' {
@@ -663,12 +664,28 @@ export default function TeamsView({
     }
   });
 
+  // Load custom lineups and systems from cloud (Supabase) on mount if available
+  useEffect(() => {
+    dbFetchSetting<Record<string, Record<string, string[]>>>('custom_team_lineups', {}).then((remote) => {
+      if (remote && typeof remote === 'object' && Object.keys(remote).length > 0) {
+        setCustomLineups((prev) => ({ ...remote, ...prev }));
+      }
+    });
+
+    dbFetchSetting<Record<string, string>>('team_systems', {}).then((remote) => {
+      if (remote && typeof remote === 'object' && Object.keys(remote).length > 0) {
+        setTeamSystems((prev) => ({ ...remote, ...prev }));
+      }
+    });
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem('DEPARTAMENTO_SCOUTING_TEAMS_CUSTOM_LINEUPS_V2', JSON.stringify(customLineups));
     } catch (e) {
       console.error('Error saving custom lineups:', e);
     }
+    dbSaveSetting('custom_team_lineups', customLineups);
   }, [customLineups]);
   
   // Custom tactical systems per team with localStorage persistence
@@ -687,6 +704,7 @@ export default function TeamsView({
     } catch (e) {
       console.error('Error saving team systems:', e);
     }
+    dbSaveSetting('team_systems', teamSystems);
   }, [teamSystems]);
 
   // Group players by team dynamically

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { ConfirmationModal } from './ConfirmationModal';
+import { dbFetchSetting, dbSaveSetting } from '../utils/supabaseClient';
 
 interface TacticalBoardProps {
   players: ScoutedPlayer[];
@@ -298,9 +299,28 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [editTitleInput, setEditTitleInput] = useState('');
   const [campogramaToDelete, setCampogramaToDelete] = useState<{ id: string; nombre: string } | null>(null);
 
-  // Save campogramas to localStorage on change
+  // Load campogramas from cloud (Supabase) on mount if available
   useEffect(() => {
-    localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(campogramas));
+    dbFetchSetting<CampogramaItem[]>('campogramas', []).then((remote) => {
+      if (Array.isArray(remote) && remote.length > 0) {
+        setCampogramas((prev) => {
+          const map = new Map<string, CampogramaItem>();
+          prev.forEach(c => map.set(c.id, c));
+          remote.forEach(c => map.set(c.id, c));
+          return Array.from(map.values());
+        });
+      }
+    });
+  }, []);
+
+  // Save campogramas to localStorage and cloud on change
+  useEffect(() => {
+    try {
+      localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(campogramas));
+    } catch (e) {
+      console.error('Error saving campogramas:', e);
+    }
+    dbSaveSetting('campogramas', campogramas);
   }, [campogramas]);
 
   // Active Campograma helper

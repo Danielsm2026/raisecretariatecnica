@@ -553,11 +553,48 @@ export async function dbBulkUpsertMatchReports(reports: MatchReport[]): Promise<
 }
 
 /**
+ * Generic setting retriever for cloud syncing across Vercel deployments and devices.
+ */
+export async function dbFetchSetting<T>(key: string, defaultValue: T): Promise<T> {
+  if (!supabase) return defaultValue;
+  try {
+    const { data, error } = await supabase
+      .from('scouting_settings')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+
+    if (error || !data) return defaultValue;
+    return (data.value !== undefined && data.value !== null) ? (data.value as T) : defaultValue;
+  } catch (e) {
+    console.warn(`Could not fetch setting "${key}" from Supabase:`, e);
+    return defaultValue;
+  }
+}
+
+/**
+ * Generic setting saver for cloud syncing across Vercel deployments and devices.
+ */
+export async function dbSaveSetting(key: string, value: any): Promise<void> {
+  if (!supabase) return;
+  try {
+    const payload = {
+      key,
+      value,
+      updated_at: new Date().toISOString()
+    };
+    await safeUpsert('scouting_settings', payload, 'key');
+  } catch (err) {
+    console.warn(`Could not save setting "${key}" to Supabase:`, err);
+  }
+}
+
+/**
  * Returns a SQL code snippet that the user can run in the Supabase SQL editor to bootstrap
  * their table automatically.
  */
 export function getSQLInstructions(): string {
-  return `-- Opción A: Si ya tienes las tablas creadas y quieres habilitar las valoraciones físicas y otras columnas (incluyendo fichajes 2026), ejecuta esto en el SQL Editor de Supabase:
+  return `-- Opción A: Si ya tienes las tablas creadas y quieres habilitar las valoraciones físicas, fichajes 2026 y sincronización de campogramas, ejecuta esto en el SQL Editor de Supabase:
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS categoria TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS valoracion_fisica JSONB;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "valoracionFisica" JSONB;
@@ -572,6 +609,15 @@ ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "esFichajeVerano2026" BOOL
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS besoccer_url TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "besoccerUrl" TEXT;
 ALTER TABLE scouting_match_reports ADD COLUMN IF NOT EXISTS categoria TEXT;
+
+CREATE TABLE IF NOT EXISTS scouting_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
+CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
 
 -- Forzar recarga de cache del esquema en Supabase (PostgREST)
 NOTIFY pgrst, 'reload schema';
