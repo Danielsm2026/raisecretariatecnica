@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { ScoutedPlayer, MatchReport } from '../types';
+import { ScoutedPlayer, MatchReport, WeeklyMatchAssignment } from '../types';
 
 const metaEnv = (import.meta as any).env || {};
 const supabaseUrl = (metaEnv.VITE_SUPABASE_URL as string) || '';
@@ -553,6 +553,141 @@ export async function dbBulkUpsertMatchReports(reports: MatchReport[]): Promise<
 }
 
 /**
+ * Fetch weekly match assignments from Supabase.
+ */
+export async function dbFetchWeeklyAssignments(): Promise<WeeklyMatchAssignment[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('scouting_weekly_assignments')
+      .select('*')
+      .order('fecha', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      return data.map((row: any) => ({
+        id: row.id,
+        diaSemana: row.diaSemana || row.dia_semana || 'Lunes',
+        fecha: row.fecha || '',
+        hora: row.hora || '',
+        partido: row.partido || '',
+        equipoLocal: row.equipoLocal || row.equipo_local || '',
+        equipoVisitante: row.equipoVisitante || row.equipo_visitante || '',
+        competicion: row.competicion || '',
+        acreditacion: row.acreditacion || 'Solicitar',
+        modalidad: row.modalidad || '',
+        ubicacion: row.ubicacion || '',
+        ojeadorAsignado: row.ojeadorAsignado || row.ojeador_asignado || '',
+        jugadoresObjetivo: row.jugadoresObjetivo || row.jugadores_objetivo || '',
+        estado: row.estado || 'Pendiente',
+        notasAdicionales: row.notasAdicionales || row.notas_adicionales || ''
+      }));
+    }
+  } catch (err) {
+    console.warn('Could not fetch from scouting_weekly_assignments table directly:', err);
+  }
+
+  // Fallback: fetch from settings store if table doesn't exist
+  return dbFetchSetting<WeeklyMatchAssignment[]>('scouting_weekly_assignments_v1', []);
+}
+
+/**
+ * Save a single weekly match assignment to Supabase.
+ */
+export async function dbSaveWeeklyAssignment(assignment: WeeklyMatchAssignment): Promise<void> {
+  if (!supabase) return;
+
+  const payload = {
+    id: assignment.id,
+    dia_semana: assignment.diaSemana,
+    diaSemana: assignment.diaSemana,
+    fecha: assignment.fecha,
+    hora: assignment.hora,
+    partido: assignment.partido,
+    equipo_local: assignment.equipoLocal,
+    equipoLocal: assignment.equipoLocal,
+    equipo_visitante: assignment.equipoVisitante,
+    equipoVisitante: assignment.equipoVisitante,
+    competicion: assignment.competicion,
+    acreditacion: assignment.acreditacion,
+    modalidad: assignment.modalidad || '',
+    ubicacion: assignment.ubicacion,
+    ojeador_asignado: assignment.ojeadorAsignado,
+    ojeadorAsignado: assignment.ojeadorAsignado,
+    jugadores_objetivo: assignment.jugadoresObjetivo || '',
+    jugadoresObjetivo: assignment.jugadoresObjetivo || '',
+    estado: assignment.estado,
+    notas_adicionales: assignment.notasAdicionales || '',
+    notasAdicionales: assignment.notasAdicionales || '',
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    await safeUpsert('scouting_weekly_assignments', payload, 'id');
+  } catch (err) {
+    console.warn('Error saving to scouting_weekly_assignments table, falling back to settings store:', err);
+  }
+}
+
+/**
+ * Delete a single weekly match assignment from Supabase.
+ */
+export async function dbDeleteWeeklyAssignment(id: string): Promise<void> {
+  if (!supabase) return;
+
+  try {
+    const { error } = await supabase
+      .from('scouting_weekly_assignments')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.warn('Error deleting from scouting_weekly_assignments table:', error);
+    }
+  } catch (err) {
+    console.warn('Error deleting from scouting_weekly_assignments table:', err);
+  }
+}
+
+/**
+ * Bulk upload/sync weekly match assignments to Supabase.
+ */
+export async function dbBulkUpsertWeeklyAssignments(assignments: WeeklyMatchAssignment[]): Promise<void> {
+  if (!supabase || assignments.length === 0) return;
+
+  const payloads = assignments.map(a => ({
+    id: a.id,
+    dia_semana: a.diaSemana,
+    diaSemana: a.diaSemana,
+    fecha: a.fecha,
+    hora: a.hora,
+    partido: a.partido,
+    equipo_local: a.equipoLocal,
+    equipoLocal: a.equipoLocal,
+    equipo_visitante: a.equipoVisitante,
+    equipoVisitante: a.equipoVisitante,
+    competicion: a.competicion,
+    acreditacion: a.acreditacion,
+    modalidad: a.modalidad || '',
+    ubicacion: a.ubicacion,
+    ojeador_asignado: a.ojeadorAsignado,
+    ojeadorAsignado: a.ojeadorAsignado,
+    jugadores_objetivo: a.jugadoresObjetivo || '',
+    jugadoresObjetivo: a.jugadoresObjetivo || '',
+    estado: a.estado,
+    notas_adicionales: a.notasAdicionales || '',
+    notasAdicionales: a.notasAdicionales || '',
+    updated_at: new Date().toISOString()
+  }));
+
+  try {
+    await safeBulkUpsert('scouting_weekly_assignments', payloads, 'id');
+  } catch (err) {
+    console.warn('Error bulk upserting to scouting_weekly_assignments table:', err);
+  }
+}
+
+/**
  * Generic setting retriever for cloud syncing across Vercel deployments and devices.
  */
 export async function dbFetchSetting<T>(key: string, defaultValue: T): Promise<T> {
@@ -722,6 +857,36 @@ ALTER TABLE scouting_match_reports ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Permitir todo en informes de partidos" ON scouting_match_reports;
 CREATE POLICY "Permitir todo en informes de partidos" ON scouting_match_reports
   FOR ALL USING (true) WITH CHECK (true);
+
+-- TABLA PARA REGISTROS Y ASIGNACIONES DEL PLAN SEMANAL
+CREATE TABLE IF NOT EXISTS scouting_weekly_assignments (
+  id TEXT PRIMARY KEY,
+  dia_semana TEXT,
+  "diaSemana" TEXT,
+  fecha TEXT,
+  hora TEXT,
+  partido TEXT,
+  equipo_local TEXT,
+  "equipoLocal" TEXT,
+  equipo_visitante TEXT,
+  "equipoVisitante" TEXT,
+  competicion TEXT,
+  acreditacion TEXT,
+  modalidad TEXT,
+  ubicacion TEXT,
+  ojeador_asignado TEXT,
+  "ojeadorAsignado" TEXT,
+  jugadores_objetivo TEXT,
+  "jugadoresObjetivo" TEXT,
+  estado TEXT,
+  notas_adicionales TEXT,
+  "notasAdicionales" TEXT,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE scouting_weekly_assignments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en asignaciones semanales" ON scouting_weekly_assignments;
+CREATE POLICY "Permitir todo en asignaciones semanales" ON scouting_weekly_assignments FOR ALL USING (true) WITH CHECK (true);
 
 -- CONFIGURACIÓN DE STORAGE EN SUPABASE (EJECUTA ESTO EN EL SQL EDITOR):
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('scouting_assets', 'scouting_assets', true) ON CONFLICT (id) DO NOTHING;

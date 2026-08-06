@@ -25,7 +25,14 @@ import {
   ListTodo,
   AlertTriangle
 } from 'lucide-react';
-import { dbFetchSetting, dbSaveSetting } from '../utils/supabaseClient';
+import { 
+  dbFetchSetting, 
+  dbSaveSetting, 
+  dbFetchWeeklyAssignments, 
+  dbSaveWeeklyAssignment, 
+  dbDeleteWeeklyAssignment, 
+  dbBulkUpsertWeeklyAssignments 
+} from '../utils/supabaseClient';
 
 export interface WeeklyMatchAssignment {
   id: string;
@@ -267,7 +274,23 @@ export default function WeeklyPlanView({
       console.error('Error loading weekly plan from localStorage:', e);
     }
 
-    // Sync with Cloud Supabase
+    // 1. Fetch from Supabase scouting_weekly_assignments table directly
+    dbFetchWeeklyAssignments().then((tableAssignments) => {
+      if (Array.isArray(tableAssignments) && tableAssignments.length > 0) {
+        setAssignments(prev => {
+          const map = new Map<string, WeeklyMatchAssignment>();
+          prev.forEach(a => map.set(a.id, a));
+          tableAssignments.forEach(a => {
+            if (!savedDeleted.includes(a.id)) {
+              map.set(a.id, a);
+            }
+          });
+          return Array.from(map.values());
+        });
+      }
+    });
+
+    // 2. Sync with Cloud Settings backup
     dbFetchSetting<WeeklyPlanData>('weekly_plan_data', {
       semanaNombre: weekInfo.label,
       fechaInicio: weekInfo.monday.toISOString(),
@@ -285,8 +308,16 @@ export default function WeeklyPlanView({
       }
 
       if (Array.isArray(remote.assignments)) {
-        const cleanAssignments = remote.assignments.filter((a: WeeklyMatchAssignment) => !combinedDeleted.includes(a.id));
-        setAssignments(cleanAssignments);
+        setAssignments(prev => {
+          const map = new Map<string, WeeklyMatchAssignment>();
+          prev.forEach(a => map.set(a.id, a));
+          remote.assignments.forEach((a: WeeklyMatchAssignment) => {
+            if (!combinedDeleted.includes(a.id)) {
+              map.set(a.id, a);
+            }
+          });
+          return Array.from(map.values());
+        });
       }
       if (Array.isArray(remote.objectives) && remote.objectives.length > 0) {
         setObjectives(remote.objectives);
@@ -313,8 +344,11 @@ export default function WeeklyPlanView({
       console.error('Error saving weekly plan to localStorage:', e);
     }
 
-    // Save to Cloud Supabase for Vercel cross-device persistence
+    // Save to Cloud Supabase (both settings JSON and relational table bulk upsert)
     dbSaveSetting('weekly_plan_data', planData);
+    if (cleanAssignments.length > 0) {
+      dbBulkUpsertWeeklyAssignments(cleanAssignments);
+    }
   }, [assignments, objectives, deletedAssignmentIds, weekInfo]);
 
   // Filtered assignments
@@ -433,7 +467,9 @@ export default function WeeklyPlanView({
       }
       return updated;
     });
-    if (showNotification) showNotification('Partido eliminado del plan semanal', 'info');
+    // Delete directly from Supabase relational database
+    dbDeleteWeeklyAssignment(id);
+    if (showNotification) showNotification('Partido eliminado del plan semanal y Supabase', 'info');
   };
 
   // Toggle Status directly from card
@@ -444,7 +480,14 @@ export default function WeeklyPlanView({
       'Completado': 'Pendiente'
     };
     const nextStatus = nextMap[current];
-    setAssignments(prev => prev.map(a => a.id === id ? { ...a, estado: nextStatus } : a));
+    setAssignments(prev => {
+      const updated = prev.map(a => a.id === id ? { ...a, estado: nextStatus } : a);
+      const target = updated.find(a => a.id === id);
+      if (target) {
+        dbSaveWeeklyAssignment(target);
+      }
+      return updated;
+    });
     if (showNotification) showNotification(`Estado cambiado a ${nextStatus}`, 'success');
   };
 
@@ -453,15 +496,19 @@ export default function WeeklyPlanView({
     e.preventDefault();
     const partidoName = formData.partido?.trim() || `${formData.equipoLocal || 'Equipo A'} vs ${formData.equipoVisitante || 'Equipo B'}`;
 
+    let savedAssignment: WeeklyMatchAssignment;
+
     if (editingAssignment) {
-      setAssignments(prev => prev.map(a => a.id === editingAssignment.id ? {
-        ...a,
+      savedAssignment = {
+        ...editingAssignment,
         ...formData,
         partido: partidoName
-      } as WeeklyMatchAssignment : a));
-      if (showNotification) showNotification('Asignación actualizada correctamente', 'success');
+      } as WeeklyMatchAssignment;
+
+      setAssignments(prev => prev.map(a => a.id === editingAssignment.id ? savedAssignment : a));
+      if (showNotification) showNotification('Asignación actualizada en Supabase y local', 'success');
     } else {
-      const newAssign: WeeklyMatchAssignment = {
+      savedAssignment = {
         id: `assign-${Date.now()}`,
         diaSemana: formData.diaSemana || 'Sábado',
         fecha: formData.fecha || new Date().toISOString().split('T')[0],
@@ -477,9 +524,13 @@ export default function WeeklyPlanView({
         estado: formData.estado || 'Pendiente',
         notasAdicionales: formData.notasAdicionales || ''
       };
-      setAssignments(prev => [newAssign, ...prev]);
-      if (showNotification) showNotification('Nuevo partido añadido al Plan Semanal', 'success');
+      setAssignments(prev => [savedAssignment, ...prev]);
+      if (showNotification) showNotification('Nuevo partido añadido y sincronizado con Supabase', 'success');
     }
+
+    // Direct save to Supabase relational table
+    dbSaveWeeklyAssignment(savedAssignment);
+
     setIsMatchModalOpen(false);
   };
 

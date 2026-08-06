@@ -109,6 +109,25 @@ export interface VideoItem {
   fechaRegistro: string; // ISO format date
 }
 
+export interface WeeklyMatchAssignment {
+  id: string;
+  diaSemana: 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
+  fecha: string; // YYYY-MM-DD
+  hora: string;
+  partido: string;
+  equipoLocal: string;
+  equipoVisitante: string;
+  competicion: string;
+  acreditacion: 'Solicitar' | 'Solicitado' | 'Confirmado';
+  modalidad?: string;
+  ubicacion: string;
+  ojeadorAsignado: string;
+  jugadoresObjetivo: string; // Nombres o notas de futbolistas a vigilar
+  estado: 'Pendiente' | 'En Progreso' | 'Completado';
+  notasAdicionales?: string;
+}
+
+
 export function getPhysicalCapacitiesByPosition(pos: string): { category: string; capacities: string[] } | null {
   const normalized = (pos || '').toUpperCase().trim();
   
