@@ -22,7 +22,8 @@ import {
   CheckSquare, 
   Sparkles,
   Award,
-  ListTodo
+  ListTodo,
+  AlertTriangle
 } from 'lucide-react';
 import { dbFetchSetting, dbSaveSetting } from '../utils/supabaseClient';
 
@@ -58,6 +59,7 @@ export interface WeeklyPlanData {
   fechaFin: string;
   assignments: WeeklyMatchAssignment[];
   objectives: WeeklyObjective[];
+  deletedAssignmentIds?: string[];
 }
 
 interface WeeklyPlanViewProps {
@@ -70,6 +72,7 @@ interface WeeklyPlanViewProps {
 const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const;
 const SCOUT_OPTIONS = ['Miguel Linares', 'Antonio Cruz', 'Daniel Saugar', 'Carlos', 'Nico'] as const;
 const ACREDITACION_OPTIONS = ['Solicitar', 'Solicitado', 'Confirmado'] as const;
+const COMPETICION_OPTIONS = ['Segunda División', 'Primera RFEF', 'Segunda RFEF', 'Tercera RFEF', 'Juvenil DH', 'Amistoso'] as const;
 
 const DEFAULT_OBJECTIVES: WeeklyObjective[] = [
   { id: 'obj-1', titulo: 'Cobertura presencial partido Segunda RFEF Grupo I (Real Avilés)', prioridad: 'Alta', completado: true, categoria: 'Scouting Presencial' },
@@ -154,7 +157,34 @@ export default function WeeklyPlanView({
 }: WeeklyPlanViewProps) {
   // Current Week State
   const [currentWeekOffset, setCurrentWeekOffset] = useState<number>(0);
-  const [assignments, setAssignments] = useState<WeeklyMatchAssignment[]>(DEFAULT_ASSIGNMENTS);
+  
+  // Track permanently deleted assignment IDs
+  const [deletedAssignmentIds, setDeletedAssignmentIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [assignments, setAssignments] = useState<WeeklyMatchAssignment[]>(() => {
+    try {
+      const savedDeleted = localStorage.getItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1');
+      const deletedIds: string[] = savedDeleted ? JSON.parse(savedDeleted) : [];
+      const savedLocal = localStorage.getItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_V1');
+      if (savedLocal) {
+        const parsed = JSON.parse(savedLocal);
+        if (Array.isArray(parsed.assignments)) {
+          return parsed.assignments.filter((a: WeeklyMatchAssignment) => !deletedIds.includes(a.id));
+        }
+      }
+      return DEFAULT_ASSIGNMENTS.filter(a => !deletedIds.includes(a.id));
+    } catch {
+      return DEFAULT_ASSIGNMENTS;
+    }
+  });
+
   const [objectives, setObjectives] = useState<WeeklyObjective[]>(DEFAULT_OBJECTIVES);
   
   // Filter States
@@ -167,6 +197,7 @@ export default function WeeklyPlanView({
   // Modal Form States
   const [isMatchModalOpen, setIsMatchModalOpen] = useState<boolean>(false);
   const [editingAssignment, setEditingAssignment] = useState<WeeklyMatchAssignment | null>(null);
+  const [assignmentToDelete, setAssignmentToDelete] = useState<WeeklyMatchAssignment | null>(null);
 
   const [isObjModalOpen, setIsObjModalOpen] = useState<boolean>(false);
   const [newObjTitle, setNewObjTitle] = useState<string>('');
@@ -219,12 +250,18 @@ export default function WeeklyPlanView({
 
   // Load plan from Cloud (Supabase) and LocalStorage on Mount
   useEffect(() => {
+    let savedDeleted: string[] = [];
     try {
+      const savedDeletedStr = localStorage.getItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1');
+      if (savedDeletedStr) savedDeleted = JSON.parse(savedDeletedStr);
+
       const savedLocal = localStorage.getItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_V1');
       if (savedLocal) {
         const parsed = JSON.parse(savedLocal);
-        if (parsed.assignments) setAssignments(parsed.assignments);
-        if (parsed.objectives) setObjectives(parsed.objectives);
+        if (Array.isArray(parsed.assignments)) {
+          setAssignments(parsed.assignments.filter((a: WeeklyMatchAssignment) => !savedDeleted.includes(a.id)));
+        }
+        if (Array.isArray(parsed.objectives)) setObjectives(parsed.objectives);
       }
     } catch (e) {
       console.error('Error loading weekly plan from localStorage:', e);
@@ -236,12 +273,22 @@ export default function WeeklyPlanView({
       fechaInicio: weekInfo.monday.toISOString(),
       fechaFin: weekInfo.sunday.toISOString(),
       assignments: DEFAULT_ASSIGNMENTS,
-      objectives: DEFAULT_OBJECTIVES
+      objectives: DEFAULT_OBJECTIVES,
+      deletedAssignmentIds: savedDeleted
     }).then((remote) => {
-      if (remote && Array.isArray(remote.assignments) && remote.assignments.length > 0) {
-        setAssignments(remote.assignments);
+      if (!remote) return;
+      let combinedDeleted = savedDeleted;
+      if (Array.isArray(remote.deletedAssignmentIds)) {
+        combinedDeleted = Array.from(new Set([...combinedDeleted, ...remote.deletedAssignmentIds]));
+        setDeletedAssignmentIds(combinedDeleted);
+        localStorage.setItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1', JSON.stringify(combinedDeleted));
       }
-      if (remote && Array.isArray(remote.objectives) && remote.objectives.length > 0) {
+
+      if (Array.isArray(remote.assignments)) {
+        const cleanAssignments = remote.assignments.filter((a: WeeklyMatchAssignment) => !combinedDeleted.includes(a.id));
+        setAssignments(cleanAssignments);
+      }
+      if (Array.isArray(remote.objectives) && remote.objectives.length > 0) {
         setObjectives(remote.objectives);
       }
     });
@@ -249,23 +296,26 @@ export default function WeeklyPlanView({
 
   // Sync to Cloud and LocalStorage whenever assignments or objectives change
   useEffect(() => {
+    const cleanAssignments = assignments.filter(a => !deletedAssignmentIds.includes(a.id));
     const planData: WeeklyPlanData = {
       semanaNombre: weekInfo.label,
       fechaInicio: weekInfo.monday.toISOString(),
       fechaFin: weekInfo.sunday.toISOString(),
-      assignments,
-      objectives
+      assignments: cleanAssignments,
+      objectives,
+      deletedAssignmentIds
     };
 
     try {
       localStorage.setItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_V1', JSON.stringify(planData));
+      localStorage.setItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1', JSON.stringify(deletedAssignmentIds));
     } catch (e) {
       console.error('Error saving weekly plan to localStorage:', e);
     }
 
     // Save to Cloud Supabase for Vercel cross-device persistence
     dbSaveSetting('weekly_plan_data', planData);
-  }, [assignments, objectives, weekInfo]);
+  }, [assignments, objectives, deletedAssignmentIds, weekInfo]);
 
   // Filtered assignments
   const filteredAssignments = useMemo(() => {
@@ -374,7 +424,16 @@ export default function WeeklyPlanView({
   // Delete Assignment
   const handleDeleteAssignment = (id: string) => {
     setAssignments(prev => prev.filter(a => a.id !== id));
-    if (showNotification) showNotification('Partido/Asignación eliminada del plan semanal', 'info');
+    setDeletedAssignmentIds(prev => {
+      const updated = Array.from(new Set([...prev, id]));
+      try {
+        localStorage.setItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error saving deleted match IDs to localStorage:', e);
+      }
+      return updated;
+    });
+    if (showNotification) showNotification('Partido eliminado del plan semanal', 'info');
   };
 
   // Toggle Status directly from card
@@ -701,24 +760,6 @@ export default function WeeklyPlanView({
 
                           {/* Action & Status Column */}
                           <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850">
-                            {/* Cycle Status Button */}
-                            <button
-                              onClick={() => handleCycleStatus(item.id, item.estado)}
-                              className={`px-3 py-1 rounded text-[10px] font-mono font-bold tracking-wider uppercase border transition-all flex items-center space-x-1.5 ${
-                                item.estado === 'Completado'
-                                  ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/80 hover:bg-emerald-900/60'
-                                  : item.estado === 'En Progreso'
-                                  ? 'bg-blue-950/60 text-blue-300 border-blue-800/80 hover:bg-blue-900/60 animate-pulse'
-                                  : 'bg-amber-950/60 text-amber-300 border-amber-800/80 hover:bg-amber-900/60'
-                              }`}
-                              title="Haz clic para cambiar estado"
-                            >
-                              {item.estado === 'Completado' && <CheckCircle2 className="w-3 h-3" />}
-                              {item.estado === 'En Progreso' && <Eye className="w-3 h-3" />}
-                              {item.estado === 'Pendiente' && <Clock className="w-3 h-3" />}
-                              <span>{item.estado}</span>
-                            </button>
-
                             {/* Action Buttons */}
                             <div className="flex items-center space-x-1">
                               {setActiveTab && (
@@ -741,9 +782,9 @@ export default function WeeklyPlanView({
                               </button>
 
                               <button
-                                onClick={() => handleDeleteAssignment(item.id)}
-                                className="p-1.5 bg-slate-850 hover:bg-red-950/40 text-slate-400 hover:text-red-400 rounded border border-slate-750 transition-colors"
-                                title="Eliminar asignación"
+                                onClick={() => setAssignmentToDelete(item)}
+                                className="p-1.5 bg-slate-850 hover:bg-red-950/40 text-slate-400 hover:text-red-400 rounded border border-slate-750 transition-colors cursor-pointer"
+                                title="Eliminar partido"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -824,13 +865,18 @@ export default function WeeklyPlanView({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">Competición</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: Primera RFEF"
-                    value={formData.competicion}
+                  <select
+                    value={formData.competicion || 'Primera RFEF'}
                     onChange={(e) => setFormData(prev => ({ ...prev, competicion: e.target.value }))}
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded px-3 py-2 focus:border-blue-500 focus:outline-none font-sans"
-                  />
+                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded px-3 py-2 focus:border-blue-500 focus:outline-none font-sans cursor-pointer"
+                  >
+                    {COMPETICION_OPTIONS.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                    {formData.competicion && !COMPETICION_OPTIONS.includes(formData.competicion as any) && (
+                      <option value={formData.competicion}>{formData.competicion}</option>
+                    )}
+                  </select>
                 </div>
 
                 <div>
@@ -882,6 +928,64 @@ export default function WeeklyPlanView({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Confirm Delete */}
+      {assignmentToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-fade-in">
+            <div className="flex items-center space-x-3 text-red-400 border-b border-slate-800 pb-3">
+              <div className="p-2 bg-red-950/60 border border-red-900/50 rounded-lg shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold font-display text-white tracking-wide">
+                  ¿Eliminar partido?
+                </h3>
+                <p className="text-[11px] font-mono text-slate-400">
+                  Esta acción eliminará el partido del plan semanal.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/80 space-y-1">
+              <p className="text-xs font-bold text-slate-200">
+                {assignmentToDelete.partido}
+              </p>
+              <div className="text-[11px] font-mono text-slate-400 flex flex-wrap items-center gap-x-2">
+                <span>{assignmentToDelete.diaSemana} ({assignmentToDelete.hora || 'Sin hora'})</span>
+                <span>•</span>
+                <span className="text-blue-400">{assignmentToDelete.competicion}</span>
+              </div>
+              {assignmentToDelete.ojeadorAsignado && (
+                <p className="text-[10px] font-mono text-slate-500">
+                  Scout: {assignmentToDelete.ojeadorAsignado}
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setAssignmentToDelete(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-xs font-bold transition-colors cursor-pointer"
+              >
+                CANCELAR
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleDeleteAssignment(assignmentToDelete.id);
+                  setAssignmentToDelete(null);
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-mono text-xs font-bold shadow-md shadow-red-600/20 transition-colors cursor-pointer flex items-center space-x-1"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>SÍ, ELIMINAR</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
