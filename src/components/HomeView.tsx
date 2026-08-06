@@ -7,6 +7,7 @@ import {
   Layout, 
   Video, 
   BarChart3, 
+  Calendar,
   Sparkles, 
   ChevronRight, 
   ArrowRight, 
@@ -23,7 +24,7 @@ import {
 interface HomeViewProps {
   players: ScoutedPlayer[];
   matchReports: MatchReport[];
-  setActiveTab: (tab: 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports') => void;
+  setActiveTab: (tab: 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports' | 'plan_semanal') => void;
   onAddPlayer: () => void;
 }
 
@@ -135,6 +136,18 @@ export default function HomeView({ players, matchReports, setActiveTab, onAddPla
       borderColor: 'border-rose-500/30 hover:border-rose-400',
       iconColor: 'text-rose-400',
       badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+    },
+    {
+      id: 'plan_semanal' as const,
+      title: 'Plan Semanal',
+      subtitle: 'WEEKLY SCOUTING SCHEDULE',
+      badge: 'Agenda & Asignaciones',
+      description: 'Planificación semanal de partidos en directo y streaming, asignaciones a ojeadores, seguimiento de objetivos departamentales y sincronización en tiempo real.',
+      icon: Calendar,
+      color: 'from-blue-600/20 to-teal-500/10',
+      borderColor: 'border-blue-500/30 hover:border-blue-400',
+      iconColor: 'text-blue-400',
+      badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
     }
   ];
 
