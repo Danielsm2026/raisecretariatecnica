@@ -491,6 +491,29 @@ export default function WeeklyPlanView({
     if (showNotification) showNotification(`Estado cambiado a ${nextStatus}`, 'success');
   };
 
+  // Change Accreditation state directly from card selector and sync to Supabase
+  const handleAccreditationChange = (id: string, newAcc: 'Solicitar' | 'Solicitado' | 'Confirmado') => {
+    setAssignments(prev => {
+      const updated = prev.map(a => a.id === id ? { ...a, acreditacion: newAcc, modalidad: newAcc } : a);
+      const target = updated.find(a => a.id === id);
+      if (target) {
+        dbSaveWeeklyAssignment(target);
+      }
+      return updated;
+    });
+    if (showNotification) showNotification(`Acreditación cambiada a "${newAcc}" y vinculada con Supabase`, 'success');
+  };
+
+  const handleCycleAccreditation = (id: string, current: string) => {
+    const nextMap: Record<string, 'Solicitar' | 'Solicitado' | 'Confirmado'> = {
+      'Solicitar': 'Solicitado',
+      'Solicitado': 'Confirmado',
+      'Confirmado': 'Solicitar'
+    };
+    const nextAcc = nextMap[current] || 'Solicitado';
+    handleAccreditationChange(id, nextAcc);
+  };
+
   // Save Assignment Form
   const handleSaveAssignment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -763,16 +786,26 @@ export default function WeeklyPlanView({
                                 {item.competicion}
                               </span>
 
-                              {/* Accreditation Badge */}
-                              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold flex items-center gap-1 ${
-                                (item.acreditacion || item.modalidad) === 'Confirmado' 
-                                  ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/80' 
-                                  : (item.acreditacion || item.modalidad) === 'Solicitado'
-                                  ? 'bg-blue-950/60 text-blue-300 border-blue-800/80'
-                                  : 'bg-amber-950/60 text-amber-300 border-amber-800/80'
-                              }`}>
-                                <span>🎟️ Acreditación: {item.acreditacion || item.modalidad || 'Solicitar'}</span>
-                              </span>
+                              {/* Accreditation Badge & Dropdown Selector (Syncs with Supabase) */}
+                              <div className="relative inline-flex items-center">
+                                <select
+                                  value={item.acreditacion || item.modalidad || 'Solicitar'}
+                                  onChange={(e) => handleAccreditationChange(item.id, e.target.value as any)}
+                                  className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold cursor-pointer outline-none transition-all appearance-none pr-5 ${
+                                    (item.acreditacion || item.modalidad) === 'Confirmado' 
+                                      ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800/80 hover:bg-emerald-900/80' 
+                                      : (item.acreditacion || item.modalidad) === 'Solicitado'
+                                      ? 'bg-blue-950/80 text-blue-300 border-blue-800/80 hover:bg-blue-900/80'
+                                      : 'bg-amber-950/80 text-amber-300 border-amber-800/80 hover:bg-amber-900/80'
+                                  }`}
+                                  title="Cambiar estado de Acreditación (Sincronizado con Supabase)"
+                                >
+                                  <option value="Solicitar" className="bg-slate-900 text-amber-300 font-mono">🎟️ Acreditación: Solicitar</option>
+                                  <option value="Solicitado" className="bg-slate-900 text-blue-300 font-mono">🎟️ Acreditación: Solicitado</option>
+                                  <option value="Confirmado" className="bg-slate-900 text-emerald-300 font-mono">🎟️ Acreditación: Confirmado</option>
+                                </select>
+                                <span className="absolute right-1.5 pointer-events-none text-[8px] text-slate-400">▼</span>
+                              </div>
                             </div>
 
                             {/* Match Title */}
