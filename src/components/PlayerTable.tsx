@@ -520,7 +520,6 @@ export default function PlayerTable({
               <option value="SEGUIR">Seguir</option>
               <option value="INTERESANTE">Interesante</option>
               <option value="FIRMAR">Firmar</option>
-              <option value="DESCARTAR">Descartar</option>
             </select>
           </div>
 
@@ -767,7 +766,6 @@ export default function PlayerTable({
                       <option value="SEGUIR" className="bg-slate-900 text-slate-100">Seguir</option>
                       <option value="INTERESANTE" className="bg-slate-900 text-slate-100">Interesante</option>
                       <option value="FIRMAR" className="bg-slate-900 text-slate-100">Firmar</option>
-                      <option value="DESCARTAR" className="bg-slate-900 text-slate-100">Descartar</option>
                     </select>
                   </td>
                 </tr>

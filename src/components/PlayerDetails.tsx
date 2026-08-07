@@ -493,7 +493,6 @@ export default function PlayerDetails({
                       <option value="SEGUIR">SEGUIR</option>
                       <option value="INTERESANTE">INTERESANTE</option>
                       <option value="EVALUAR">EVALUAR</option>
-                      <option value="DESCARTAR">DESCARTAR</option>
                     </select>
                     <input
                       type="text"
