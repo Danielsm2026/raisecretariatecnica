@@ -15,7 +15,7 @@ import DataReportsView from './components/DataReportsView';
 import HomeView from './components/HomeView';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { DEFAULT_TEAM_ESCUDOS } from './utils/escudoHelper';
-import { isSupabaseConfigured, dbFetchPlayers, dbSavePlayer, dbDeletePlayer, dbBulkUpsert, dbFetchMatchReports, dbSaveMatchReport, dbDeleteMatchReport, dbBulkUpsertMatchReports } from './utils/supabaseClient';
+import { isSupabaseConfigured, dbFetchPlayers, dbSavePlayer, dbDeletePlayer, dbBulkUpsert, dbFetchMatchReports, dbSaveMatchReport, dbDeleteMatchReport, dbBulkUpsertMatchReports, dbSaveSetting } from './utils/supabaseClient';
 import { Trophy, HelpCircle, FileJson, Info, Calendar, Plus, Trash2, Edit, FileText, ChevronRight, BarChart3 } from 'lucide-react';
 
 export default function App() {
@@ -852,6 +852,58 @@ export default function App() {
       }
     } else {
       showNotification('Jugador removido del archivo de ojeadores.', 'info');
+    }
+
+    // Clean up deleted player ID from campogramas in localStorage and Supabase
+    try {
+      const savedCampogramasStr = localStorage.getItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2');
+      if (savedCampogramasStr) {
+        let currentCampograms: any[] = JSON.parse(savedCampogramasStr);
+        let campogramasChanged = false;
+
+        currentCampograms = currentCampograms.map((c: any) => {
+          let updatedAssignments = { ...(c.assignments || {}) };
+          let updatedMonthly = { ...(c.monthlyAssignments || {}) };
+          let itemChanged = false;
+
+          // Clean single assignments
+          Object.keys(updatedAssignments).forEach(posKey => {
+            if (updatedAssignments[posKey] === id) {
+              delete updatedAssignments[posKey];
+              itemChanged = true;
+            }
+          });
+
+          // Clean monthly assignments
+          Object.keys(updatedMonthly).forEach(posKey => {
+            if (Array.isArray(updatedMonthly[posKey]) && updatedMonthly[posKey].includes(id)) {
+              updatedMonthly[posKey] = updatedMonthly[posKey].filter((pid: string) => pid !== id);
+              itemChanged = true;
+            }
+          });
+
+          if (itemChanged) {
+            campogramasChanged = true;
+            return {
+              ...c,
+              assignments: updatedAssignments,
+              monthlyAssignments: updatedMonthly,
+              fechaModificacion: new Date().toLocaleDateString('es-ES'),
+              updatedAt: Date.now()
+            };
+          }
+          return c;
+        });
+
+        if (campogramasChanged) {
+          localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(currentCampograms));
+          if (isSupabaseConfigured()) {
+            dbSaveSetting('campogramas', currentCampograms).catch(console.error);
+          }
+        }
+      }
+    } catch (campErr) {
+      console.warn('Error purging deleted player from campogramas:', campErr);
     }
 
     setPlayers(freshPlayers);

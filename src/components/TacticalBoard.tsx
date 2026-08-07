@@ -317,33 +317,104 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   // Folder Navigation State
   const [currentFolder, setCurrentFolder] = useState<CampogramaFolderId | null>(null);
   const [currentSubFolder, setCurrentSubFolder] = useState<CampogramaSubFolderId | null>(null);
+  // Helpers for persistent deleted campogramas tracking & sanitization across AI Studio and Vercel
+  const getLocalDeletedCampogramaIds = (): string[] => {
+    const DEFAULT_DELETED = ['c_mensual_principal', 'c_mensual_enero', 'c_mensual_2rfef_principal', 'c_enero_2026_2rfef_g1'];
+    try {
+      const saved = localStorage.getItem('scouting_deleted_campogramas_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return Array.from(new Set([...DEFAULT_DELETED, ...parsed]));
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_DELETED;
+  };
+
+  const saveLocalDeletedCampogramaIds = (ids: string[]) => {
+    try {
+      localStorage.setItem('scouting_deleted_campogramas_v2', JSON.stringify(ids));
+    } catch (e) {}
+    if (isSupabaseConfigured()) {
+      dbSaveSetting('deleted_campogramas', ids).catch(console.error);
+    }
+  };
+
+  const sanitizeCampogramas = (
+    items: CampogramaItem[],
+    validPlayersList: ScoutedPlayer[],
+    deletedCampogramaIds: Set<string>
+  ): CampogramaItem[] => {
+    const validPlayerIds = new Set(validPlayersList.map(p => p.id));
+
+    // 1. Omit deleted campogramas
+    const activeItems = items.filter(c => c && c.id && !deletedCampogramaIds.has(c.id));
+
+    // 2. Clean invalid/deleted player IDs from assignments & monthlyAssignments
+    return activeItems.map(item => {
+      let assignmentsChanged = false;
+      let monthlyChanged = false;
+
+      const newAssignments: AssignedPositions = {};
+      if (item.assignments) {
+        Object.entries(item.assignments).forEach(([pos, pid]) => {
+          if (pid && validPlayerIds.has(pid)) {
+            newAssignments[pos] = pid;
+          } else {
+            assignmentsChanged = true;
+          }
+        });
+      }
+
+      const newMonthly: { [pos: string]: string[] } = {};
+      if (item.monthlyAssignments) {
+        Object.entries(item.monthlyAssignments).forEach(([pos, pids]) => {
+          if (Array.isArray(pids)) {
+            const validList = pids.filter(pid => validPlayerIds.has(pid));
+            if (validList.length !== pids.length) {
+              monthlyChanged = true;
+            }
+            if (validList.length > 0) {
+              newMonthly[pos] = validList;
+            }
+          }
+        });
+      }
+
+      if (assignmentsChanged || monthlyChanged) {
+        return {
+          ...item,
+          assignments: newAssignments,
+          monthlyAssignments: newMonthly,
+          fechaModificacion: new Date().toLocaleDateString('es-ES'),
+          updatedAt: Date.now()
+        };
+      }
+
+      return item;
+    });
+  };
+
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [campogramas, setCampogramas] = useState<CampogramaItem[]>(() => {
-    const deletedIds = new Set([
-      'c_mensual_principal', 
-      'c_mensual_enero', 
-      'c_mensual_2rfef_principal', 
-      'c_enero_2026_2rfef_g1'
-    ]);
+    const deletedSet = new Set(getLocalDeletedCampogramaIds());
     try {
       const saved = localStorage.getItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Filter out explicitly removed default campogramas
-          const filtered = parsed.filter((c: CampogramaItem) => !deletedIds.has(c.id));
-          const existingIds = new Set(filtered.map((c: CampogramaItem) => c.id));
-          const missingDefaults = DEFAULT_CAMPOGRAMAS.filter(d => !existingIds.has(d.id));
-          const result = missingDefaults.length > 0 ? [...filtered, ...missingDefaults] : filtered;
-          localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(result));
-          return result;
+          const clean = sanitizeCampogramas(parsed, players, deletedSet);
+          localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(clean));
+          return clean;
         }
       }
     } catch (e) {
       console.error('Error reading saved campogramas:', e);
     }
-    return DEFAULT_CAMPOGRAMAS;
+    const defaultClean = sanitizeCampogramas(DEFAULT_CAMPOGRAMAS, players, deletedSet);
+    return defaultClean;
   });
 
   // Modal States
@@ -359,16 +430,27 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
   // Load campogramas from cloud (Supabase) on mount if available
   useEffect(() => {
-    dbFetchSetting<CampogramaItem[]>('campogramas', []).then((remote) => {
+    Promise.all([
+      dbFetchSetting<CampogramaItem[]>('campogramas', []),
+      dbFetchSetting<string[]>('deleted_campogramas', [])
+    ]).then(([remoteCampogramas, remoteDeletedIds]) => {
+      const localDeleted = getLocalDeletedCampogramaIds();
+      const combinedDeletedIds = Array.from(new Set([...localDeleted, ...(Array.isArray(remoteDeletedIds) ? remoteDeletedIds : [])]));
+      saveLocalDeletedCampogramaIds(combinedDeletedIds);
+      const deletedSet = new Set(combinedDeletedIds);
+
       setCampogramas((prev) => {
         const map = new Map<string, CampogramaItem>();
-        // Start with default campogramas
-        DEFAULT_CAMPOGRAMAS.forEach(d => map.set(d.id, d));
-        // Merge current local state
-        prev.forEach(c => map.set(c.id, c));
-        // Merge remote items from Supabase smartly
-        if (Array.isArray(remote) && remote.length > 0) {
-          remote.forEach(remoteItem => {
+
+        // 1. Current local state
+        prev.forEach(c => {
+          if (c && c.id && !deletedSet.has(c.id)) map.set(c.id, c);
+        });
+
+        // 2. Remote items from Supabase
+        if (Array.isArray(remoteCampogramas) && remoteCampogramas.length > 0) {
+          remoteCampogramas.forEach(remoteItem => {
+            if (!remoteItem || !remoteItem.id || deletedSet.has(remoteItem.id)) return;
             const localItem = map.get(remoteItem.id);
             if (!localItem) {
               map.set(remoteItem.id, remoteItem);
@@ -381,18 +463,29 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             }
           });
         }
-        // Ensure all DEFAULT_CAMPOGRAMAS items are guaranteed to exist
-        DEFAULT_CAMPOGRAMAS.forEach(d => {
-          if (!map.has(d.id)) {
-            map.set(d.id, d);
-          }
-        });
-        const finalCampogramas = Array.from(map.values());
-        dbSaveSetting('campogramas', finalCampogramas);
-        return finalCampogramas;
+
+        const rawList = Array.from(map.values());
+        const cleaned = sanitizeCampogramas(rawList, players, deletedSet);
+        localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(cleaned));
+        dbSaveSetting('campogramas', cleaned);
+        return cleaned;
       });
     });
   }, []);
+
+  // Auto-purge deleted players from campogramas whenever players list changes
+  useEffect(() => {
+    const deletedSet = new Set(getLocalDeletedCampogramaIds());
+    const sanitized = sanitizeCampogramas(campogramas, players, deletedSet);
+    
+    const originalStr = JSON.stringify(campogramas);
+    const sanitizedStr = JSON.stringify(sanitized);
+    if (originalStr !== sanitizedStr) {
+      setCampogramas(sanitized);
+      localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', sanitizedStr);
+      dbSaveSetting('campogramas', sanitized);
+    }
+  }, [players]);
 
   // Save campogramas to localStorage and cloud on change
   useEffect(() => {
@@ -415,12 +508,25 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     setIsSyncingCloud(true);
     showNotification('Sincronizando campogramas con Supabase...', 'info');
     try {
-      const remote = await dbFetchSetting<CampogramaItem[]>('campogramas', []);
+      const [remoteCampogramas, remoteDeletedIds] = await Promise.all([
+        dbFetchSetting<CampogramaItem[]>('campogramas', []),
+        dbFetchSetting<string[]>('deleted_campogramas', [])
+      ]);
+
+      const localDeleted = getLocalDeletedCampogramaIds();
+      const combinedDeletedIds = Array.from(new Set([...localDeleted, ...(Array.isArray(remoteDeletedIds) ? remoteDeletedIds : [])]));
+      saveLocalDeletedCampogramaIds(combinedDeletedIds);
+      const deletedSet = new Set(combinedDeletedIds);
+
       const map = new Map<string, CampogramaItem>();
-      DEFAULT_CAMPOGRAMAS.forEach(d => map.set(d.id, d));
-      campogramas.forEach(c => map.set(c.id, c));
-      if (Array.isArray(remote) && remote.length > 0) {
-        remote.forEach(remoteItem => {
+
+      campogramas.forEach(c => {
+        if (c && c.id && !deletedSet.has(c.id)) map.set(c.id, c);
+      });
+
+      if (Array.isArray(remoteCampogramas) && remoteCampogramas.length > 0) {
+        remoteCampogramas.forEach(remoteItem => {
+          if (!remoteItem || !remoteItem.id || deletedSet.has(remoteItem.id)) return;
           const localItem = map.get(remoteItem.id);
           if (!localItem) {
             map.set(remoteItem.id, remoteItem);
@@ -433,14 +539,13 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           }
         });
       }
-      DEFAULT_CAMPOGRAMAS.forEach(d => {
-        if (!map.has(d.id)) map.set(d.id, d);
-      });
-      const merged = Array.from(map.values());
+
+      const merged = sanitizeCampogramas(Array.from(map.values()), players, deletedSet);
       setCampogramas(merged);
       await dbSaveSetting('campogramas', merged);
+      await dbSaveSetting('deleted_campogramas', combinedDeletedIds);
       localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(merged));
-      showNotification('¡Campogramas sincronizados exitosamente con Supabase!', 'success');
+      showNotification('¡Campogramas y eliminaciones sincronizados exitosamente con Supabase!', 'success');
     } catch (err: any) {
       console.error('Error syncing campogramas:', err);
       showNotification(`Error al sincronizar con Supabase: ${err?.message || 'Error de conexión'}`, 'error');
@@ -1032,9 +1137,20 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const confirmDeleteCampograma = () => {
     if (!campogramaToDelete) return;
     const { id, nombre } = campogramaToDelete;
-    setCampogramas(prev => prev.filter(c => c.id !== id));
+
+    // Record deletion permanently
+    const currentDeleted = getLocalDeletedCampogramaIds();
+    const updatedDeleted = Array.from(new Set([...currentDeleted, id]));
+    saveLocalDeletedCampogramaIds(updatedDeleted);
+
+    // Filter state
+    const cleanList = campogramas.filter(c => c.id !== id);
+    setCampogramas(cleanList);
+    localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(cleanList));
+    dbSaveSetting('campogramas', cleanList);
+
     if (activeCampogramaId === id) setActiveCampogramaId(null);
-    showNotification(`Campograma "${nombre}" eliminado`, 'info');
+    showNotification(`Campograma "${nombre}" eliminado permanentemente en local y Supabase.`, 'info');
     setCampogramaToDelete(null);
   };
 
