@@ -12,7 +12,6 @@ import TeamsView from './components/TeamsView';
 import TacticalBoard from './components/TacticalBoard';
 import VideoLibrary from './components/VideoLibrary';
 import DataReportsView from './components/DataReportsView';
-import WeeklyPlanView from './components/WeeklyPlanView';
 import HomeView from './components/HomeView';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { DEFAULT_TEAM_ESCUDOS } from './utils/escudoHelper';
@@ -43,7 +42,7 @@ export default function App() {
   }, [matchReports]);
   const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'inicio' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports' | 'plan_semanal'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports'>('inicio');
 
   // Supabase states
   const [supabaseStatus, setSupabaseStatus] = useState<'connected' | 'error' | 'not_configured' | 'loading'>('not_configured');
@@ -1296,17 +1295,6 @@ export default function App() {
           >
             <span>📊 Informes de Datos</span>
           </button>
-
-          <button
-            onClick={() => setActiveTab('plan_semanal')}
-            className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-widest border-b-2 transition-all flex items-center space-x-2 shrink-0 ${
-              activeTab === 'plan_semanal'
-                ? 'border-blue-500 text-blue-400 bg-slate-900/10'
-                : 'border-transparent text-slate-400 hover:text-white hover:border-slate-800'
-            }`}
-          >
-            <span>📅 Plan Semanal</span>
-          </button>
         </div>
 
         {activeTab === 'inicio' && (
@@ -1559,15 +1547,6 @@ export default function App() {
           <DataReportsView
             players={players}
             matchReports={matchReports}
-          />
-        )}
-
-        {activeTab === 'plan_semanal' && (
-          <WeeklyPlanView
-            players={players}
-            matchReports={matchReports}
-            setActiveTab={setActiveTab}
-            showNotification={showNotification}
           />
         )}
       </main>

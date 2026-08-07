@@ -1,71 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
-import { ScoutedPlayer, MatchReport, WeeklyMatchAssignment } from '../types';
+import { ScoutedPlayer, MatchReport } from '../types';
 
 const metaEnv = (import.meta as any).env || {};
+const supabaseUrl = (metaEnv.VITE_SUPABASE_URL as string) || '';
+const supabaseAnonKey = (metaEnv.VITE_SUPABASE_ANON_KEY as string) || '';
 
-export function getSupabaseCredentials(): { url: string; key: string; source: 'env' | 'local' | 'none' } {
-  let localUrl = '';
-  let localKey = '';
-  if (typeof window !== 'undefined') {
-    localUrl = localStorage.getItem('VITE_SUPABASE_URL') || localStorage.getItem('SUPABASE_CUSTOM_URL') || '';
-    localKey = localStorage.getItem('VITE_SUPABASE_ANON_KEY') || localStorage.getItem('SUPABASE_CUSTOM_ANON_KEY') || '';
-  }
-
-  const envUrl = (metaEnv.VITE_SUPABASE_URL as string) || '';
-  const envKey = (metaEnv.VITE_SUPABASE_ANON_KEY as string) || '';
-
-  if (localUrl.trim() && localKey.trim()) {
-    return { url: localUrl.trim(), key: localKey.trim(), source: 'local' };
-  }
-  if (envUrl.trim() && envKey.trim()) {
-    return { url: envUrl.trim(), key: envKey.trim(), source: 'env' };
-  }
-  return { url: '', key: '', source: 'none' };
-}
-
-let cachedClient: any = null;
-let lastUrl = '';
-let lastKey = '';
-
-export function getSupabase() {
-  const creds = getSupabaseCredentials();
-  if (!creds.url || !creds.key) {
-    cachedClient = null;
-    lastUrl = '';
-    lastKey = '';
-    return null;
-  }
-  if (!cachedClient || lastUrl !== creds.url || lastKey !== creds.key) {
-    lastUrl = creds.url;
-    lastKey = creds.key;
-    cachedClient = createClient(creds.url, creds.key);
-  }
-  return cachedClient;
-}
-
-// Export supabase getter for backward compatibility
-export const supabase = getSupabase();
+// Create the client only if keys are present
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey) 
+  : null;
 
 export function isSupabaseConfigured(): boolean {
-  return !!getSupabase();
-}
-
-export function saveSupabaseCustomCredentials(url: string, key: string) {
-  if (typeof window !== 'undefined') {
-    if (url.trim() && key.trim()) {
-      localStorage.setItem('VITE_SUPABASE_URL', url.trim());
-      localStorage.setItem('VITE_SUPABASE_ANON_KEY', key.trim());
-      localStorage.setItem('SUPABASE_CUSTOM_URL', url.trim());
-      localStorage.setItem('SUPABASE_CUSTOM_ANON_KEY', key.trim());
-    } else {
-      localStorage.removeItem('VITE_SUPABASE_URL');
-      localStorage.removeItem('VITE_SUPABASE_ANON_KEY');
-      localStorage.removeItem('SUPABASE_CUSTOM_URL');
-      localStorage.removeItem('SUPABASE_CUSTOM_ANON_KEY');
-    }
-    cachedClient = null;
-    getSupabase();
-  }
+  return !!supabase;
 }
 
 export interface SupabaseSyncResult {
@@ -78,19 +24,18 @@ export interface SupabaseSyncResult {
  * Fetch players from Supabase.
  */
 export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
-  const client = getSupabase();
-  if (!client) {
-    throw new Error('Supabase URL o Anon Key no configurada.');
+  if (!supabase) {
+    throw new Error('Supabase URL or Anon Key is missing in environment variables.');
   }
 
-  let { data, error } = await client
+  let { data, error } = await supabase
     .from('scouting_players')
     .select('*')
     .order('fechaRegistro', { ascending: false });
 
   if (error) {
     // Fallback 1: Try ordering by snake_case fecha_registro
-    const res2 = await client
+    const res2 = await supabase
       .from('scouting_players')
       .select('*')
       .order('fecha_registro', { ascending: false });
@@ -100,7 +45,7 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
       error = null;
     } else {
       // Fallback 2: Select without ordering if order column does not exist
-      const res3 = await client
+      const res3 = await supabase
         .from('scouting_players')
         .select('*');
 
@@ -174,11 +119,9 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
  * Helper to perform an upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
 async function safeUpsert(table: string, payload: any, onConflict: string): Promise<any> {
-  const client = getSupabase();
-  if (!client) throw new Error('Supabase client not initialized.');
   let currentPayload = { ...payload };
   while (true) {
-    const { error } = await client
+    const { error } = await supabase!
       .from(table)
       .upsert(currentPayload, { onConflict });
     
@@ -217,11 +160,9 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
  * Helper to perform a bulk upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
 async function safeBulkUpsert(table: string, payloads: any[], onConflict: string): Promise<any> {
-  const client = getSupabase();
-  if (!client) throw new Error('Supabase client not initialized.');
   let currentPayloads = payloads.map(p => ({ ...p }));
   while (true) {
-    const { error } = await client
+    const { error } = await supabase!
       .from(table)
       .upsert(currentPayloads, { onConflict });
     
@@ -264,8 +205,7 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
  * Saves a single player to Supabase (upsert pattern).
  */
 export async function dbSavePlayer(player: ScoutedPlayer): Promise<void> {
-  const client = getSupabase();
-  if (!client) {
+  if (!supabase) {
     throw new Error('Supabase client not initialized.');
   }
 
@@ -343,12 +283,11 @@ export async function dbSavePlayer(player: ScoutedPlayer): Promise<void> {
  * Deletes a single player from Supabase.
  */
 export async function dbDeletePlayer(id: string): Promise<void> {
-  const client = getSupabase();
-  if (!client) {
+  if (!supabase) {
     throw new Error('Supabase client not initialized.');
   }
 
-  const { error } = await client
+  const { error } = await supabase
     .from('scouting_players')
     .delete()
     .eq('id', id);
@@ -441,12 +380,11 @@ export async function dbBulkUpsert(players: ScoutedPlayer[]): Promise<void> {
  * Fetch match reports from Supabase.
  */
 export async function dbFetchMatchReports(): Promise<MatchReport[]> {
-  const client = getSupabase();
-  if (!client) {
-    throw new Error('Supabase URL o Anon Key no configurada.');
+  if (!supabase) {
+    throw new Error('Supabase URL or Anon Key is missing in environment variables.');
   }
 
-  const { data, error } = await client
+  const { data, error } = await supabase
     .from('scouting_match_reports')
     .select('*')
     .order('fecha', { ascending: false });
@@ -481,8 +419,7 @@ export async function dbFetchMatchReports(): Promise<MatchReport[]> {
  * Saves a single match report to Supabase (upsert pattern).
  */
 export async function dbSaveMatchReport(report: MatchReport): Promise<void> {
-  const client = getSupabase();
-  if (!client) {
+  if (!supabase) {
     throw new Error('Supabase client not initialized.');
   }
 
@@ -517,14 +454,14 @@ export async function dbSaveMatchReport(report: MatchReport): Promise<void> {
     jugadoresVisitante: report.jugadoresVisitante
   };
 
-  const { error } = await client
+  const { error } = await supabase
     .from('scouting_match_reports')
     .upsert(payload, { onConflict: 'id' });
 
   if (error) {
     if (error.message && error.message.includes('categoria')) {
       const { categoria, ...payloadWithoutCategory } = payload;
-      const { error: retryError } = await client
+      const { error: retryError } = await supabase
         .from('scouting_match_reports')
         .upsert(payloadWithoutCategory, { onConflict: 'id' });
       if (!retryError) {
@@ -541,12 +478,11 @@ export async function dbSaveMatchReport(report: MatchReport): Promise<void> {
  * Deletes a single match report from Supabase.
  */
 export async function dbDeleteMatchReport(id: string): Promise<void> {
-  const client = getSupabase();
-  if (!client) {
+  if (!supabase) {
     throw new Error('Supabase client not initialized.');
   }
 
-  const { error } = await client
+  const { error } = await supabase
     .from('scouting_match_reports')
     .delete()
     .eq('id', id);
@@ -561,8 +497,7 @@ export async function dbDeleteMatchReport(id: string): Promise<void> {
  * Bulk upload match reports to Supabase.
  */
 export async function dbBulkUpsertMatchReports(reports: MatchReport[]): Promise<void> {
-  const client = getSupabase();
-  if (!client) {
+  if (!supabase) {
     throw new Error('Supabase client not initialized.');
   }
 
@@ -597,14 +532,14 @@ export async function dbBulkUpsertMatchReports(reports: MatchReport[]): Promise<
     jugadoresVisitante: report.jugadoresVisitante
   }));
 
-  const { error } = await client
+  const { error } = await supabase
     .from('scouting_match_reports')
     .upsert(payloads, { onConflict: 'id' });
 
   if (error) {
     if (error.message && error.message.includes('categoria')) {
       const retryPayloads = payloads.map(({ categoria, ...rest }) => rest);
-      const { error: retryError } = await client
+      const { error: retryError } = await supabase
         .from('scouting_match_reports')
         .upsert(retryPayloads, { onConflict: 'id' });
       if (!retryError) {
@@ -618,152 +553,12 @@ export async function dbBulkUpsertMatchReports(reports: MatchReport[]): Promise<
 }
 
 /**
- * Fetch weekly match assignments from Supabase.
- */
-export async function dbFetchWeeklyAssignments(): Promise<WeeklyMatchAssignment[]> {
-  const client = getSupabase();
-  if (!client) return [];
-
-  try {
-    const { data, error } = await client
-      .from('scouting_weekly_assignments')
-      .select('*')
-      .order('fecha', { ascending: true });
-
-    if (!error && data && data.length > 0) {
-      return data.map((row: any) => ({
-        id: row.id,
-        diaSemana: row.diaSemana || row.dia_semana || 'Lunes',
-        fecha: row.fecha || '',
-        hora: row.hora || '',
-        partido: row.partido || '',
-        equipoLocal: row.equipoLocal || row.equipo_local || '',
-        equipoVisitante: row.equipoVisitante || row.equipo_visitante || '',
-        competicion: row.competicion || '',
-        acreditacion: row.acreditacion || 'Solicitar',
-        modalidad: row.modalidad || '',
-        ubicacion: row.ubicacion || '',
-        ojeadorAsignado: row.ojeadorAsignado || row.ojeador_asignado || '',
-        jugadoresObjetivo: row.jugadoresObjetivo || row.jugadores_objetivo || '',
-        estado: row.estado || 'Pendiente',
-        notasAdicionales: row.notasAdicionales || row.notas_adicionales || ''
-      }));
-    }
-  } catch (err) {
-    console.warn('Could not fetch from scouting_weekly_assignments table directly:', err);
-  }
-
-  // Fallback: fetch from settings store if table doesn't exist
-  return dbFetchSetting<WeeklyMatchAssignment[]>('scouting_weekly_assignments_v1', []);
-}
-
-/**
- * Save a single weekly match assignment to Supabase.
- */
-export async function dbSaveWeeklyAssignment(assignment: WeeklyMatchAssignment): Promise<void> {
-  const client = getSupabase();
-  if (!client) return;
-
-  const payload = {
-    id: assignment.id,
-    dia_semana: assignment.diaSemana,
-    diaSemana: assignment.diaSemana,
-    fecha: assignment.fecha,
-    hora: assignment.hora,
-    partido: assignment.partido,
-    equipo_local: assignment.equipoLocal,
-    equipoLocal: assignment.equipoLocal,
-    equipo_visitante: assignment.equipoVisitante,
-    equipoVisitante: assignment.equipoVisitante,
-    competicion: assignment.competicion,
-    acreditacion: assignment.acreditacion,
-    modalidad: assignment.modalidad || '',
-    ubicacion: assignment.ubicacion,
-    ojeador_asignado: assignment.ojeadorAsignado,
-    ojeadorAsignado: assignment.ojeadorAsignado,
-    jugadores_objetivo: assignment.jugadoresObjetivo || '',
-    jugadoresObjetivo: assignment.jugadoresObjetivo || '',
-    estado: assignment.estado,
-    notas_adicionales: assignment.notasAdicionales || '',
-    notasAdicionales: assignment.notasAdicionales || '',
-    updated_at: new Date().toISOString()
-  };
-
-  try {
-    await safeUpsert('scouting_weekly_assignments', payload, 'id');
-  } catch (err) {
-    console.warn('Error saving to scouting_weekly_assignments table, falling back to settings store:', err);
-  }
-}
-
-/**
- * Delete a single weekly match assignment from Supabase.
- */
-export async function dbDeleteWeeklyAssignment(id: string): Promise<void> {
-  const client = getSupabase();
-  if (!client) return;
-
-  try {
-    const { error } = await client
-      .from('scouting_weekly_assignments')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.warn('Error deleting from scouting_weekly_assignments table:', error);
-    }
-  } catch (err) {
-    console.warn('Error deleting from scouting_weekly_assignments table:', err);
-  }
-}
-
-/**
- * Bulk upload/sync weekly match assignments to Supabase.
- */
-export async function dbBulkUpsertWeeklyAssignments(assignments: WeeklyMatchAssignment[]): Promise<void> {
-  const client = getSupabase();
-  if (!client || assignments.length === 0) return;
-
-  const payloads = assignments.map(a => ({
-    id: a.id,
-    dia_semana: a.diaSemana,
-    diaSemana: a.diaSemana,
-    fecha: a.fecha,
-    hora: a.hora,
-    partido: a.partido,
-    equipo_local: a.equipoLocal,
-    equipoLocal: a.equipoLocal,
-    equipo_visitante: a.equipoVisitante,
-    equipoVisitante: a.equipoVisitante,
-    competicion: a.competicion,
-    acreditacion: a.acreditacion,
-    modalidad: a.modalidad || '',
-    ubicacion: a.ubicacion,
-    ojeador_asignado: a.ojeadorAsignado,
-    ojeadorAsignado: a.ojeadorAsignado,
-    jugadores_objetivo: a.jugadoresObjetivo || '',
-    jugadoresObjetivo: a.jugadoresObjetivo || '',
-    estado: a.estado,
-    notas_adicionales: a.notasAdicionales || '',
-    notasAdicionales: a.notasAdicionales || '',
-    updated_at: new Date().toISOString()
-  }));
-
-  try {
-    await safeBulkUpsert('scouting_weekly_assignments', payloads, 'id');
-  } catch (err) {
-    console.warn('Error bulk upserting to scouting_weekly_assignments table:', err);
-  }
-}
-
-/**
  * Generic setting retriever for cloud syncing across Vercel deployments and devices.
  */
 export async function dbFetchSetting<T>(key: string, defaultValue: T): Promise<T> {
-  const client = getSupabase();
-  if (!client) return defaultValue;
+  if (!supabase) return defaultValue;
   try {
-    const { data, error } = await client
+    const { data, error } = await supabase
       .from('scouting_settings')
       .select('value')
       .eq('key', key)
@@ -780,8 +575,7 @@ export async function dbFetchSetting<T>(key: string, defaultValue: T): Promise<T
  * Generic setting saver for cloud syncing across Vercel deployments and devices.
  */
 export async function dbSaveSetting(key: string, value: any): Promise<void> {
-  const client = getSupabase();
-  if (!client) return;
+  if (!supabase) return;
   try {
     const payload = {
       key,
@@ -929,36 +723,6 @@ DROP POLICY IF EXISTS "Permitir todo en informes de partidos" ON scouting_match_
 CREATE POLICY "Permitir todo en informes de partidos" ON scouting_match_reports
   FOR ALL USING (true) WITH CHECK (true);
 
--- TABLA PARA REGISTROS Y ASIGNACIONES DEL PLAN SEMANAL
-CREATE TABLE IF NOT EXISTS scouting_weekly_assignments (
-  id TEXT PRIMARY KEY,
-  dia_semana TEXT,
-  "diaSemana" TEXT,
-  fecha TEXT,
-  hora TEXT,
-  partido TEXT,
-  equipo_local TEXT,
-  "equipoLocal" TEXT,
-  equipo_visitante TEXT,
-  "equipoVisitante" TEXT,
-  competicion TEXT,
-  acreditacion TEXT,
-  modalidad TEXT,
-  ubicacion TEXT,
-  ojeador_asignado TEXT,
-  "ojeadorAsignado" TEXT,
-  jugadores_objetivo TEXT,
-  "jugadoresObjetivo" TEXT,
-  estado TEXT,
-  notas_adicionales TEXT,
-  "notasAdicionales" TEXT,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
-);
-
-ALTER TABLE scouting_weekly_assignments ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Permitir todo en asignaciones semanales" ON scouting_weekly_assignments;
-CREATE POLICY "Permitir todo en asignaciones semanales" ON scouting_weekly_assignments FOR ALL USING (true) WITH CHECK (true);
-
 -- CONFIGURACIÓN DE STORAGE EN SUPABASE (EJECUTA ESTO EN EL SQL EDITOR):
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('scouting_assets', 'scouting_assets', true) ON CONFLICT (id) DO NOTHING;
 -- CREATE POLICY "Acceso publico lectura" ON storage.objects FOR SELECT USING (bucket_id = 'scouting_assets');
@@ -973,9 +737,8 @@ CREATE POLICY "Permitir todo en asignaciones semanales" ON scouting_weekly_assig
  * Automatically ensures unique names and organizes into subfolders.
  */
 export async function dbUploadFile(file: File, folderName: 'player_photos' | 'team_crests'): Promise<string> {
-  const client = getSupabase();
-  if (!client) {
-    throw new Error('Supabase client is not initialized or configured.');
+  if (!supabase) {
+    throw new Error('Supabase client is not initialized or configured in .env.');
   }
 
   const fileExt = file.name.split('.').pop() || 'png';
@@ -985,7 +748,7 @@ export async function dbUploadFile(file: File, folderName: 'player_photos' | 'te
 
   // Try creating the bucket in case it doesn't exist
   try {
-    await client.storage.createBucket('scouting_assets', {
+    await supabase.storage.createBucket('scouting_assets', {
       public: true,
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
     });
@@ -993,7 +756,7 @@ export async function dbUploadFile(file: File, folderName: 'player_photos' | 'te
     // Bucket might already exist or RLS doesn't allow creation, proceed to upload anyway
   }
 
-  const { data, error } = await client.storage
+  const { data, error } = await supabase.storage
     .from('scouting_assets')
     .upload(filePath, file, {
       cacheControl: '3600',
@@ -1005,87 +768,9 @@ export async function dbUploadFile(file: File, folderName: 'player_photos' | 'te
     throw error;
   }
 
-  const { data: { publicUrl } } = client.storage
+  const { data: { publicUrl } } = supabase.storage
     .from('scouting_assets')
     .getPublicUrl(filePath);
 
   return publicUrl;
-}
-
-/**
- * Realtime subscription helper for scouting_weekly_assignments
- */
-export function dbSubscribeToWeeklyAssignments(
-  onUpdate: (assignments: WeeklyMatchAssignment[]) => void
-): () => void {
-  const client = getSupabase();
-  if (!client) return () => {};
-
-  try {
-    const channel = client
-      .channel('realtime_scouting_weekly_assignments')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'scouting_weekly_assignments' },
-        async () => {
-          const fresh = await dbFetchWeeklyAssignments();
-          if (Array.isArray(fresh)) {
-            onUpdate(fresh);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      client.removeChannel(channel);
-    };
-  } catch (err) {
-    console.warn('Could not subscribe to Realtime weekly assignments:', err);
-    return () => {};
-  }
-}
-
-/**
- * Realtime subscription helper for any setting key in scouting_settings
- */
-export function dbSubscribeToSetting<T>(
-  key: string,
-  onUpdate: (value: T) => void
-): () => void {
-  const client = getSupabase();
-  if (!client) return () => {};
-
-  try {
-    const channel = client
-      .channel(`realtime_scouting_settings_${key}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'scouting_settings',
-          filter: `key=eq.${key}`
-        },
-        (payload: any) => {
-          if (payload?.new?.value) {
-            try {
-              const val = typeof payload.new.value === 'string' 
-                ? JSON.parse(payload.new.value) 
-                : payload.new.value;
-              onUpdate(val);
-            } catch (e) {
-              onUpdate(payload.new.value);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      client.removeChannel(channel);
-    };
-  } catch (err) {
-    console.warn(`Could not subscribe to Realtime setting ${key}:`, err);
-    return () => {};
-  }
 }
