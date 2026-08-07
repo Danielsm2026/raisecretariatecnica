@@ -973,8 +973,9 @@ CREATE POLICY "Permitir todo en asignaciones semanales" ON scouting_weekly_assig
  * Automatically ensures unique names and organizes into subfolders.
  */
 export async function dbUploadFile(file: File, folderName: 'player_photos' | 'team_crests'): Promise<string> {
-  if (!supabase) {
-    throw new Error('Supabase client is not initialized or configured in .env.');
+  const client = getSupabase();
+  if (!client) {
+    throw new Error('Supabase client is not initialized or configured.');
   }
 
   const fileExt = file.name.split('.').pop() || 'png';
@@ -984,7 +985,7 @@ export async function dbUploadFile(file: File, folderName: 'player_photos' | 'te
 
   // Try creating the bucket in case it doesn't exist
   try {
-    await supabase.storage.createBucket('scouting_assets', {
+    await client.storage.createBucket('scouting_assets', {
       public: true,
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
     });
@@ -992,7 +993,7 @@ export async function dbUploadFile(file: File, folderName: 'player_photos' | 'te
     // Bucket might already exist or RLS doesn't allow creation, proceed to upload anyway
   }
 
-  const { data, error } = await supabase.storage
+  const { data, error } = await client.storage
     .from('scouting_assets')
     .upload(filePath, file, {
       cacheControl: '3600',
@@ -1004,9 +1005,87 @@ export async function dbUploadFile(file: File, folderName: 'player_photos' | 'te
     throw error;
   }
 
-  const { data: { publicUrl } } = supabase.storage
+  const { data: { publicUrl } } = client.storage
     .from('scouting_assets')
     .getPublicUrl(filePath);
 
   return publicUrl;
+}
+
+/**
+ * Realtime subscription helper for scouting_weekly_assignments
+ */
+export function dbSubscribeToWeeklyAssignments(
+  onUpdate: (assignments: WeeklyMatchAssignment[]) => void
+): () => void {
+  const client = getSupabase();
+  if (!client) return () => {};
+
+  try {
+    const channel = client
+      .channel('realtime_scouting_weekly_assignments')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'scouting_weekly_assignments' },
+        async () => {
+          const fresh = await dbFetchWeeklyAssignments();
+          if (Array.isArray(fresh)) {
+            onUpdate(fresh);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  } catch (err) {
+    console.warn('Could not subscribe to Realtime weekly assignments:', err);
+    return () => {};
+  }
+}
+
+/**
+ * Realtime subscription helper for any setting key in scouting_settings
+ */
+export function dbSubscribeToSetting<T>(
+  key: string,
+  onUpdate: (value: T) => void
+): () => void {
+  const client = getSupabase();
+  if (!client) return () => {};
+
+  try {
+    const channel = client
+      .channel(`realtime_scouting_settings_${key}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'scouting_settings',
+          filter: `key=eq.${key}`
+        },
+        (payload: any) => {
+          if (payload?.new?.value) {
+            try {
+              const val = typeof payload.new.value === 'string' 
+                ? JSON.parse(payload.new.value) 
+                : payload.new.value;
+              onUpdate(val);
+            } catch (e) {
+              onUpdate(payload.new.value);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  } catch (err) {
+    console.warn(`Could not subscribe to Realtime setting ${key}:`, err);
+    return () => {};
+  }
 }

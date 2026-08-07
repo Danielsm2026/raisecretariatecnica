@@ -31,7 +31,9 @@ import {
   dbFetchWeeklyAssignments, 
   dbSaveWeeklyAssignment, 
   dbDeleteWeeklyAssignment, 
-  dbBulkUpsertWeeklyAssignments 
+  dbBulkUpsertWeeklyAssignments,
+  dbSubscribeToWeeklyAssignments,
+  dbSubscribeToSetting
 } from '../utils/supabaseClient';
 
 export interface WeeklyMatchAssignment {
@@ -255,10 +257,62 @@ export default function WeeklyPlanView({
     };
   }, [currentWeekOffset]);
 
-  // Load plan from Cloud (Supabase) and LocalStorage on Mount
-  useEffect(() => {
-    let savedDeleted: string[] = [];
+  // Reference to prevent save feedback loops during remote sync
+  const isApplyingRemoteRef = React.useRef(false);
+
+  // Reload fresh data from Supabase Cloud
+  const reloadPlanFromCloud = React.useCallback(async () => {
     try {
+      let savedDeleted: string[] = [];
+      try {
+        const savedDeletedStr = localStorage.getItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1');
+        if (savedDeletedStr) savedDeleted = JSON.parse(savedDeletedStr);
+      } catch (e) {}
+
+      const tableAssignments = await dbFetchWeeklyAssignments();
+      const remotePlan = await dbFetchSetting<WeeklyPlanData>('weekly_plan_data', {
+        semanaNombre: weekInfo.label,
+        fechaInicio: weekInfo.monday.toISOString(),
+        fechaFin: weekInfo.sunday.toISOString(),
+        assignments: DEFAULT_ASSIGNMENTS,
+        objectives: DEFAULT_OBJECTIVES,
+        deletedAssignmentIds: savedDeleted
+      });
+
+      isApplyingRemoteRef.current = true;
+
+      if (Array.isArray(tableAssignments) && tableAssignments.length > 0) {
+        setAssignments(prev => {
+          const map = new Map<string, WeeklyMatchAssignment>();
+          tableAssignments.forEach(a => {
+            if (!savedDeleted.includes(a.id)) {
+              map.set(a.id, a);
+            }
+          });
+          return Array.from(map.values());
+        });
+      } else if (remotePlan && Array.isArray(remotePlan.assignments)) {
+        setAssignments(remotePlan.assignments.filter(a => !savedDeleted.includes(a.id)));
+      }
+
+      if (remotePlan && Array.isArray(remotePlan.objectives) && remotePlan.objectives.length > 0) {
+        setObjectives(remotePlan.objectives);
+      }
+
+      setTimeout(() => {
+        isApplyingRemoteRef.current = false;
+      }, 300);
+    } catch (err) {
+      console.warn('Error fetching plan from cloud:', err);
+      isApplyingRemoteRef.current = false;
+    }
+  }, [weekInfo]);
+
+  // Initial Load & Realtime Bidirectional Subscription
+  useEffect(() => {
+    // 1. Initial local state check
+    try {
+      let savedDeleted: string[] = [];
       const savedDeletedStr = localStorage.getItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1');
       if (savedDeletedStr) savedDeleted = JSON.parse(savedDeletedStr);
 
@@ -274,59 +328,50 @@ export default function WeeklyPlanView({
       console.error('Error loading weekly plan from localStorage:', e);
     }
 
-    // 1. Fetch from Supabase scouting_weekly_assignments table directly
-    dbFetchWeeklyAssignments().then((tableAssignments) => {
-      if (Array.isArray(tableAssignments) && tableAssignments.length > 0) {
-        setAssignments(prev => {
-          const map = new Map<string, WeeklyMatchAssignment>();
-          prev.forEach(a => map.set(a.id, a));
-          tableAssignments.forEach(a => {
-            if (!savedDeleted.includes(a.id)) {
-              map.set(a.id, a);
-            }
-          });
-          return Array.from(map.values());
-        });
+    // 2. Initial Cloud fetch
+    reloadPlanFromCloud();
+
+    // 3. Realtime Subscription to scouting_weekly_assignments
+    const unsubAssignments = dbSubscribeToWeeklyAssignments((freshAssignments) => {
+      if (Array.isArray(freshAssignments) && freshAssignments.length > 0) {
+        isApplyingRemoteRef.current = true;
+        setAssignments(freshAssignments);
+        setTimeout(() => { isApplyingRemoteRef.current = false; }, 300);
       }
     });
 
-    // 2. Sync with Cloud Settings backup
-    dbFetchSetting<WeeklyPlanData>('weekly_plan_data', {
-      semanaNombre: weekInfo.label,
-      fechaInicio: weekInfo.monday.toISOString(),
-      fechaFin: weekInfo.sunday.toISOString(),
-      assignments: DEFAULT_ASSIGNMENTS,
-      objectives: DEFAULT_OBJECTIVES,
-      deletedAssignmentIds: savedDeleted
-    }).then((remote) => {
-      if (!remote) return;
-      let combinedDeleted = savedDeleted;
-      if (Array.isArray(remote.deletedAssignmentIds)) {
-        combinedDeleted = Array.from(new Set([...combinedDeleted, ...remote.deletedAssignmentIds]));
-        setDeletedAssignmentIds(combinedDeleted);
-        localStorage.setItem('DEPARTAMENTO_SCOUTING_WEEKLY_PLAN_DELETED_IDS_V1', JSON.stringify(combinedDeleted));
-      }
-
-      if (Array.isArray(remote.assignments)) {
-        setAssignments(prev => {
-          const map = new Map<string, WeeklyMatchAssignment>();
-          prev.forEach(a => map.set(a.id, a));
-          remote.assignments.forEach((a: WeeklyMatchAssignment) => {
-            if (!combinedDeleted.includes(a.id)) {
-              map.set(a.id, a);
-            }
-          });
-          return Array.from(map.values());
-        });
-      }
-      if (Array.isArray(remote.objectives) && remote.objectives.length > 0) {
-        setObjectives(remote.objectives);
+    // 4. Realtime Subscription to weekly_plan_data settings
+    const unsubSettings = dbSubscribeToSetting<WeeklyPlanData>('weekly_plan_data', (remoteData) => {
+      if (remoteData && Array.isArray(remoteData.objectives)) {
+        isApplyingRemoteRef.current = true;
+        setObjectives(remoteData.objectives);
+        setTimeout(() => { isApplyingRemoteRef.current = false; }, 300);
       }
     });
-  }, []);
 
-  // Sync to Cloud and LocalStorage whenever assignments or objectives change
+    // 5. Polling fallback every 6 seconds for Vercel <-> AI Studio cross-environment sync
+    const interval = setInterval(() => {
+      reloadPlanFromCloud();
+    }, 6000);
+
+    // 6. Window focus listener when switching browser tabs/windows
+    const handleFocus = () => {
+      reloadPlanFromCloud();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      unsubAssignments();
+      unsubSettings();
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [reloadPlanFromCloud]);
+
+  // Sync to Cloud and LocalStorage whenever assignments or objectives change locally
   useEffect(() => {
+    if (isApplyingRemoteRef.current) return;
+
     const cleanAssignments = assignments.filter(a => !deletedAssignmentIds.includes(a.id));
     const planData: WeeklyPlanData = {
       semanaNombre: weekInfo.label,
@@ -572,8 +617,9 @@ export default function WeeklyPlanView({
               <div>
                 <h2 className="text-xl font-bold font-display text-white tracking-widest uppercase flex items-center gap-2">
                   <span>PLAN SEMANAL DE SCOUTING</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 bg-blue-900/60 text-blue-300 border border-blue-700/50 rounded-full font-semibold">
-                    SYNC NUBE ACTIVE
+                  <span className="text-[10px] font-mono px-2 py-0.5 bg-emerald-950/70 text-emerald-300 border border-emerald-700/50 rounded-full font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    SYNC BIDIRECCIONAL EN TIEMPO REAL
                   </span>
                 </h2>
                 <p className="text-xs text-slate-400 font-mono mt-0.5">
