@@ -3,11 +3,12 @@ import { ScoutedPlayer } from '../types';
 import { 
   Shield, Trash2, SwitchCamera, UserPlus, Users, Search, HelpCircle, 
   UserCheck, Download, Folder, FolderPlus, Calendar, Snowflake, Sun, 
-  ChevronRight, ArrowLeft, Edit3, Plus, Layout, FileText, Check, Copy, Sparkles, X 
+  ChevronRight, ArrowLeft, Edit3, Plus, Layout, FileText, Check, Copy, Sparkles, X,
+  Database, Upload, RefreshCw
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { ConfirmationModal } from './ConfirmationModal';
-import { dbFetchSetting, dbSaveSetting } from '../utils/supabaseClient';
+import { dbFetchSetting, dbSaveSetting, isSupabaseConfigured, getSQLInstructions } from '../utils/supabaseClient';
 
 interface TacticalBoardProps {
   players: ScoutedPlayer[];
@@ -402,6 +403,101 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     }
     dbSaveSetting('campogramas', campogramas);
   }, [campogramas]);
+
+  // Cloud Sync & Backup Functions for Campogramas
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+
+  const handleSyncCampogramasWithCloud = async () => {
+    if (!isSupabaseConfigured()) {
+      showNotification('Supabase no está configurado aún. Agrega VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en tus variables.', 'info');
+      return;
+    }
+    setIsSyncingCloud(true);
+    showNotification('Sincronizando campogramas con Supabase...', 'info');
+    try {
+      const remote = await dbFetchSetting<CampogramaItem[]>('campogramas', []);
+      const map = new Map<string, CampogramaItem>();
+      DEFAULT_CAMPOGRAMAS.forEach(d => map.set(d.id, d));
+      campogramas.forEach(c => map.set(c.id, c));
+      if (Array.isArray(remote) && remote.length > 0) {
+        remote.forEach(remoteItem => {
+          const localItem = map.get(remoteItem.id);
+          if (!localItem) {
+            map.set(remoteItem.id, remoteItem);
+          } else {
+            const localTime = localItem.updatedAt || 0;
+            const remoteTime = remoteItem.updatedAt || 0;
+            if (remoteTime >= localTime) {
+              map.set(remoteItem.id, remoteItem);
+            }
+          }
+        });
+      }
+      DEFAULT_CAMPOGRAMAS.forEach(d => {
+        if (!map.has(d.id)) map.set(d.id, d);
+      });
+      const merged = Array.from(map.values());
+      setCampogramas(merged);
+      await dbSaveSetting('campogramas', merged);
+      localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(merged));
+      showNotification('¡Campogramas sincronizados exitosamente con Supabase!', 'success');
+    } catch (err: any) {
+      console.error('Error syncing campogramas:', err);
+      showNotification(`Error al sincronizar con Supabase: ${err?.message || 'Error de conexión'}`, 'error');
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  };
+
+  const handleExportCampogramasJSON = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(campogramas, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `campogramas_scouting_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showNotification('Copia de seguridad de campogramas (JSON) descargada con éxito', 'success');
+    } catch (e) {
+      showNotification('Error al exportar JSON de campogramas', 'error');
+    }
+  };
+
+  const handleImportCampogramasJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const content = event.target?.result as string;
+        const parsed = JSON.parse(content);
+        if (!Array.isArray(parsed)) {
+          showNotification('El archivo JSON debe contener una lista de campogramas válidos', 'error');
+          return;
+        }
+        const map = new Map<string, CampogramaItem>();
+        campogramas.forEach(c => map.set(c.id, c));
+        parsed.forEach((c: CampogramaItem) => {
+          if (c.id && c.nombre) {
+            map.set(c.id, {
+              ...c,
+              updatedAt: Date.now()
+            });
+          }
+        });
+        const merged = Array.from(map.values());
+        setCampogramas(merged);
+        await dbSaveSetting('campogramas', merged);
+        localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(merged));
+        showNotification(`¡${parsed.length} campogramas importados e integrados correctamente!`, 'success');
+      } catch (err) {
+        showNotification('Error al leer o procesar el archivo JSON de campogramas', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   // Active Campograma helper
   const activeCamp = campogramas.find(c => c.id === activeCampogramaId) || null;
@@ -998,10 +1094,40 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               </p>
             </div>
 
-            <div className="flex items-center space-x-3 shrink-0">
-              <div className="bg-slate-950 border border-slate-800 px-3 py-2 rounded-lg text-center">
-                <span className="text-[10px] font-mono text-slate-500 uppercase block font-bold">Total Campogramas</span>
-                <span className="text-lg font-bold font-mono text-blue-400">{campogramas.length}</span>
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <button
+                onClick={handleSyncCampogramasWithCloud}
+                disabled={isSyncingCloud}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer disabled:opacity-50"
+                title="Sincronizar campogramas directamente con Supabase"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+                <span>{isSyncingCloud ? 'Sincronizando...' : 'Sincronizar Supabase'}</span>
+              </button>
+
+              <button
+                onClick={handleExportCampogramasJSON}
+                className="px-3 py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all border border-slate-700 cursor-pointer"
+                title="Exportar copia de seguridad de campogramas en formato JSON"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <span>Exportar JSON</span>
+              </button>
+
+              <label className="px-3 py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all border border-slate-700 cursor-pointer">
+                <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Importar JSON</span>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportCampogramasJSON}
+                  className="hidden"
+                />
+              </label>
+
+              <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg text-center min-w-[90px]">
+                <span className="text-[9px] font-mono text-slate-500 uppercase block font-bold">Total Campogramas</span>
+                <span className="text-base font-bold font-mono text-blue-400">{campogramas.length}</span>
               </div>
             </div>
           </div>
