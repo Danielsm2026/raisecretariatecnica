@@ -2,16 +2,70 @@ import { createClient } from '@supabase/supabase-js';
 import { ScoutedPlayer, MatchReport, WeeklyMatchAssignment } from '../types';
 
 const metaEnv = (import.meta as any).env || {};
-const supabaseUrl = (metaEnv.VITE_SUPABASE_URL as string) || '';
-const supabaseAnonKey = (metaEnv.VITE_SUPABASE_ANON_KEY as string) || '';
 
-// Create the client only if keys are present
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
-  : null;
+export function getSupabaseCredentials(): { url: string; key: string; source: 'env' | 'local' | 'none' } {
+  let localUrl = '';
+  let localKey = '';
+  if (typeof window !== 'undefined') {
+    localUrl = localStorage.getItem('VITE_SUPABASE_URL') || localStorage.getItem('SUPABASE_CUSTOM_URL') || '';
+    localKey = localStorage.getItem('VITE_SUPABASE_ANON_KEY') || localStorage.getItem('SUPABASE_CUSTOM_ANON_KEY') || '';
+  }
+
+  const envUrl = (metaEnv.VITE_SUPABASE_URL as string) || '';
+  const envKey = (metaEnv.VITE_SUPABASE_ANON_KEY as string) || '';
+
+  if (localUrl.trim() && localKey.trim()) {
+    return { url: localUrl.trim(), key: localKey.trim(), source: 'local' };
+  }
+  if (envUrl.trim() && envKey.trim()) {
+    return { url: envUrl.trim(), key: envKey.trim(), source: 'env' };
+  }
+  return { url: '', key: '', source: 'none' };
+}
+
+let cachedClient: any = null;
+let lastUrl = '';
+let lastKey = '';
+
+export function getSupabase() {
+  const creds = getSupabaseCredentials();
+  if (!creds.url || !creds.key) {
+    cachedClient = null;
+    lastUrl = '';
+    lastKey = '';
+    return null;
+  }
+  if (!cachedClient || lastUrl !== creds.url || lastKey !== creds.key) {
+    lastUrl = creds.url;
+    lastKey = creds.key;
+    cachedClient = createClient(creds.url, creds.key);
+  }
+  return cachedClient;
+}
+
+// Export supabase getter for backward compatibility
+export const supabase = getSupabase();
 
 export function isSupabaseConfigured(): boolean {
-  return !!supabase;
+  return !!getSupabase();
+}
+
+export function saveSupabaseCustomCredentials(url: string, key: string) {
+  if (typeof window !== 'undefined') {
+    if (url.trim() && key.trim()) {
+      localStorage.setItem('VITE_SUPABASE_URL', url.trim());
+      localStorage.setItem('VITE_SUPABASE_ANON_KEY', key.trim());
+      localStorage.setItem('SUPABASE_CUSTOM_URL', url.trim());
+      localStorage.setItem('SUPABASE_CUSTOM_ANON_KEY', key.trim());
+    } else {
+      localStorage.removeItem('VITE_SUPABASE_URL');
+      localStorage.removeItem('VITE_SUPABASE_ANON_KEY');
+      localStorage.removeItem('SUPABASE_CUSTOM_URL');
+      localStorage.removeItem('SUPABASE_CUSTOM_ANON_KEY');
+    }
+    cachedClient = null;
+    getSupabase();
+  }
 }
 
 export interface SupabaseSyncResult {
@@ -24,18 +78,19 @@ export interface SupabaseSyncResult {
  * Fetch players from Supabase.
  */
 export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
-  if (!supabase) {
-    throw new Error('Supabase URL or Anon Key is missing in environment variables.');
+  const client = getSupabase();
+  if (!client) {
+    throw new Error('Supabase URL o Anon Key no configurada.');
   }
 
-  let { data, error } = await supabase
+  let { data, error } = await client
     .from('scouting_players')
     .select('*')
     .order('fechaRegistro', { ascending: false });
 
   if (error) {
     // Fallback 1: Try ordering by snake_case fecha_registro
-    const res2 = await supabase
+    const res2 = await client
       .from('scouting_players')
       .select('*')
       .order('fecha_registro', { ascending: false });
@@ -45,7 +100,7 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
       error = null;
     } else {
       // Fallback 2: Select without ordering if order column does not exist
-      const res3 = await supabase
+      const res3 = await client
         .from('scouting_players')
         .select('*');
 
@@ -119,9 +174,11 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
  * Helper to perform an upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
 async function safeUpsert(table: string, payload: any, onConflict: string): Promise<any> {
+  const client = getSupabase();
+  if (!client) throw new Error('Supabase client not initialized.');
   let currentPayload = { ...payload };
   while (true) {
-    const { error } = await supabase!
+    const { error } = await client
       .from(table)
       .upsert(currentPayload, { onConflict });
     
@@ -160,9 +217,11 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
  * Helper to perform a bulk upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
 async function safeBulkUpsert(table: string, payloads: any[], onConflict: string): Promise<any> {
+  const client = getSupabase();
+  if (!client) throw new Error('Supabase client not initialized.');
   let currentPayloads = payloads.map(p => ({ ...p }));
   while (true) {
-    const { error } = await supabase!
+    const { error } = await client
       .from(table)
       .upsert(currentPayloads, { onConflict });
     
@@ -205,7 +264,8 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
  * Saves a single player to Supabase (upsert pattern).
  */
 export async function dbSavePlayer(player: ScoutedPlayer): Promise<void> {
-  if (!supabase) {
+  const client = getSupabase();
+  if (!client) {
     throw new Error('Supabase client not initialized.');
   }
 
@@ -283,11 +343,12 @@ export async function dbSavePlayer(player: ScoutedPlayer): Promise<void> {
  * Deletes a single player from Supabase.
  */
 export async function dbDeletePlayer(id: string): Promise<void> {
-  if (!supabase) {
+  const client = getSupabase();
+  if (!client) {
     throw new Error('Supabase client not initialized.');
   }
 
-  const { error } = await supabase
+  const { error } = await client
     .from('scouting_players')
     .delete()
     .eq('id', id);
@@ -380,11 +441,12 @@ export async function dbBulkUpsert(players: ScoutedPlayer[]): Promise<void> {
  * Fetch match reports from Supabase.
  */
 export async function dbFetchMatchReports(): Promise<MatchReport[]> {
-  if (!supabase) {
-    throw new Error('Supabase URL or Anon Key is missing in environment variables.');
+  const client = getSupabase();
+  if (!client) {
+    throw new Error('Supabase URL o Anon Key no configurada.');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('scouting_match_reports')
     .select('*')
     .order('fecha', { ascending: false });
@@ -419,7 +481,8 @@ export async function dbFetchMatchReports(): Promise<MatchReport[]> {
  * Saves a single match report to Supabase (upsert pattern).
  */
 export async function dbSaveMatchReport(report: MatchReport): Promise<void> {
-  if (!supabase) {
+  const client = getSupabase();
+  if (!client) {
     throw new Error('Supabase client not initialized.');
   }
 
@@ -454,14 +517,14 @@ export async function dbSaveMatchReport(report: MatchReport): Promise<void> {
     jugadoresVisitante: report.jugadoresVisitante
   };
 
-  const { error } = await supabase
+  const { error } = await client
     .from('scouting_match_reports')
     .upsert(payload, { onConflict: 'id' });
 
   if (error) {
     if (error.message && error.message.includes('categoria')) {
       const { categoria, ...payloadWithoutCategory } = payload;
-      const { error: retryError } = await supabase
+      const { error: retryError } = await client
         .from('scouting_match_reports')
         .upsert(payloadWithoutCategory, { onConflict: 'id' });
       if (!retryError) {
@@ -478,11 +541,12 @@ export async function dbSaveMatchReport(report: MatchReport): Promise<void> {
  * Deletes a single match report from Supabase.
  */
 export async function dbDeleteMatchReport(id: string): Promise<void> {
-  if (!supabase) {
+  const client = getSupabase();
+  if (!client) {
     throw new Error('Supabase client not initialized.');
   }
 
-  const { error } = await supabase
+  const { error } = await client
     .from('scouting_match_reports')
     .delete()
     .eq('id', id);
@@ -497,7 +561,8 @@ export async function dbDeleteMatchReport(id: string): Promise<void> {
  * Bulk upload match reports to Supabase.
  */
 export async function dbBulkUpsertMatchReports(reports: MatchReport[]): Promise<void> {
-  if (!supabase) {
+  const client = getSupabase();
+  if (!client) {
     throw new Error('Supabase client not initialized.');
   }
 
@@ -532,14 +597,14 @@ export async function dbBulkUpsertMatchReports(reports: MatchReport[]): Promise<
     jugadoresVisitante: report.jugadoresVisitante
   }));
 
-  const { error } = await supabase
+  const { error } = await client
     .from('scouting_match_reports')
     .upsert(payloads, { onConflict: 'id' });
 
   if (error) {
     if (error.message && error.message.includes('categoria')) {
       const retryPayloads = payloads.map(({ categoria, ...rest }) => rest);
-      const { error: retryError } = await supabase
+      const { error: retryError } = await client
         .from('scouting_match_reports')
         .upsert(retryPayloads, { onConflict: 'id' });
       if (!retryError) {
@@ -556,10 +621,11 @@ export async function dbBulkUpsertMatchReports(reports: MatchReport[]): Promise<
  * Fetch weekly match assignments from Supabase.
  */
 export async function dbFetchWeeklyAssignments(): Promise<WeeklyMatchAssignment[]> {
-  if (!supabase) return [];
+  const client = getSupabase();
+  if (!client) return [];
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('scouting_weekly_assignments')
       .select('*')
       .order('fecha', { ascending: true });
@@ -595,7 +661,8 @@ export async function dbFetchWeeklyAssignments(): Promise<WeeklyMatchAssignment[
  * Save a single weekly match assignment to Supabase.
  */
 export async function dbSaveWeeklyAssignment(assignment: WeeklyMatchAssignment): Promise<void> {
-  if (!supabase) return;
+  const client = getSupabase();
+  if (!client) return;
 
   const payload = {
     id: assignment.id,
@@ -633,10 +700,11 @@ export async function dbSaveWeeklyAssignment(assignment: WeeklyMatchAssignment):
  * Delete a single weekly match assignment from Supabase.
  */
 export async function dbDeleteWeeklyAssignment(id: string): Promise<void> {
-  if (!supabase) return;
+  const client = getSupabase();
+  if (!client) return;
 
   try {
-    const { error } = await supabase
+    const { error } = await client
       .from('scouting_weekly_assignments')
       .delete()
       .eq('id', id);
@@ -653,7 +721,8 @@ export async function dbDeleteWeeklyAssignment(id: string): Promise<void> {
  * Bulk upload/sync weekly match assignments to Supabase.
  */
 export async function dbBulkUpsertWeeklyAssignments(assignments: WeeklyMatchAssignment[]): Promise<void> {
-  if (!supabase || assignments.length === 0) return;
+  const client = getSupabase();
+  if (!client || assignments.length === 0) return;
 
   const payloads = assignments.map(a => ({
     id: a.id,
@@ -691,9 +760,10 @@ export async function dbBulkUpsertWeeklyAssignments(assignments: WeeklyMatchAssi
  * Generic setting retriever for cloud syncing across Vercel deployments and devices.
  */
 export async function dbFetchSetting<T>(key: string, defaultValue: T): Promise<T> {
-  if (!supabase) return defaultValue;
+  const client = getSupabase();
+  if (!client) return defaultValue;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('scouting_settings')
       .select('value')
       .eq('key', key)
@@ -710,7 +780,8 @@ export async function dbFetchSetting<T>(key: string, defaultValue: T): Promise<T
  * Generic setting saver for cloud syncing across Vercel deployments and devices.
  */
 export async function dbSaveSetting(key: string, value: any): Promise<void> {
-  if (!supabase) return;
+  const client = getSupabase();
+  if (!client) return;
   try {
     const payload = {
       key,

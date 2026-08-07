@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Database, 
   CheckCircle, 
@@ -10,10 +10,20 @@ import {
   ExternalLink,
   CloudOff,
   Server,
-  Zap
+  Zap,
+  Key,
+  Settings,
+  Link as LinkIcon,
+  X,
+  ShieldCheck
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { isSupabaseConfigured, getSQLInstructions } from '../utils/supabaseClient';
+import { 
+  isSupabaseConfigured, 
+  getSQLInstructions, 
+  getSupabaseCredentials, 
+  saveSupabaseCustomCredentials 
+} from '../utils/supabaseClient';
 
 interface SupabaseSyncBannerProps {
   status: 'connected' | 'error' | 'not_configured' | 'loading';
@@ -33,10 +43,37 @@ export default function SupabaseSyncBanner({
   matchReportCount = 0
 }: SupabaseSyncBannerProps) {
   const [showSql, setShowSql] = useState(false);
+  const [showKeyConfig, setShowKeyConfig] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedPatch, setCopiedPatch] = useState(false);
 
+  const creds = getSupabaseCredentials();
+  const [customUrl, setCustomUrl] = useState(creds.url);
+  const [customKey, setCustomKey] = useState(creds.key);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    const current = getSupabaseCredentials();
+    setCustomUrl(current.url);
+    setCustomKey(current.key);
+  }, [showKeyConfig]);
+
   const configured = isSupabaseConfigured();
+
+  const handleSaveKeys = async (e: React.FormEvent) => {
+    e.preventDefault();
+    saveSupabaseCustomCredentials(customUrl, customKey);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
+    await onRefresh();
+  };
+
+  const handleClearKeys = async () => {
+    saveSupabaseCustomCredentials('', '');
+    setCustomUrl('');
+    setCustomKey('');
+    await onRefresh();
+  };
 
   const handleCopySql = () => {
     navigator.clipboard.writeText(getSQLInstructions());
@@ -116,7 +153,7 @@ NOTIFY pgrst, 'reload schema';`;
               {/* Dynamic Status Badges */}
               {status === 'connected' && (
                 <span className="text-[7.5px] font-bold font-mono px-1 py-0.2 rounded bg-emerald-950/45 text-emerald-400 border border-emerald-900/30">
-                  ● EN LÍNEA
+                  ● EN LÍNEA ({creds.source === 'env' ? 'Env Vars' : 'Config Local'})
                 </span>
               )}
               {status === 'loading' && (
@@ -126,27 +163,39 @@ NOTIFY pgrst, 'reload schema';`;
               )}
               {status === 'error' && (
                 <span className="text-[7.5px] font-bold font-mono px-1 py-0.2 rounded bg-red-950/45 text-red-400 border border-red-900/30">
-                  ⚠️ ERROR TABLA
+                  ⚠️ ERROR CONEXIÓN
                 </span>
               )}
               {status === 'not_configured' && (
-                <span className="text-[7.5px] font-bold font-mono px-1 py-0.2 rounded bg-slate-950/60 text-slate-400 border border-slate-800">
-                  LOCAL
+                <span className="text-[7.5px] font-bold font-mono px-1 py-0.2 rounded bg-amber-950/45 text-amber-400 border border-amber-900/30">
+                  SIN VINCULAR
                 </span>
               )}
             </div>
  
             <p className="text-slate-450 text-[9px] leading-tight font-sans">
-              {status === 'connected' && `Sincronizado (${playerCount} prospectos, ${matchReportCount} actas).`}
-              {status === 'loading' && 'Recuperando informes y actas desde Supabase...'}
+              {status === 'connected' && `Sincronizado con Supabase (${playerCount} prospectos, ${matchReportCount} actas).`}
+              {status === 'loading' && 'Recuperando datos en tiempo real desde Supabase...'}
               {status === 'error' && `Error: ${errorMessage || 'No se puede conectar'}.`}
-              {status === 'not_configured' && 'Guardando en LocalStorage (Offline). Si estás en Vercel, añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en tus variables de entorno para sincronizar.'}
+              {status === 'not_configured' && 'Guardando localmente. Pulsa "Vincular Claves" para conectar tu base de datos Supabase al instante.'}
             </p>
           </div>
         </div>
  
         {/* Sync Controls buttons */}
         <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
+          <button
+            onClick={() => setShowKeyConfig(!showKeyConfig)}
+            className={`px-2 py-0.5 rounded text-[8.5px] font-bold font-mono uppercase tracking-wider flex items-center gap-1 transition-all border cursor-pointer ${
+              showKeyConfig 
+                ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30' 
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-sm'
+            }`}
+          >
+            <LinkIcon className="w-2.5 h-2.5" />
+            <span>Vincular Claves</span>
+          </button>
+
           {configured && (
             <button
               onClick={() => onRefresh()}
@@ -166,7 +215,7 @@ NOTIFY pgrst, 'reload schema';`;
               title="Sincronizar y subir de forma masiva todos los jugadores locales a Supabase"
             >
               <Database className="w-2.5 h-2.5" />
-              <span>Forzar Subida Masiva</span>
+              <span>Forzar Subida</span>
             </button>
           )}
  
@@ -183,6 +232,95 @@ NOTIFY pgrst, 'reload schema';`;
           </button>
         </div>
       </div>
+
+      {/* Dynamic Supabase Credentials Configuration Form */}
+      {showKeyConfig && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          className="border-t border-slate-800 bg-slate-950/90 p-4 sm:p-5 font-sans space-y-3 z-20 relative"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Key className="w-4 h-4 text-emerald-400" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                Conexión Directa Supabase &lt;&gt; AI Studio
+              </h4>
+            </div>
+            <button 
+              onClick={() => setShowKeyConfig(false)}
+              className="text-slate-400 hover:text-white text-xs cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <p className="text-[11px] text-slate-400 leading-relaxed">
+            Ingresa tu <b>URL del proyecto</b> y tu <b>Anon Public Key</b> de Supabase para vincular el Scouting en tiempo real. 
+            Los datos se guardarán y estarán sincronizados al instante.
+          </p>
+
+          <form onSubmit={handleSaveKeys} className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold font-mono uppercase text-slate-300 mb-1">
+                  URL del Proyecto (VITE_SUPABASE_URL)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://xyzxyz.supabase.co"
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold font-mono uppercase text-slate-300 mb-1">
+                  Clave Anónima / Pública (VITE_SUPABASE_ANON_KEY)
+                </label>
+                <input
+                  type="password"
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  value={customKey}
+                  onChange={(e) => setCustomKey(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2">
+                {saveSuccess && (
+                  <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 font-mono">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    ¡Claves guardadas y sincronizando!
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {creds.source === 'local' && (
+                  <button
+                    type="button"
+                    onClick={handleClearKeys}
+                    className="px-3 py-1 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-red-300 rounded text-[11px] font-bold font-mono transition-colors cursor-pointer"
+                  >
+                    Desvincular
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Guardar y Sincronizar</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </motion.div>
+      )}
 
       {/* Inline Schema Auto-Recovery Alert for 'categoria' */}
       {isCategoryError && (
@@ -232,7 +370,7 @@ NOTIFY pgrst, 'reload schema';`;
               <ol className="list-decimal pl-4 mt-1.5 space-y-1">
                 <li>Crea un proyecto en <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 inline-flex items-center gap-0.5">supabase.com <ExternalLink className="w-2.5 h-2.5" /></a></li>
                 <li>Ve al panel de <b>SQL Editor</b>, copia y ejecuta el script proporcionado a la derecha.</li>
-                <li>Añade las variables de entorno secretas: <b>VITE_SUPABASE_URL</b> y <b>VITE_SUPABASE_ANON_KEY</b> en tus Ajustes del editor.</li>
+                <li>Usa el botón verde <b>"Vincular Claves"</b> arriba para pegar tu URL y Anon Key, o configúralas en Vercel.</li>
               </ol>
             </div>
 
