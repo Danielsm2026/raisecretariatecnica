@@ -1085,7 +1085,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     if (cleanRec === 'INTERESANTE' || cleanRec === 'EVALUAR') {
       return { text: 'EVALUAR', bg: 'bg-amber-950/40 text-amber-400 border-amber-900/30' };
     }
-    return { text: 'DESCARTAR', bg: 'bg-red-950/40 text-red-400 border-red-900/30' };
+    return null;
   };
 
   // Action: Create New Campograma
@@ -1943,7 +1943,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 <option value="FIRMAR">⭐ FIRMAR / CONTRATAR</option>
                 <option value="SEGUIR">👀 SEGUIR</option>
                 <option value="INTERESANTE">💡 EVALUAR / INTERESANTE</option>
-                <option value="DESCARTAR">❌ DESCARTAR</option>
                 <option value="SIN_VALORAR">❓ SIN VALORAR</option>
               </select>
 
@@ -2031,9 +2030,9 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                             {player.lateralidad.slice(0, 3)}
                           </span>
                         )}
-                        {player.recomendacion && (
-                          <span className={`text-[8px] font-mono font-bold px-1 rounded-xs border ${getRecTag(player.recomendacion)?.bg || 'bg-slate-900/40 text-slate-400 border-slate-800'}`}>
-                            {getRecTag(player.recomendacion)?.text || player.recomendacion}
+                        {getRecTag(player.recomendacion) && (
+                          <span className={`text-[8px] font-mono font-bold px-1 rounded-xs border ${getRecTag(player.recomendacion)!.bg}`}>
+                            {getRecTag(player.recomendacion)!.text}
                           </span>
                         )}
                       </div>
