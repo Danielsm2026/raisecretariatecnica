@@ -19,6 +19,8 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'CF Talavera': '/escudos/talavera.svg',
   'CP Cacereño': 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1',
   'Cacereño': 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1',
+  'Pontevedra CF': 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1',
+  'Pontevedra': 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -40,6 +42,11 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is CP Cacereño, override the logo explicitly with 602.png
   if (teamNormal && (teamNormal === 'CP Cacereño' || teamNormal === 'Cacereño' || teamNormal.toLowerCase().includes('cacereño') || teamNormal.toLowerCase().includes('cacereno'))) {
     return 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1';
+  }
+
+  // If team is Pontevedra CF, override the logo explicitly with 1997.png
+  if (teamNormal && (teamNormal === 'Pontevedra CF' || teamNormal === 'Pontevedra' || teamNormal.toLowerCase().includes('pontevedra'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {

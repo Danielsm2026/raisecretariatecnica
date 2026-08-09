@@ -124,6 +124,11 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       return;
     }
 
+    let finalEscudoUrl = escudoUrl.trim();
+    if (equipo.trim().toLowerCase().includes('pontevedra') && (!finalEscudoUrl || finalEscudoUrl.includes('1986.png'))) {
+      finalEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
+    }
+
     onSave({
       id: playerToEdit?.id,
       nombre: nombre.trim(),
@@ -143,7 +148,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       },
       elo: elo || undefined,
       altura: altura.trim() || undefined,
-      escudoUrl: escudoUrl.trim() || undefined,
+      escudoUrl: finalEscudoUrl || undefined,
       fotoUrl: fotoUrl.trim() || undefined,
       besoccerUrl: besoccerUrl.trim() || undefined,
       valoracionFisica

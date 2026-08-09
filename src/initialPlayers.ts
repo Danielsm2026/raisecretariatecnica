@@ -2811,7 +2811,6 @@ const NUEVOS_PORTEROS_RAW = [
   { nombre: 'K. Armesto', equipo: 'Eldense', anoNacimiento: 1997, altura: '1.86 m', lateralidad: 'Diestro' },
   { nombre: 'Dani Martín', equipo: 'Tenerife', anoNacimiento: 1998, altura: '1.87 m', lateralidad: 'Diestro' },
   { nombre: 'Andrés Prieto', equipo: 'Ponferradina', anoNacimiento: 1993, altura: '1.94 m', lateralidad: 'Diestro' },
-  { nombre: 'Raúl Marqueta', equipo: 'Pontevedra', anoNacimiento: 1994, altura: '1.85 m', lateralidad: 'Diestro' },
   { nombre: 'F. Sobrón', equipo: 'Zamora CF', anoNacimiento: 1995, altura: '1.77 m', lateralidad: 'Diestro' },
   { nombre: 'Diego Fuoli', equipo: 'CE Sabadell', anoNacimiento: 1997, altura: '1.88 m', lateralidad: 'Diestro' },
   { nombre: 'Dani Rebollo', equipo: 'Gimnàstic Tarragona', anoNacimiento: 1999, altura: '1.88 m', lateralidad: 'Diestro' },
@@ -2997,12 +2996,68 @@ const generateGoalkeepers = (data: Array<{
 
 const NUEVOS_PORTEROS_PRIMERA_RFEF = generateGoalkeepers(NUEVOS_PORTEROS_RAW);
 
+export const PONTEVEDRA_PORTEROS: ScoutedPlayer[] = [
+  {
+    id: 'p_raul_marqueta',
+    nombre: 'Raúl Marqueta',
+    equipo: 'Pontevedra CF',
+    categoria: 'Segunda RFEF',
+    posicion: 'Portero',
+    anoNacimiento: 1994,
+    lateralidad: 'Diestro',
+    valorMercado: 250000,
+    calificacion: 4,
+    altura: '1.85 m',
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1',
+    fotoUrl: 'https://cdn.resfu.com/img_data/jugadores/r_marqueta_135760.jpg',
+    besoccerUrl: 'https://es.besoccer.com/jugador/r-marqueta-135760',
+    recomendacion: 'FIRMAR',
+    recomendacionComentario: 'Portero veterano de gran solvencia, jerarquía y liderazgo bajo palos.',
+    notas: 'Guardameta experimentado con excelente posicionamiento, reflejos en tiros a bocajarro y seguridad en blocajes.',
+    atributos: { fisico: 8, tecnica: 8, tactica: 8, mental: 8 },
+    fechaRegistro: '2026-08-07',
+    descripcionGeneral: 'Raúl Marqueta es el guardameta experimentado del Pontevedra CF.',
+    fortalezas: 'Excelente colocación bajo palos.\nGran reflejo y estirada.\nLiderazgo de la zaga.',
+    debilidades: 'Juego de pies bajo alta presión rival.',
+    enSuEquipo: 'Líder en la portería del Pontevedra CF.',
+    enPocasPalabras: 'EXPERIENCIA.\nSOLVENCIA.\nSEGURIDAD BAJO PALOS.',
+    tieneValorPor: 'JERARQUÍA EN ÁREA.\nEXPERIENCIA EN COMPETICIÓN.'
+  },
+  {
+    id: 'p_iker_galindo',
+    nombre: 'Iker Galindo',
+    equipo: 'Pontevedra CF',
+    categoria: 'Segunda RFEF',
+    posicion: 'Portero',
+    anoNacimiento: 2004,
+    lateralidad: 'Diestro',
+    valorMercado: 180000,
+    calificacion: 3.5,
+    altura: '1.86 m',
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1',
+    fotoUrl: 'https://cdn.resfu.com/img_data/jugadores/i_galindo_504543.jpg',
+    besoccerUrl: 'https://es.besoccer.com/jugador/i-galindo-504543',
+    recomendacion: 'SEGUIR',
+    recomendacionComentario: 'Joven guardameta Sub-23 de buena proyección y agilidad.',
+    notas: 'Portero joven con gran velocidad de reacción, agilidad en el uno contra uno y buena parada de reflejos.',
+    atributos: { fisico: 7, tecnica: 7, tactica: 7, mental: 7 },
+    fechaRegistro: '2026-08-07',
+    descripcionGeneral: 'Iker Galindo es un joven portero con gran potencial en el Pontevedra CF.',
+    fortalezas: 'Reflejos felinos en tiros cercanos.\nVelocidad en el uno contra uno.\nProyección Sub-23.',
+    debilidades: 'Toma de decisiones en salidas aéreas.',
+    enSuEquipo: 'Aporta juventud y competencia en la portería.',
+    enPocasPalabras: 'JUVENTUD.\nAGILIDAD.\nPROYECCIÓN.',
+    tieneValorPor: 'TALENTO SUB-23.\nPOTENCIAL DE CRECIMIENTO.'
+  }
+];
+
 export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...RAW_PLAYERS,
   ...BILBAO_ATHLETIC_PLAYERS,
   ...CF_TALAVERA_PLAYERS,
   ...CP_CACERENO_PLAYERS,
   ...NUEVOS_PORTEROS_PRIMERA_RFEF,
+  ...PONTEVEDRA_PORTEROS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {

@@ -146,7 +146,7 @@ export default function App() {
 
         // Merge local deleted IDs with DB deleted IDs and update local storage
         let localDeletedIds = getDeletedPlayerIds();
-        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez'];
+        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_raul_marqueta', 'p_iker_galindo'];
         if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
           localDeletedIds = localDeletedIds.filter(id => !forceKeepIds.includes(id));
           try {
@@ -266,6 +266,13 @@ export default function App() {
           }
           if (teamName.toLowerCase().includes('cacereño') || teamName.toLowerCase().includes('cacereno')) {
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('pontevedra')) {
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
@@ -438,7 +445,7 @@ export default function App() {
         
         // Merge missing initial players automatically (like the new goalkeepers), excluding any manually deleted ones
         let deletedIds = getDeletedPlayerIds();
-        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_mangel_prendes', 'p_samu_mayo', 'p_neskes'];
+        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_mangel_prendes', 'p_samu_mayo', 'p_neskes', 'p_raul_marqueta', 'p_iker_galindo'];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
           deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
           try {
@@ -492,6 +499,13 @@ export default function App() {
           }
           if (teamName.toLowerCase().includes('cacereño') || teamName.toLowerCase().includes('cacereno')) {
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('pontevedra')) {
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
@@ -693,20 +707,24 @@ export default function App() {
     let resolvedEscudoUrl = playerData.escudoUrl;
     if (playerData.equipo) {
       const targetTeam = playerData.equipo.trim().toLowerCase();
-      // First, look for any other player in the list who has a non-empty escudoUrl for this team
-      const existingTeamPlayer = players.find(
-        (p) => p.id !== playerData.id && p.equipo && p.equipo.trim().toLowerCase() === targetTeam && p.escudoUrl && p.escudoUrl.trim() !== ''
-      );
-
-      if (existingTeamPlayer && existingTeamPlayer.escudoUrl) {
-        resolvedEscudoUrl = existingTeamPlayer.escudoUrl.trim();
-      } else if (!resolvedEscudoUrl || resolvedEscudoUrl.trim() === '') {
-        // Look up in DEFAULT_TEAM_ESCUDOS map
-        const matchedKey = Object.keys(DEFAULT_TEAM_ESCUDOS).find(
-          (k) => k.toLowerCase() === targetTeam
+      if (targetTeam.includes('pontevedra')) {
+        resolvedEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
+      } else {
+        // First, look for any other player in the list who has a non-empty escudoUrl for this team
+        const existingTeamPlayer = players.find(
+          (p) => p.id !== playerData.id && p.equipo && p.equipo.trim().toLowerCase() === targetTeam && p.escudoUrl && p.escudoUrl.trim() !== ''
         );
-        if (matchedKey) {
-          resolvedEscudoUrl = DEFAULT_TEAM_ESCUDOS[matchedKey];
+
+        if (existingTeamPlayer && existingTeamPlayer.escudoUrl) {
+          resolvedEscudoUrl = existingTeamPlayer.escudoUrl.trim();
+        } else if (!resolvedEscudoUrl || resolvedEscudoUrl.trim() === '') {
+          // Look up in DEFAULT_TEAM_ESCUDOS map
+          const matchedKey = Object.keys(DEFAULT_TEAM_ESCUDOS).find(
+            (k) => k.toLowerCase() === targetTeam
+          );
+          if (matchedKey) {
+            resolvedEscudoUrl = DEFAULT_TEAM_ESCUDOS[matchedKey];
+          }
         }
       }
     }
