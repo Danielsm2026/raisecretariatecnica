@@ -24,7 +24,7 @@ import {
 interface HomeViewProps {
   players: ScoutedPlayer[];
   matchReports: MatchReport[];
-  setActiveTab: (tab: 'inicio' | 'plan_semanal' | 'players' | 'matchReports' | 'teams' | 'data_reports') => void;
+  setActiveTab: (tab: 'inicio' | 'plan_semanal' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports') => void;
   onAddPlayer: () => void;
 }
 
@@ -112,6 +112,30 @@ export default function HomeView({ players, matchReports, setActiveTab, onAddPla
       borderColor: 'border-amber-500/30 hover:border-amber-400',
       iconColor: 'text-amber-400',
       badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+    },
+    {
+      id: 'tactical' as const,
+      title: 'Campograma',
+      subtitle: 'TACTICAL BOARD',
+      badge: 'Pizarra interactiva',
+      description: 'Herramienta de diseño estratégico. Configura alineaciones en tiempo real, ensaya movimientos, arrastra fichas y personaliza anotaciones visuales.',
+      icon: Layout,
+      color: 'from-purple-500/20 to-pink-500/10',
+      borderColor: 'border-purple-500/30 hover:border-purple-400',
+      iconColor: 'text-purple-400',
+      badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+    },
+    {
+      id: 'videoteca' as const,
+      title: 'Videoteca Técnica',
+      subtitle: 'VIDEO ANALYSIS ROOM',
+      badge: 'Clips técnicos',
+      description: 'Análisis de video individual. Filtra jugadas por categorías (pases clave, regates, recuperaciones), reproduce cortes tácticos y asocia evidencia visual.',
+      icon: Video,
+      color: 'from-cyan-500/20 to-blue-500/10',
+      borderColor: 'border-cyan-500/30 hover:border-cyan-400',
+      iconColor: 'text-cyan-400',
+      badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
     },
     {
       id: 'data_reports' as const,
