@@ -1552,18 +1552,30 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              const defaultPrefix = currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle;
-              setNewTitle(`${defaultPrefix} - ${new Date().toLocaleDateString('es-ES')}`);
-              if (currentSubFolder) setNewSubFolder(currentSubFolder);
-              setShowCreateModal(true);
-            }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-blue-600/20 transition-all shrink-0 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nuevo Campograma</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              onClick={handleSyncCampogramasWithCloud}
+              disabled={isSyncingCloud}
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-750 text-blue-400 hover:text-blue-300 border border-slate-700 rounded-lg font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              title="Sincronizar campogramas de Primera RFEF con Supabase"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+              <span>{isSyncingCloud ? 'Sincronizando...' : 'Sincronizar Supabase'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const defaultPrefix = currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle;
+                setNewTitle(`${defaultPrefix} - ${new Date().toLocaleDateString('es-ES')}`);
+                if (currentSubFolder) setNewSubFolder(currentSubFolder);
+                setShowCreateModal(true);
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-blue-600/20 transition-all shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nuevo Campograma</span>
+            </button>
+          </div>
         </div>
 
         {/* Campogramas Grid inside this Folder */}
@@ -1891,10 +1903,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 text-xs font-mono">
-          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-900/40 px-2 py-0.5 rounded flex items-center gap-1">
-            <Check className="w-3 h-3" /> Guardado
+        <div className="flex items-center space-x-2 text-xs font-mono">
+          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-900/40 px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
+            <Database className="w-3 h-3 text-blue-400" />
+            <span>Supabase Sincronizado</span>
           </span>
+          <button
+            onClick={handleSyncCampogramasWithCloud}
+            disabled={isSyncingCloud}
+            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-md border border-slate-700 transition cursor-pointer disabled:opacity-50"
+            title="Sincronizar cambios ahora con Supabase Nube"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
 
