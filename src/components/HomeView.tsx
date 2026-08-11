@@ -17,13 +17,14 @@ import {
   Edit2,
   Check,
   RotateCcw,
-  Link2
+  Link2,
+  Calendar
 } from 'lucide-react';
 
 interface HomeViewProps {
   players: ScoutedPlayer[];
   matchReports: MatchReport[];
-  setActiveTab: (tab: 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports') => void;
+  setActiveTab: (tab: 'inicio' | 'plan_semanal' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports') => void;
   onAddPlayer: () => void;
 }
 
@@ -62,8 +63,20 @@ export default function HomeView({ players, matchReports, setActiveTab, onAddPla
     ? (players.reduce((sum, p) => sum + p.calificacion, 0) / totalPlayers).toFixed(1)
     : '0.0';
 
-  // Card items config for the 7 sections
+  // Card items config for the sections
   const sections = [
+    {
+      id: 'plan_semanal' as const,
+      title: 'Plan Semanal',
+      subtitle: 'WEEKLY AGENDA & SCOUTING',
+      badge: 'Agenda semanal',
+      description: 'Coordinación de partidos, horarios, scouts asignados, modalidades de seguimiento (Directo / Vídeo) y gestión de acreditaciones.',
+      icon: Calendar,
+      color: 'from-blue-600/25 to-sky-500/10',
+      borderColor: 'border-blue-500/40 hover:border-blue-400',
+      iconColor: 'text-blue-400',
+      badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+    },
     {
       id: 'players' as const,
       title: 'Base de datos de jugadores',
@@ -220,7 +233,7 @@ export default function HomeView({ players, matchReports, setActiveTab, onAddPla
         </div>
       </div>
 
-      {/* 2. Main Content Grid - Sections Cards */}
+      {/* Main Content Grid - Sections Cards */}
       <div className="space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-mono font-extrabold uppercase text-white tracking-widest flex items-center space-x-2">

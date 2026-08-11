@@ -13,6 +13,7 @@ import TacticalBoard from './components/TacticalBoard';
 import VideoLibrary from './components/VideoLibrary';
 import DataReportsView from './components/DataReportsView';
 import HomeView from './components/HomeView';
+import PlanSemanal from './components/PlanSemanal';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { DEFAULT_TEAM_ESCUDOS } from './utils/escudoHelper';
 import { isSupabaseConfigured, dbFetchPlayers, dbSavePlayer, dbDeletePlayer, dbBulkUpsert, dbFetchMatchReports, dbSaveMatchReport, dbDeleteMatchReport, dbBulkUpsertMatchReports, dbSaveSetting } from './utils/supabaseClient';
@@ -42,7 +43,7 @@ export default function App() {
   }, [matchReports]);
   const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'inicio' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'plan_semanal' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports'>('inicio');
 
   // Supabase states
   const [supabaseStatus, setSupabaseStatus] = useState<'connected' | 'error' | 'not_configured' | 'loading'>('not_configured');
@@ -1292,6 +1293,17 @@ export default function App() {
           </button>
 
           <button
+            onClick={() => setActiveTab('plan_semanal')}
+            className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-widest border-b-2 transition-all flex items-center space-x-2 shrink-0 ${
+              activeTab === 'plan_semanal'
+                ? 'border-blue-500 text-blue-400 bg-slate-900/10'
+                : 'border-transparent text-slate-400 hover:text-white hover:border-slate-800'
+            }`}
+          >
+            <span>📅 Plan Semanal</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('players')}
             className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-widest border-b-2 transition-all flex items-center space-x-2 shrink-0 ${
               activeTab === 'players'
@@ -1374,6 +1386,10 @@ export default function App() {
             setActiveTab={setActiveTab}
             onAddPlayer={handleOpenAdd}
           />
+        )}
+
+        {activeTab === 'plan_semanal' && (
+          <PlanSemanal />
         )}
 
         {activeTab === 'players' && (
