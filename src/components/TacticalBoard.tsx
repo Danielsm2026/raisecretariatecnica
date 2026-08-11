@@ -8,7 +8,16 @@ import {
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { ConfirmationModal } from './ConfirmationModal';
-import { dbFetchSetting, dbSaveSetting, isSupabaseConfigured, getSQLInstructions } from '../utils/supabaseClient';
+import { 
+  dbFetchSetting, 
+  dbSaveSetting, 
+  isSupabaseConfigured, 
+  getSQLInstructions,
+  dbFetchCampogramas,
+  dbSaveCampograma,
+  dbDeleteCampograma,
+  dbBulkUpsertCampogramas
+} from '../utils/supabaseClient';
 
 interface TacticalBoardProps {
   players: ScoutedPlayer[];
@@ -430,8 +439,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
   // Load campogramas from cloud (Supabase) on mount if available
   useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+
     Promise.all([
-      dbFetchSetting<CampogramaItem[]>('campogramas', []),
+      dbFetchCampogramas(),
       dbFetchSetting<string[]>('deleted_campogramas', [])
     ]).then(([remoteCampogramas, remoteDeletedIds]) => {
       const localDeleted = getLocalDeletedCampogramaIds();
@@ -447,7 +458,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           if (c && c.id && !deletedSet.has(c.id)) map.set(c.id, c);
         });
 
-        // 2. Remote items from Supabase
+        // 2. Remote items from Supabase scouting_campogramas
         if (Array.isArray(remoteCampogramas) && remoteCampogramas.length > 0) {
           remoteCampogramas.forEach(remoteItem => {
             if (!remoteItem || !remoteItem.id || deletedSet.has(remoteItem.id)) return;
@@ -467,9 +478,11 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         const rawList = Array.from(map.values());
         const cleaned = sanitizeCampogramas(rawList, players, deletedSet);
         localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(cleaned));
-        dbSaveSetting('campogramas', cleaned);
+        dbBulkUpsertCampogramas(cleaned).catch(console.error);
         return cleaned;
       });
+    }).catch(err => {
+      console.warn('Error fetching campogramas from Supabase on mount:', err);
     });
   }, []);
 
@@ -483,7 +496,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     if (originalStr !== sanitizedStr) {
       setCampogramas(sanitized);
       localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', sanitizedStr);
-      dbSaveSetting('campogramas', sanitized);
+      dbBulkUpsertCampogramas(sanitized).catch(console.error);
     }
   }, [players]);
 
@@ -494,7 +507,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     } catch (e) {
       console.error('Error saving campogramas:', e);
     }
-    dbSaveSetting('campogramas', campogramas);
+    dbBulkUpsertCampogramas(campogramas).catch(console.error);
   }, [campogramas]);
 
   // Cloud Sync & Backup Functions for Campogramas
@@ -506,10 +519,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       return;
     }
     setIsSyncingCloud(true);
-    showNotification('Sincronizando campogramas con Supabase...', 'info');
+    showNotification('Sincronizando campogramas con la tabla scouting_campogramas en Supabase...', 'info');
     try {
       const [remoteCampogramas, remoteDeletedIds] = await Promise.all([
-        dbFetchSetting<CampogramaItem[]>('campogramas', []),
+        dbFetchCampogramas(),
         dbFetchSetting<string[]>('deleted_campogramas', [])
       ]);
 
@@ -542,10 +555,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
       const merged = sanitizeCampogramas(Array.from(map.values()), players, deletedSet);
       setCampogramas(merged);
-      await dbSaveSetting('campogramas', merged);
+      await dbBulkUpsertCampogramas(merged);
       await dbSaveSetting('deleted_campogramas', combinedDeletedIds);
       localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(merged));
-      showNotification('¡Campogramas y eliminaciones sincronizados exitosamente con Supabase!', 'success');
+      showNotification('¡Campogramas vinculados y sincronizados exitosamente en la tabla "scouting_campogramas" de Supabase!', 'success');
     } catch (err: any) {
       console.error('Error syncing campogramas:', err);
       showNotification(`Error al sincronizar con Supabase: ${err?.message || 'Error de conexión'}`, 'error');
@@ -1143,11 +1156,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     const updatedDeleted = Array.from(new Set([...currentDeleted, id]));
     saveLocalDeletedCampogramaIds(updatedDeleted);
 
+    // Delete from Supabase scouting_campogramas
+    dbDeleteCampograma(id).catch(console.error);
+
     // Filter state
     const cleanList = campogramas.filter(c => c.id !== id);
     setCampogramas(cleanList);
     localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(cleanList));
-    dbSaveSetting('campogramas', cleanList);
+    dbBulkUpsertCampogramas(cleanList).catch(console.error);
 
     if (activeCampogramaId === id) setActiveCampogramaId(null);
     showNotification(`Campograma "${nombre}" eliminado permanentemente en local y Supabase.`, 'info');

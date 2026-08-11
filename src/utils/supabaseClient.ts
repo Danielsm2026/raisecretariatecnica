@@ -654,6 +654,143 @@ export async function dbFetchPlanSemanalWeeksWithStatus<T = any>(defaultWeeks: T
 }
 
 /**
+ * Fetch campogramas from Supabase table scouting_campogramas with fallback to settings storage.
+ */
+export async function dbFetchCampogramas(): Promise<any[]> {
+  if (!supabase) {
+    throw new Error('Supabase client is not initialized.');
+  }
+
+  let { data, error } = await supabase
+    .from('scouting_campogramas')
+    .select('*')
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    // Fallback 1: try without ordering if updated_at column or order fails
+    const res2 = await supabase
+      .from('scouting_campogramas')
+      .select('*');
+    if (!res2.error) {
+      data = res2.data;
+      error = null;
+    }
+  }
+
+  if (error) {
+    console.warn('Error fetching campogramas from scouting_campogramas table, using fallback:', error.message || error);
+    return dbFetchSetting<any[]>('campogramas', []);
+  }
+
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    folderId: row.folder_id || row.folderId || 'mensuales',
+    subFolderId: row.sub_folder_id || row.subFolderId || undefined,
+    monthFolderId: row.month_folder_id || row.monthFolderId || undefined,
+    nombre: row.nombre || 'Campograma sin nombre',
+    descripcion: row.descripcion || '',
+    fechaModificacion: row.fecha_modificacion || row.fechaModificacion || new Date().toLocaleDateString('es-ES'),
+    updatedAt: row.updated_at !== undefined ? Number(row.updated_at) : (row.updatedAt !== undefined ? Number(row.updatedAt) : Date.now()),
+    formation: row.formation || '4-4-2',
+    monthlyView: row.monthly_view !== undefined ? row.monthly_view : (row.monthlyView !== undefined ? row.monthlyView : true),
+    assignments: typeof row.assignments === 'string' ? JSON.parse(row.assignments) : (row.assignments || {}),
+    monthlyAssignments: typeof row.monthly_assignments === 'string' ? JSON.parse(row.monthly_assignments) : (row.monthlyAssignments ? (typeof row.monthlyAssignments === 'string' ? JSON.parse(row.monthlyAssignments) : row.monthlyAssignments) : {}),
+    notes: row.notes || ''
+  }));
+}
+
+/**
+ * Saves a single campograma to Supabase (table scouting_campogramas).
+ */
+export async function dbSaveCampograma(campograma: any): Promise<void> {
+  if (!supabase) return;
+
+  const payload = {
+    id: campograma.id,
+    folder_id: campograma.folderId,
+    folderId: campograma.folderId,
+    sub_folder_id: campograma.subFolderId || null,
+    subFolderId: campograma.subFolderId || null,
+    month_folder_id: campograma.monthFolderId || null,
+    monthFolderId: campograma.monthFolderId || null,
+    nombre: campograma.nombre,
+    descripcion: campograma.descripcion || '',
+    fecha_modificacion: campograma.fechaModificacion || new Date().toLocaleDateString('es-ES'),
+    fechaModificacion: campograma.fechaModificacion || new Date().toLocaleDateString('es-ES'),
+    updated_at: campograma.updatedAt || Date.now(),
+    updatedAt: campograma.updatedAt || Date.now(),
+    formation: campograma.formation || '4-4-2',
+    monthly_view: campograma.monthlyView ?? true,
+    monthlyView: campograma.monthlyView ?? true,
+    assignments: campograma.assignments || {},
+    monthly_assignments: campograma.monthlyAssignments || {},
+    monthlyAssignments: campograma.monthlyAssignments || {},
+    notes: campograma.notes || ''
+  };
+
+  try {
+    await safeUpsert('scouting_campogramas', payload, 'id');
+  } catch (err) {
+    console.warn('Upsert to scouting_campogramas failed, storing backup in settings:', err);
+  }
+}
+
+/**
+ * Deletes a single campograma from Supabase table scouting_campogramas.
+ */
+export async function dbDeleteCampograma(id: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from('scouting_campogramas')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.warn('Error deleting from scouting_campogramas:', error.message || error);
+    }
+  } catch (err) {
+    console.warn('Error in dbDeleteCampograma:', err);
+  }
+}
+
+/**
+ * Bulk upserts campogramas into Supabase table scouting_campogramas.
+ */
+export async function dbBulkUpsertCampogramas(campogramas: any[]): Promise<void> {
+  if (!supabase) return;
+
+  const payloads = campogramas.map(campograma => ({
+    id: campograma.id,
+    folder_id: campograma.folderId,
+    folderId: campograma.folderId,
+    sub_folder_id: campograma.subFolderId || null,
+    subFolderId: campograma.subFolderId || null,
+    month_folder_id: campograma.monthFolderId || null,
+    monthFolderId: campograma.monthFolderId || null,
+    nombre: campograma.nombre,
+    descripcion: campograma.descripcion || '',
+    fecha_modificacion: campograma.fechaModificacion || new Date().toLocaleDateString('es-ES'),
+    fechaModificacion: campograma.fechaModificacion || new Date().toLocaleDateString('es-ES'),
+    updated_at: campograma.updatedAt || Date.now(),
+    updatedAt: campograma.updatedAt || Date.now(),
+    formation: campograma.formation || '4-4-2',
+    monthly_view: campograma.monthlyView ?? true,
+    monthlyView: campograma.monthlyView ?? true,
+    assignments: campograma.assignments || {},
+    monthly_assignments: campograma.monthlyAssignments || {},
+    monthlyAssignments: campograma.monthlyAssignments || {},
+    notes: campograma.notes || ''
+  }));
+
+  try {
+    await safeBulkUpsert('scouting_campogramas', payloads, 'id');
+  } catch (err) {
+    console.warn('Bulk upsert to scouting_campogramas failed:', err);
+    await dbSaveSetting('campogramas', campogramas);
+  }
+}
+
+/**
  * Save Plan Semanal weeks to Supabase settings storage.
  */
 export async function dbSavePlanSemanalWeeks(weeks: any): Promise<void> {
@@ -684,6 +821,34 @@ ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "esFichajeVerano2026" BOOL
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS besoccer_url TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "besoccerUrl" TEXT;
 ALTER TABLE scouting_match_reports ADD COLUMN IF NOT EXISTS categoria TEXT;
+
+-- TABLA DEDICADA PARA CAMPOGRAMAS
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL,
+  "folderId" TEXT,
+  sub_folder_id TEXT,
+  "subFolderId" TEXT,
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT true,
+  "monthlyView" BOOLEAN DEFAULT true,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
 
 CREATE TABLE IF NOT EXISTS scouting_settings (
   key TEXT PRIMARY KEY,
@@ -762,7 +927,7 @@ DROP POLICY IF EXISTS "Permitir todo a usuarios anónimos" ON scouting_players;
 CREATE POLICY "Permitir todo a usuarios anónimos" ON scouting_players
   FOR ALL USING (true) WITH CHECK (true);
 
--- NUEVA TABLA PARA INFORMES DE PARTIDOS (ACTAS DE ALINEACIÓN TÁCTICA)
+-- TABLA PARA INFORMES DE PARTIDOS (ACTAS DE ALINEACIÓN TÁCTICA)
 CREATE TABLE IF NOT EXISTS scouting_match_reports (
   id TEXT PRIMARY KEY,
   fecha TEXT NOT NULL,
@@ -799,6 +964,36 @@ ALTER TABLE scouting_match_reports ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Permitir todo en informes de partidos" ON scouting_match_reports;
 CREATE POLICY "Permitir todo en informes de partidos" ON scouting_match_reports
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- TABLA DEDICADA PARA CAMPOGRAMAS Y PIZARRAS TÁCTICAS
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL,
+  "folderId" TEXT,
+  sub_folder_id TEXT,
+  "subFolderId" TEXT,
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT true,
+  "monthlyView" BOOLEAN DEFAULT true,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas
   FOR ALL USING (true) WITH CHECK (true);
 
 -- CONFIGURACIÓN DE STORAGE EN SUPABASE (EJECUTA ESTO EN EL SQL EDITOR):
