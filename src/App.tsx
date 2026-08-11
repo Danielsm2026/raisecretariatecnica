@@ -9,8 +9,6 @@ import PlayerReportModal from './components/PlayerReportModal';
 import MatchReportModal from './components/MatchReportModal';
 import SupabaseSyncBanner from './components/SupabaseSyncBanner';
 import TeamsView from './components/TeamsView';
-import TacticalBoard from './components/TacticalBoard';
-import VideoLibrary from './components/VideoLibrary';
 import DataReportsView from './components/DataReportsView';
 import HomeView from './components/HomeView';
 import PlanSemanal from './components/PlanSemanal';
@@ -43,7 +41,7 @@ export default function App() {
   }, [matchReports]);
   const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
   const [isReportEditorOpen, setIsReportEditorOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'inicio' | 'plan_semanal' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'videoteca' | 'data_reports'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'plan_semanal' | 'players' | 'matchReports' | 'teams' | 'data_reports'>('inicio');
 
   // Supabase states
   const [supabaseStatus, setSupabaseStatus] = useState<'connected' | 'error' | 'not_configured' | 'loading'>('not_configured');
@@ -1346,28 +1344,6 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('tactical')}
-            className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-widest border-b-2 transition-all flex items-center space-x-2 shrink-0 ${
-              activeTab === 'tactical'
-                ? 'border-blue-500 text-blue-400 bg-slate-900/10'
-                : 'border-transparent text-slate-400 hover:text-white hover:border-slate-800'
-            }`}
-          >
-            <span>📋 Campograma</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('videoteca')}
-            className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-widest border-b-2 transition-all flex items-center space-x-2 shrink-0 ${
-              activeTab === 'videoteca'
-                ? 'border-blue-500 text-blue-400 bg-slate-900/10'
-                : 'border-transparent text-slate-400 hover:text-white hover:border-slate-800'
-            }`}
-          >
-            <span>📹 Videoteca</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('data_reports')}
             className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-widest border-b-2 transition-all flex items-center space-x-2 shrink-0 ${
               activeTab === 'data_reports'
@@ -1612,21 +1588,6 @@ export default function App() {
               </table>
             </div>
           </div>
-        )}
-
-        {activeTab === 'tactical' && (
-          <TacticalBoard
-            players={players}
-            showNotification={showNotification}
-            onUpdatePlayer={handleSavePlayer}
-          />
-        )}
-
-        {activeTab === 'videoteca' && (
-          <VideoLibrary
-            players={players}
-            showNotification={showNotification}
-          />
         )}
 
         {activeTab === 'data_reports' && (
