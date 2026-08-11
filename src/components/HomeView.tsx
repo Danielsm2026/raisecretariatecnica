@@ -212,7 +212,7 @@ export default function HomeView({ players, matchReports, setActiveTab, onAddPla
 
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-widest text-white font-sans">
-            SECRETARÍA TÉCNICA
+            DIRECCIÓN DEPORTIVA
           </h1>
           <p className="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-blue-400 uppercase">
             REAL AVILÉS INDUSTRIAL C.F.

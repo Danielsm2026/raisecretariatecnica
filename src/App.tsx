@@ -146,7 +146,7 @@ export default function App() {
 
         // Merge local deleted IDs with DB deleted IDs and update local storage
         let localDeletedIds = getDeletedPlayerIds();
-        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_raul_marqueta', 'p_iker_galindo'];
+        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_raul_marqueta', 'p_iker_galindo', 'p_david_alba', 'p_juanra', 'p_alvaro_perez', 'p_rui_pedro', 'p_ander_vidorreta', 'p_adrian_argos'];
         if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
           localDeletedIds = localDeletedIds.filter(id => !forceKeepIds.includes(id));
           try {
@@ -445,7 +445,7 @@ export default function App() {
         
         // Merge missing initial players automatically (like the new goalkeepers), excluding any manually deleted ones
         let deletedIds = getDeletedPlayerIds();
-        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_mangel_prendes', 'p_samu_mayo', 'p_neskes', 'p_raul_marqueta', 'p_iker_galindo'];
+        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_mangel_prendes', 'p_samu_mayo', 'p_neskes', 'p_raul_marqueta', 'p_iker_galindo', 'p_david_alba', 'p_juanra', 'p_alvaro_perez', 'p_rui_pedro', 'p_ander_vidorreta', 'p_adrian_argos'];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
           deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
           try {
