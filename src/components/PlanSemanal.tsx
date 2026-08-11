@@ -30,6 +30,7 @@ import {
   dbSavePlanSemanalWeeksWithStatus,
   getSQLInstructions
 } from '../utils/supabaseClient';
+import { ConfirmationModal } from './ConfirmationModal';
 
 export interface PlanSemanalMatch {
   id: string;
@@ -251,6 +252,19 @@ export default function PlanSemanal() {
   const [formModalidad, setFormModalidad] = useState<PlanSemanalMatch['modalidad']>('DIRECTO');
   const [formAcreditaciones, setFormAcreditaciones] = useState<PlanSemanalMatch['acreditaciones']>('CONFIRMADA');
 
+  // Confirmation Modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
   // Manual Pull from Supabase
   const handlePullFromCloud = async () => {
     if (!supabaseConnected) return;
@@ -359,10 +373,16 @@ export default function PlanSemanal() {
 
   const handleDeleteWeek = (semId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('¿Seguro que deseas eliminar esta semana del plan?')) {
-      setWeeks(prev => prev.filter(w => w.id !== semId));
-      if (selectedWeekId === semId) setSelectedWeekId(null);
-    }
+    const sem = weeks.find(w => w.id === semId);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Eliminar Semana del Plan',
+      message: `¿Seguro que deseas eliminar "${sem?.nombre || sem?.filename || 'esta semana'}"? Se eliminarán todos los partidos asociados a esta semana.`,
+      onConfirm: () => {
+        setWeeks(prev => prev.filter(w => w.id !== semId));
+        if (selectedWeekId === semId) setSelectedWeekId(null);
+      }
+    });
   };
 
   const handleSaveWeek = (e: React.FormEvent) => {
@@ -397,11 +417,16 @@ export default function PlanSemanal() {
   };
 
   const handleReset = () => {
-    if (window.confirm('¿Deseas restaurar el registro de semanas al estado inicial?')) {
-      setWeeks(DEFAULT_WEEKS);
-      localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(DEFAULT_WEEKS));
-      setSelectedWeekId(null);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Restaurar Estado Inicial',
+      message: '¿Deseas restaurar la agenda semanal al estado inicial por defecto? Se perderán las modificaciones no guardadas.',
+      onConfirm: () => {
+        setWeeks(DEFAULT_WEEKS);
+        localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(DEFAULT_WEEKS));
+        setSelectedWeekId(null);
+      }
+    });
   };
 
   // Matches CRUD for selected week
@@ -422,7 +447,8 @@ export default function PlanSemanal() {
     setIsMatchModalOpen(true);
   };
 
-  const handleOpenEditMatch = (m: PlanSemanalMatch) => {
+  const handleOpenEditMatch = (m: PlanSemanalMatch, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setEditingMatch(m);
     setFormDia(m.diaSemana);
     setFormFecha(m.fechaStr);
@@ -435,17 +461,26 @@ export default function PlanSemanal() {
     setIsMatchModalOpen(true);
   };
 
-  const handleDeleteMatch = (matchId: string) => {
-    if (!selectedWeekId) return;
-    setWeeks(prev => prev.map(w => {
-      if (w.id === selectedWeekId) {
-        return {
-          ...w,
-          partidos: w.partidos.filter(p => p.id !== matchId)
-        };
+  const handleDeleteMatch = (matchId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const match = selectedWeek?.partidos.find(p => p.id === matchId);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Eliminar Partido',
+      message: `¿Seguro que deseas eliminar el partido "${match?.partido || 'seleccionado'}" del plan semanal?`,
+      onConfirm: () => {
+        if (!selectedWeekId) return;
+        setWeeks(prev => prev.map(w => {
+          if (w.id === selectedWeekId) {
+            return {
+              ...w,
+              partidos: w.partidos.filter(p => p.id !== matchId)
+            };
+          }
+          return w;
+        }));
       }
-      return w;
-    }));
+    });
   };
 
   const handleSaveMatch = (e: React.FormEvent) => {
@@ -866,14 +901,14 @@ export default function PlanSemanal() {
                               <span>{m.partido}</span>
                               <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1 ml-2 transition shrink-0">
                                 <button
-                                  onClick={() => handleOpenEditMatch(m)}
+                                  onClick={(e) => handleOpenEditMatch(m, e)}
                                   className="p-1 hover:text-blue-400 text-slate-400 transition"
                                   title="Editar partido"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteMatch(m.id)}
+                                  onClick={(e) => handleDeleteMatch(m.id, e)}
                                   className="p-1 hover:text-red-400 text-slate-400 transition"
                                   title="Eliminar partido"
                                 >
@@ -1251,6 +1286,18 @@ NOTIFY pgrst, 'reload schema';`;
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDanger={true}
+      />
     </div>
   );
 }
