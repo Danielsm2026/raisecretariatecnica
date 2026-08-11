@@ -589,6 +589,20 @@ export async function dbSaveSetting(key: string, value: any): Promise<void> {
 }
 
 /**
+ * Fetch Plan Semanal weeks from Supabase settings storage.
+ */
+export async function dbFetchPlanSemanalWeeks<T = any>(defaultWeeks: T): Promise<T> {
+  return dbFetchSetting<T>('plan_semanal_weeks_v2', defaultWeeks);
+}
+
+/**
+ * Save Plan Semanal weeks to Supabase settings storage.
+ */
+export async function dbSavePlanSemanalWeeks(weeks: any): Promise<void> {
+  await dbSaveSetting('plan_semanal_weeks_v2', weeks);
+}
+
+/**
  * Returns a SQL code snippet that the user can run in the Supabase SQL editor to bootstrap
  * their table automatically.
  */
