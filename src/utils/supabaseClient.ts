@@ -632,6 +632,8 @@ ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
 CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
 
+-- La tabla 'scouting_settings' guarda la agenda del Plan Semanal (key: 'plan_semanal_weeks_v2'), alineaciones tácticas y preferencias de la app.
+
 -- Forzar recarga de cache del esquema en Supabase (PostgREST)
 NOTIFY pgrst, 'reload schema';
 
