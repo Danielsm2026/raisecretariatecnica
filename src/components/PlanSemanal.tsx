@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, 
   Plus, 
@@ -13,13 +13,22 @@ import {
   Search,
   Clock,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Database,
+  Cloud,
+  RefreshCw,
+  UploadCloud,
+  Copy,
+  CheckCircle2,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 import { 
   isSupabaseConfigured, 
-  dbFetchPlanSemanalWeeks, 
-  dbSavePlanSemanalWeeks 
+  dbFetchPlanSemanalWeeksWithStatus, 
+  dbSavePlanSemanalWeeksWithStatus,
+  getSQLInstructions
 } from '../utils/supabaseClient';
 
 export interface PlanSemanalMatch {
@@ -213,8 +222,15 @@ export default function PlanSemanal() {
 
   const [supabaseConnected] = useState<boolean>(isSupabaseConfigured());
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncSuccessMsg, setSyncSuccessMsg] = useState<string | null>(null);
+  const [isSqlModalOpen, setIsSqlModalOpen] = useState<boolean>(false);
+  const [copiedSql, setCopiedSql] = useState<boolean>(false);
+
   const [selectedWeekId, setSelectedWeekId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const isCloudInitializedRef = useRef<boolean>(false);
 
   // Modals state
   const [isNewWeekModalOpen, setIsNewWeekModalOpen] = useState(false);
@@ -235,36 +251,86 @@ export default function PlanSemanal() {
   const [formModalidad, setFormModalidad] = useState<PlanSemanalMatch['modalidad']>('DIRECTO');
   const [formAcreditaciones, setFormAcreditaciones] = useState<PlanSemanalMatch['acreditaciones']>('CONFIRMADA');
 
-  // Fetch initial data from Supabase if configured
-  useEffect(() => {
+  // Manual Pull from Supabase
+  const handlePullFromCloud = async () => {
     if (!supabaseConnected) return;
+    setIsSyncing(true);
+    setSyncError(null);
+    setSyncSuccessMsg(null);
+    const res = await dbFetchPlanSemanalWeeksWithStatus<SemanaPlan[]>(DEFAULT_WEEKS);
+    setIsSyncing(false);
+    if (res.success) {
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setWeeks(res.data);
+        localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(res.data));
+        setSyncSuccessMsg('¡Datos cargados correctamente desde Supabase Nube!');
+      } else {
+        setSyncSuccessMsg('Conectado a Supabase (no hay semanas en la nube aún).');
+      }
+    } else {
+      setSyncError(res.error || 'Error al conectar con Supabase.');
+    }
+  };
+
+  // Manual Push to Supabase
+  const handlePushToCloud = async () => {
+    if (!supabaseConnected) return;
+    setIsSyncing(true);
+    setSyncError(null);
+    setSyncSuccessMsg(null);
+    const res = await dbSavePlanSemanalWeeksWithStatus(weeks);
+    setIsSyncing(false);
+    if (res.success) {
+      setSyncSuccessMsg('¡Plan Semanal guardado y sincronizado con éxito en Supabase!');
+    } else {
+      setSyncError(res.error || 'Error al guardar en Supabase.');
+    }
+  };
+
+  // Fetch initial data from Supabase on mount
+  useEffect(() => {
+    if (!supabaseConnected) {
+      isCloudInitializedRef.current = true;
+      return;
+    }
 
     let isMounted = true;
-    const fetchCloudWeeks = async () => {
+    const initCloud = async () => {
       setIsSyncing(true);
-      try {
-        const cloudWeeks = await dbFetchPlanSemanalWeeks<SemanaPlan[]>(DEFAULT_WEEKS);
-        if (isMounted && Array.isArray(cloudWeeks) && cloudWeeks.length > 0) {
-          setWeeks(cloudWeeks);
-          localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(cloudWeeks));
+      const res = await dbFetchPlanSemanalWeeksWithStatus<SemanaPlan[]>(DEFAULT_WEEKS);
+      if (!isMounted) return;
+      setIsSyncing(false);
+
+      if (res.success) {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setWeeks(res.data);
+          localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(res.data));
+          setSyncSuccessMsg('Sincronizado con Supabase');
         }
-      } catch (err) {
-        console.warn('Error fetching plan semanal from Supabase:', err);
-      } finally {
-        if (isMounted) setIsSyncing(false);
+      } else {
+        setSyncError(res.error || 'Error de conexión con Supabase');
       }
+      isCloudInitializedRef.current = true;
     };
 
-    fetchCloudWeeks();
+    initCloud();
     return () => { isMounted = false; };
   }, [supabaseConnected]);
 
-  // Persist local and Supabase when weeks change
+  // Persist local and Supabase when weeks change (after initial mount)
   useEffect(() => {
     localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(weeks));
-    if (supabaseConnected) {
-      dbSavePlanSemanalWeeks(weeks).catch(err => {
-        console.warn('Error syncing Plan Semanal to Supabase:', err);
+
+    if (supabaseConnected && isCloudInitializedRef.current) {
+      setIsSyncing(true);
+      dbSavePlanSemanalWeeksWithStatus(weeks).then(res => {
+        setIsSyncing(false);
+        if (res.success) {
+          setSyncError(null);
+          setSyncSuccessMsg('Sincronizado con Supabase');
+        } else {
+          setSyncError(res.error || 'Error al guardar en Supabase');
+        }
       });
     }
   }, [weeks, supabaseConnected]);
@@ -490,13 +556,26 @@ export default function PlanSemanal() {
                 Scouting Agenda
               </span>
               {supabaseConnected ? (
-                <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1" title="Sincronizado automáticamente en la nube con Supabase">
-                  <span className={`w-1.5 h-1.5 rounded-full bg-emerald-400 ${isSyncing ? 'animate-ping' : ''}`}></span>
-                  <span>Supabase Nube</span>
-                </span>
+                syncError ? (
+                  <span className="px-2.5 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1" title={syncError}>
+                    <AlertTriangle className="w-3 h-3 text-rose-400" />
+                    <span>Error Supabase</span>
+                  </span>
+                ) : isSyncing ? (
+                  <span className="px-2.5 py-0.5 bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1">
+                    <RefreshCw className="w-3 h-3 animate-spin text-sky-400" />
+                    <span>Sincronizando...</span>
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1" title="Sincronizado automáticamente en la nube con Supabase">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>Supabase Nube</span>
+                  </span>
+                )
               ) : (
-                <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-mono font-bold rounded-md uppercase">
-                  Almacenamiento Local
+                <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1">
+                  <Info className="w-3 h-3 text-amber-400" />
+                  <span>Sin Supabase (Solo Local)</span>
                 </span>
               )}
             </div>
@@ -509,13 +588,46 @@ export default function PlanSemanal() {
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5 w-full md:w-auto justify-end">
+          {supabaseConnected && (
+            <>
+              <button
+                onClick={handlePullFromCloud}
+                disabled={isSyncing}
+                className="px-3 py-2 text-xs font-mono font-bold text-sky-300 hover:text-white bg-sky-950/50 hover:bg-sky-900/60 border border-sky-800/60 rounded-xl flex items-center space-x-1.5 transition disabled:opacity-50"
+                title="Cargar última versión guardada en Supabase"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Cargar de Nube</span>
+              </button>
+
+              <button
+                onClick={handlePushToCloud}
+                disabled={isSyncing}
+                className="px-3 py-2 text-xs font-mono font-bold text-emerald-300 hover:text-white bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-800/60 rounded-xl flex items-center space-x-1.5 transition disabled:opacity-50"
+                title="Guardar Plan Semanal actual en Supabase Nube"
+              >
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Guardar en Nube</span>
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={() => setIsSqlModalOpen(true)}
+            className="px-3 py-2 text-xs font-mono font-bold text-purple-300 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 rounded-xl flex items-center space-x-1.5 transition"
+            title="Ver o copiar el código SQL para Supabase"
+          >
+            <Database className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline">SQL Supabase</span>
+          </button>
+
           {selectedWeek && (
             <button
               onClick={() => setSelectedWeekId(null)}
               className="px-3.5 py-2 text-xs font-mono font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center space-x-2 transition shadow-md"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Volver a Semanas</span>
+              <span>Volver</span>
             </button>
           )}
 
@@ -547,6 +659,52 @@ export default function PlanSemanal() {
           )}
         </div>
       </div>
+
+      {/* Supabase Banner Warning / Info */}
+      {(!supabaseConnected || syncError) && (
+        <div className="bg-amber-950/40 border border-amber-800/60 rounded-xl p-4 text-xs text-amber-200/90 space-y-2">
+          <div className="flex items-center space-x-2 font-bold text-amber-400 uppercase tracking-wide">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>Sincronización con Vercel y Supabase</span>
+          </div>
+          <p className="leading-relaxed">
+            {!supabaseConnected ? (
+              <>
+                <strong>Supabase no está configurado en las variables de entorno.</strong> Los cambios registrados aquí se guardan de forma local en tu navegador. Para que los datos registrados en AI Studio aparezcan automáticamente en Vercel (y entre diferentes dispositivos), asegúrate de:
+              </>
+            ) : (
+              <>
+                <strong>Hubo un problema al guardar en Supabase:</strong> <code className="bg-amber-900/60 px-1 py-0.5 rounded text-amber-300 font-mono">{syncError}</code>.
+              </>
+            )}
+          </p>
+          <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-amber-300/80">
+            <li>Añadir <span className="text-amber-200 font-bold">VITE_SUPABASE_URL</span> y <span className="text-amber-200 font-bold">VITE_SUPABASE_ANON_KEY</span> en las variables de entorno de tu proyecto en Vercel.</li>
+            <li>Asegurarte de haber creado la tabla <span className="text-amber-200 font-bold">scouting_settings</span> en el Editor SQL de Supabase.</li>
+          </ul>
+          <div className="pt-1 flex items-center space-x-3">
+            <button
+              onClick={() => setIsSqlModalOpen(true)}
+              className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg text-[11px] font-mono font-bold transition flex items-center space-x-1.5"
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>Ver y Copiar Código SQL para Supabase</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {syncSuccessMsg && supabaseConnected && !syncError && (
+        <div className="bg-emerald-950/40 border border-emerald-800/50 rounded-xl p-3 text-xs text-emerald-300 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{syncSuccessMsg}</span>
+          </div>
+          <button onClick={() => setSyncSuccessMsg(null)} className="text-emerald-400/60 hover:text-emerald-200 text-xs font-mono">
+            Cerrar
+          </button>
+        </div>
+      )}
 
       {/* VIEW 1: LIST OF WEEKS (Format requested from screenshot) */}
       {!selectedWeek ? (
@@ -1005,6 +1163,91 @@ export default function PlanSemanal() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* SQL Instructions Modal */}
+      {isSqlModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 bg-purple-500/20 text-purple-400 rounded-lg">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-lg">Sentencia SQL para Supabase</h3>
+                  <p className="text-xs text-slate-400 font-mono">Copia este código y ejecútalo en el Editor SQL de tu proyecto en Supabase</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setIsSqlModalOpen(false); setCopiedSql(false); }}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Esta sentencia crea la tabla <code className="text-purple-300 font-mono font-bold bg-slate-950 px-1 py-0.5 rounded">scouting_settings</code> y configura sus políticas de acceso público para que la agenda del Plan Semanal y las configuraciones de la app se sincronicen en la nube entre AI Studio y Vercel:
+            </p>
+
+            <div className="relative bg-slate-950 rounded-xl p-4 border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto flex-1 max-h-[300px]">
+              <pre>{`CREATE TABLE IF NOT EXISTS scouting_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
+CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
+
+NOTIFY pgrst, 'reload schema';`}</pre>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <div className="text-xs text-slate-400 font-mono">
+                Pasos: Supabase Dashboard &rarr; SQL Editor &rarr; New Query &rarr; Paste &rarr; Run
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sql = `CREATE TABLE IF NOT EXISTS scouting_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
+CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
+
+NOTIFY pgrst, 'reload schema';`;
+                    navigator.clipboard.writeText(sql);
+                    setCopiedSql(true);
+                    setTimeout(() => setCopiedSql(false), 3000);
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center space-x-2 transition shadow-lg shadow-purple-950/40"
+                >
+                  {copiedSql ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                      <span>¡Copiado al Portapapeles!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copiar Código SQL</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

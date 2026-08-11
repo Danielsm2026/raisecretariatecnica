@@ -589,17 +589,79 @@ export async function dbSaveSetting(key: string, value: any): Promise<void> {
 }
 
 /**
+ * Generic setting retriever with detailed status response.
+ */
+export async function dbFetchSettingWithStatus<T>(key: string, defaultValue: T): Promise<{ success: boolean; data: T; error?: string }> {
+  if (!supabase) {
+    return { success: false, data: defaultValue, error: 'Supabase no está configurado en las variables de entorno (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).' };
+  }
+  try {
+    const { data, error } = await supabase
+      .from('scouting_settings')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+
+    if (error) {
+      return { success: false, data: defaultValue, error: error.message || 'Error al consultar la tabla scouting_settings' };
+    }
+    if (!data) {
+      return { success: true, data: defaultValue };
+    }
+    return { 
+      success: true, 
+      data: (data.value !== undefined && data.value !== null) ? (data.value as T) : defaultValue 
+    };
+  } catch (err: any) {
+    return { success: false, data: defaultValue, error: err?.message || 'Error de conexión con Supabase.' };
+  }
+}
+
+/**
+ * Generic setting saver with detailed status response.
+ */
+export async function dbSaveSettingWithStatus(key: string, value: any): Promise<{ success: boolean; error?: string }> {
+  if (!supabase) {
+    return { success: false, error: 'Supabase no está configurado en las variables de entorno.' };
+  }
+  try {
+    const payload = {
+      key,
+      value,
+      updated_at: new Date().toISOString()
+    };
+    await safeUpsert('scouting_settings', payload, 'key');
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error saving setting to Supabase:', err);
+    return { 
+      success: false, 
+      error: err?.message || 'Error al guardar. Revisa que la tabla "scouting_settings" exista en Supabase.' 
+    };
+  }
+}
+
+/**
  * Fetch Plan Semanal weeks from Supabase settings storage.
  */
 export async function dbFetchPlanSemanalWeeks<T = any>(defaultWeeks: T): Promise<T> {
-  return dbFetchSetting<T>('plan_semanal_weeks_v2', defaultWeeks);
+  const res = await dbFetchSettingWithStatus<T>('plan_semanal_weeks_v2', defaultWeeks);
+  return res.data;
+}
+
+export async function dbFetchPlanSemanalWeeksWithStatus<T = any>(defaultWeeks: T): Promise<{ success: boolean; data: T; error?: string }> {
+  return dbFetchSettingWithStatus<T>('plan_semanal_weeks_v2', defaultWeeks);
 }
 
 /**
  * Save Plan Semanal weeks to Supabase settings storage.
  */
 export async function dbSavePlanSemanalWeeks(weeks: any): Promise<void> {
-  await dbSaveSetting('plan_semanal_weeks_v2', weeks);
+  await dbSaveSettingWithStatus('plan_semanal_weeks_v2', weeks);
+}
+
+export async function dbSavePlanSemanalWeeksWithStatus(weeks: any): Promise<{ success: boolean; error?: string }> {
+  return dbSaveSettingWithStatus('plan_semanal_weeks_v2', weeks);
 }
 
 /**
