@@ -669,38 +669,24 @@ export async function dbSavePlanSemanalWeeksWithStatus(weeks: any): Promise<{ su
  * their table automatically.
  */
 export function getSQLInstructions(): string {
-  return `-- Opción A: Si ya tienes las tablas creadas y quieres habilitar las valoraciones físicas, fichajes 2026 y sincronización de campogramas, ejecuta esto en el SQL Editor de Supabase:
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS categoria TEXT;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS valoracion_fisica JSONB;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "valoracionFisica" JSONB;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS fichaje_fecha TEXT;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "fichajeFecha" TEXT;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS fichaje_detalles TEXT;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "fichajeDetalles" TEXT;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS fichaje_origen TEXT;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "fichajeOrigen" TEXT;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS es_fichaje_verano_2026 BOOLEAN;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "esFichajeVerano2026" BOOLEAN;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS besoccer_url TEXT;
-ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "besoccerUrl" TEXT;
-ALTER TABLE scouting_match_reports ADD COLUMN IF NOT EXISTS categoria TEXT;
+  return `-- =====================================================================
+-- ESTRUCTURA COMPLETA Y REPLICACIÓN EN TIEMPO REAL PARA SUPABASE
+-- Sincronización en tiempo real de Campogramas (Primera y Segunda RFEF),
+-- Jugadores, Informes de Partidos y Ajustes para Vercel.
+-- =====================================================================
 
+-- 1. CREAR / ACTUALIZAR TABLA DE AJUSTES Y CAMPOGRAMAS (scouting_settings)
 CREATE TABLE IF NOT EXISTS scouting_settings (
   key TEXT PRIMARY KEY,
   value JSONB NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
+
 ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
 CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
 
--- La tabla 'scouting_settings' guarda la agenda del Plan Semanal (key: 'plan_semanal_weeks_v2'), alineaciones tácticas y preferencias de la app.
-
--- Forzar recarga de cache del esquema en Supabase (PostgREST)
-NOTIFY pgrst, 'reload schema';
-
--- Opción B: Copia y pega esta sentencia para inicializar tus tablas desde cero en el SQL Editor de Supabase:
-
+-- 2. CREAR TABLA DE JUGADORES (scouting_players)
 CREATE TABLE IF NOT EXISTS scouting_players (
   id TEXT PRIMARY KEY,
   nombre TEXT NOT NULL,
@@ -755,14 +741,11 @@ CREATE TABLE IF NOT EXISTS scouting_players (
   "esFichajeVerano2026" BOOLEAN
 );
 
--- Habilitar el acceso anónimo de lectura, escritura y borrado en jugadores
 ALTER TABLE scouting_players ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Permitir todo a usuarios anónimos" ON scouting_players;
-CREATE POLICY "Permitir todo a usuarios anónimos" ON scouting_players
-  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir todo a usuarios anónimos" ON scouting_players FOR ALL USING (true) WITH CHECK (true);
 
--- NUEVA TABLA PARA INFORMES DE PARTIDOS (ACTAS DE ALINEACIÓN TÁCTICA)
+-- 3. CREAR TABLA DE INFORMES DE PARTIDOS / ACTAS (scouting_match_reports)
 CREATE TABLE IF NOT EXISTS scouting_match_reports (
   id TEXT PRIMARY KEY,
   fecha TEXT NOT NULL,
@@ -794,19 +777,31 @@ CREATE TABLE IF NOT EXISTS scouting_match_reports (
   "jugadoresVisitante" JSONB
 );
 
--- Habilitar el acceso anónimo de lectura, escritura y borrado en informes de partidos
 ALTER TABLE scouting_match_reports ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Permitir todo en informes de partidos" ON scouting_match_reports;
-CREATE POLICY "Permitir todo en informes de partidos" ON scouting_match_reports
-  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir todo en informes de partidos" ON scouting_match_reports FOR ALL USING (true) WITH CHECK (true);
 
--- CONFIGURACIÓN DE STORAGE EN SUPABASE (EJECUTA ESTO EN EL SQL EDITOR):
--- INSERT INTO storage.buckets (id, name, public) VALUES ('scouting_assets', 'scouting_assets', true) ON CONFLICT (id) DO NOTHING;
--- CREATE POLICY "Acceso publico lectura" ON storage.objects FOR SELECT USING (bucket_id = 'scouting_assets');
--- CREATE POLICY "Acceso publico insercion" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'scouting_assets');
--- CREATE POLICY "Acceso publico actualizacion" ON storage.objects FOR UPDATE USING (bucket_id = 'scouting_assets') WITH CHECK (bucket_id = 'scouting_assets');
--- CREATE POLICY "Acceso publico borrado" ON storage.objects FOR DELETE USING (bucket_id = 'scouting_assets');
+-- 4. REPLICACIÓN EN TIEMPO REAL (REALTIME) PARA MULTI-USUARIO Y VERCEL
+-- Habilita la difusión automática e instantánea de cambios en campogramas
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'scouting_settings'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE scouting_settings;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'scouting_players'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE scouting_players;
+  END IF;
+END $$;
+
+-- Forzar la recarga del esquema en el motor de API de Supabase (PostgREST)
+NOTIFY pgrst, 'reload schema';
 `;
 }
 
