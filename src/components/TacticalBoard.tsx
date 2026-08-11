@@ -16,8 +16,46 @@ interface TacticalBoardProps {
   onUpdatePlayer?: (player: ScoutedPlayer) => void;
 }
 
-export type CampogramaFolderId = 'mensuales' | 'invierno' | 'verano';
+export type CampogramaFolderId = '1rfef' | '2rfef' | 'mensuales' | 'invierno' | 'verano';
 export type CampogramaSubFolderId = '1rfef' | '2rfef';
+
+export function PrimeraRfefBadgeLogo({ className = "w-14 h-14" }: { className?: string }) {
+  return (
+    <div className={`relative flex flex-col items-center justify-center p-1.5 bg-white rounded-xl shadow-lg border border-slate-300 overflow-hidden shrink-0 ${className}`}>
+      <svg viewBox="0 0 200 220" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="80" r="70" fill="#E30613" />
+        <circle cx="100" cy="80" r="54" stroke="white" strokeWidth="14" fill="none" />
+        <path d="M 46,80 A 54,54 0 0,1 154,80" fill="white" />
+        <circle cx="100" cy="80" r="42" fill="#E30613" />
+        <text x="76" y="74" fill="black" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif">R</text>
+        <text x="110" y="74" fill="black" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif">F</text>
+        <text x="76" y="98" fill="black" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif">E</text>
+        <text x="110" y="98" fill="black" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif">F</text>
+        <text x="100" y="175" textAnchor="middle" fill="#111" fontSize="22" fontWeight="900" fontFamily="Arial Black, Impact, sans-serif" letterSpacing="1">PRIMERA</text>
+        <text x="100" y="200" textAnchor="middle" fill="#111" fontSize="15" fontWeight="900" fontFamily="Arial Black, sans-serif" letterSpacing="2">FEDERACIÓN</text>
+      </svg>
+    </div>
+  );
+}
+
+export function SegundaRfefBadgeLogo({ className = "w-14 h-14" }: { className?: string }) {
+  return (
+    <div className={`relative flex flex-col items-center justify-center p-1.5 bg-white rounded-xl shadow-lg border border-slate-300 overflow-hidden shrink-0 ${className}`}>
+      <svg viewBox="0 0 200 220" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="80" r="70" fill="#00AEEF" />
+        <circle cx="100" cy="80" r="54" stroke="white" strokeWidth="14" fill="none" />
+        <path d="M 46,80 A 54,54 0 0,1 154,80" fill="white" />
+        <circle cx="100" cy="80" r="42" fill="#00AEEF" />
+        <text x="76" y="74" fill="black" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif">R</text>
+        <text x="110" y="74" fill="black" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif">F</text>
+        <text x="76" y="98" fill="black" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif">E</text>
+        <text x="110" y="98" fill="black" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif">F</text>
+        <text x="100" y="175" textAnchor="middle" fill="#111" fontSize="22" fontWeight="900" fontFamily="Arial Black, Impact, sans-serif" letterSpacing="1">SEGUNDA</text>
+        <text x="100" y="200" textAnchor="middle" fill="#111" fontSize="15" fontWeight="900" fontFamily="Arial Black, sans-serif" letterSpacing="2">FEDERACIÓN</text>
+      </svg>
+    </div>
+  );
+}
 
 export interface CampogramaItem {
   id: string;
@@ -48,47 +86,39 @@ interface PitchPosition {
   allowedRoles: string[];
 }
 
-const FOLDERS = [
-  {
-    id: 'mensuales' as const,
-    title: 'Campogramas Mensuales',
-    shortTitle: 'Mensuales',
-    subtitle: 'Seguimiento mensual de plantilla y demanda posicional',
-    icon: Calendar,
-    gradient: 'from-blue-600/20 via-indigo-600/10 to-slate-900',
-    borderColor: 'border-blue-500/30 hover:border-blue-500/60',
-    accentColor: 'text-blue-400',
-    badgeBg: 'bg-blue-950/60 text-blue-300 border-blue-800/40',
-    description: 'Campogramas posicionales actualizados mes a mes para evaluar el progreso y evolución de la cartera.',
-  },
-  {
-    id: 'invierno' as const,
-    title: 'Campograma Invierno',
-    shortTitle: 'Invierno',
-    subtitle: 'Planificación para el mercado de fichajes de invierno',
-    icon: Snowflake,
-    gradient: 'from-cyan-600/20 via-sky-600/10 to-slate-900',
-    borderColor: 'border-cyan-500/30 hover:border-cyan-500/60',
-    accentColor: 'text-cyan-400',
-    badgeBg: 'bg-cyan-950/60 text-cyan-300 border-cyan-800/40',
-    description: 'Alineaciones objetivo y refuerzos prioritarios para la ventana de traspasos invernal.',
-  },
-  {
-    id: 'verano' as const,
-    title: 'Campograma Verano',
-    shortTitle: 'Verano',
-    subtitle: 'Planificación para el mercado de fichajes de verano',
-    icon: Sun,
-    gradient: 'from-amber-600/20 via-orange-600/10 to-slate-900',
-    borderColor: 'border-amber-500/30 hover:border-amber-500/60',
-    accentColor: 'text-amber-400',
-    badgeBg: 'bg-amber-950/60 text-amber-300 border-amber-800/40',
-    description: 'Proyección de plantilla, altas, bajas y sustituciones de cara al mercado estival.',
-  }
-];
-
 const LOGO_PRIMERA_RFEF = 'https://assets.football-logos.cc/logos/spain/1500x1500/primera-federacion--no-text.88bef19f.png';
 const LOGO_SEGUNDA_RFEF = 'https://cdn.resfu.com/media/img/league_logos/segunda_rfef.png?size=120x&lossy=1';
+
+const FOLDERS = [
+  {
+    id: '1rfef' as const,
+    title: 'CAMPOGRAMA PRIMERA RFEF',
+    shortTitle: '1ª RFEF',
+    subtitle: 'Seguimiento y campogramas posicionales de Primera RFEF',
+    icon: Shield,
+    isPrimeraRfef: true,
+    logoImg: LOGO_PRIMERA_RFEF,
+    gradient: 'from-red-950/40 via-red-900/20 to-slate-900',
+    borderColor: 'border-red-500/40 hover:border-red-400',
+    accentColor: 'text-red-400',
+    badgeBg: 'bg-red-950/70 text-red-300 border-red-800/50',
+    description: 'Carpetas de seguimiento posicional, cartera y demandas de plantilla para Primera RFEF.',
+  },
+  {
+    id: '2rfef' as const,
+    title: 'CAMPOGRAMA SEGUNDA RFEF',
+    shortTitle: '2ª RFEF',
+    subtitle: 'Seguimiento y campogramas posicionales de Segunda RFEF',
+    icon: Shield,
+    isSegundaRfef: true,
+    logoImg: LOGO_SEGUNDA_RFEF,
+    gradient: 'from-cyan-950/40 via-cyan-900/20 to-slate-900',
+    borderColor: 'border-cyan-500/40 hover:border-cyan-400',
+    accentColor: 'text-cyan-400',
+    badgeBg: 'bg-cyan-950/70 text-cyan-300 border-cyan-800/50',
+    description: 'Carpetas de seguimiento posicional, cartera y promesas monitorizadas en Segunda RFEF.',
+  }
+];
 
 const SUBFOLDERS_MENSUALES = [
   {
@@ -1250,39 +1280,64 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         </div>
 
         {/* Folders Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {FOLDERS.map((f) => {
             const Icon = f.icon;
-            const itemsInFolder = campogramas.filter(c => c.folderId === f.id);
+            const itemsInFolder = campogramas.filter((c: CampogramaItem) => {
+              const fId = c.folderId as string;
+              const subId = c.subFolderId as string;
+              if (f.id === '1rfef') {
+                return fId === '1rfef' || subId === '1rfef' || (fId === 'mensuales' && (subId || '1rfef') === '1rfef') || fId === 'invierno' || fId === 'verano';
+              }
+              if (f.id === '2rfef') {
+                return fId === '2rfef' || subId === '2rfef' || (fId === 'mensuales' && subId === '2rfef');
+              }
+              return false;
+            });
             return (
               <div
                 key={f.id}
-                onClick={() => setCurrentFolder(f.id)}
-                className={`bg-gradient-to-b ${f.gradient} border ${f.borderColor} rounded-xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden`}
+                onClick={() => {
+                  setCurrentFolder(f.id);
+                  if (f.id === '1rfef' || f.id === '2rfef') {
+                    setCurrentSubFolder(f.id as CampogramaSubFolderId);
+                  }
+                }}
+                className={`bg-gradient-to-b ${f.gradient} border ${f.borderColor} rounded-2xl p-7 shadow-2xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden`}
               >
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center ${f.accentColor} group-hover:scale-110 transition-transform`}>
-                      <Icon className="w-6 h-6" />
+                  <div className="flex items-start justify-between gap-4 mb-5">
+                    <div className="flex items-center space-x-4">
+                      {f.isPrimeraRfef ? (
+                        <PrimeraRfefBadgeLogo className="w-16 h-16 group-hover:scale-105 transition-transform" />
+                      ) : f.isSegundaRfef ? (
+                        <SegundaRfefBadgeLogo className="w-16 h-16 group-hover:scale-105 transition-transform" />
+                      ) : f.logoImg ? (
+                        <img src={f.logoImg} alt={f.title} className="w-16 h-16 object-contain rounded-xl border border-slate-700 bg-white p-1 shadow-md group-hover:scale-105 transition-transform shrink-0" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className={`w-14 h-14 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center ${f.accentColor} group-hover:scale-105 transition-transform`}>
+                          <Icon className="w-7 h-7" />
+                        </div>
+                      )}
                     </div>
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full border ${f.badgeBg}`}>
+                    <span className={`text-[11px] font-mono font-bold uppercase px-3 py-1 rounded-full border shadow-sm ${f.badgeBg}`}>
                       {itemsInFolder.length} {itemsInFolder.length === 1 ? 'Campograma' : 'Campogramas'}
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-bold font-display text-white group-hover:text-blue-300 transition-colors uppercase tracking-wide">
+                  <h3 className="text-xl font-black font-display text-white group-hover:text-blue-300 transition-colors uppercase tracking-wider">
                     {f.title}
                   </h3>
-                  <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                  <p className="text-xs text-slate-300 mt-2.5 leading-relaxed font-sans">
                     {f.description}
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono font-bold">
-                  <span className={`${f.accentColor} flex items-center space-x-1`}>
-                    <span>Entrar a carpeta</span>
+                <div className="mt-8 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono font-bold">
+                  <span className={`${f.accentColor} flex items-center space-x-1.5 text-xs uppercase tracking-wider`}>
+                    <span>Entrar a la carpeta</span>
                   </span>
-                  <ChevronRight className={`w-4 h-4 ${f.accentColor} group-hover:translate-x-1 transition-transform`} />
+                  <ChevronRight className={`w-5 h-5 ${f.accentColor} group-hover:translate-x-1.5 transition-transform`} />
                 </div>
               </div>
             );
@@ -1483,17 +1538,31 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     ? MONTH_FOLDERS.find(m => m.id === currentMonthFolder)
     : null;
 
-  const folderItems = campogramas.filter(c => {
-    if (c.folderId !== currentFolder) return false;
+  const folderItems = campogramas.filter((c: CampogramaItem) => {
+    const fId = c.folderId as string;
+    const subId = c.subFolderId as string;
+    if (currentFolder === '1rfef') {
+      const is1 = fId === '1rfef' || subId === '1rfef' || (fId === 'mensuales' && (subId || '1rfef') === '1rfef') || fId === 'invierno' || fId === 'verano';
+      if (!is1) return false;
+      if (currentMonthFolder) return (c.monthFolderId || 'agosto') === currentMonthFolder;
+      return true;
+    }
+    if (currentFolder === '2rfef') {
+      const is2 = fId === '2rfef' || subId === '2rfef' || (fId === 'mensuales' && subId === '2rfef');
+      if (!is2) return false;
+      if (currentMonthFolder) return (c.monthFolderId || 'agosto') === currentMonthFolder;
+      return true;
+    }
+    if (fId !== currentFolder) return false;
     if (currentFolder === 'mensuales') {
-      if ((c.subFolderId || '1rfef') !== (currentSubFolder || '1rfef')) return false;
+      if ((subId || '1rfef') !== (currentSubFolder || '1rfef')) return false;
       return (c.monthFolderId || 'agosto') === (currentMonthFolder || 'agosto');
     }
     return true;
   });
 
   if (activeCampogramaId === null) {
-    const Icon = folderInfo.icon;
+    const Icon = folderInfo ? folderInfo.icon : Shield;
     return (
       <>
       <div className="space-y-6">
@@ -1502,14 +1571,15 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           <div className="flex items-center space-x-3">
             <button
               onClick={() => {
-                if (currentFolder === 'mensuales') {
+                if (currentMonthFolder) {
                   setCurrentMonthFolder(null);
                 } else {
                   setCurrentFolder(null);
+                  setCurrentSubFolder(null);
                 }
               }}
               className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-950 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
-              title={currentFolder === 'mensuales' ? 'Volver a Carpetas de Meses' : 'Volver a Carpetas'}
+              title="Volver a Carpetas Principal"
             >
               <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
             </button>
@@ -1518,7 +1588,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-400 uppercase">
                 <span>Carpetas</span>
                 <span>/</span>
-                <span>{folderInfo.title}</span>
+                <span>{folderInfo?.title || 'Campograma'}</span>
                 {currentSubFolderObj && (
                   <>
                     <span>/</span>
@@ -1532,8 +1602,18 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   </>
                 )}
               </div>
-              <h1 className="text-xl font-black font-display text-white uppercase tracking-wider flex items-center gap-2 mt-0.5">
-                {currentSubFolderObj ? (
+              <h1 className="text-xl font-black font-display text-white uppercase tracking-wider flex items-center gap-3 mt-1">
+                {folderInfo?.isPrimeraRfef ? (
+                  <>
+                    <PrimeraRfefBadgeLogo className="w-10 h-10 shrink-0" />
+                    <span>{folderInfo.title}</span>
+                  </>
+                ) : folderInfo?.isSegundaRfef ? (
+                  <>
+                    <SegundaRfefBadgeLogo className="w-10 h-10 shrink-0" />
+                    <span>{folderInfo.title}</span>
+                  </>
+                ) : currentSubFolderObj ? (
                   <>
                     {currentSubFolderObj.logoImg ? (
                       <img src={currentSubFolderObj.logoImg} alt={currentSubFolderObj.title} className="w-8 h-8 object-contain rounded-lg border border-slate-700 bg-slate-950 p-0.5 shadow-md shrink-0" referrerPolicy="no-referrer" />
@@ -1544,8 +1624,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   </>
                 ) : (
                   <>
-                    <Icon className={`w-5 h-5 ${folderInfo.accentColor}`} />
-                    <span>{folderInfo.title}</span>
+                    <Icon className={`w-5 h-5 ${folderInfo?.accentColor || 'text-blue-400'}`} />
+                    <span>{folderInfo?.title || 'Campograma'}</span>
                   </>
                 )}
               </h1>

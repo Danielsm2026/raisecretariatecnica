@@ -24,7 +24,7 @@ import {
 interface HomeViewProps {
   players: ScoutedPlayer[];
   matchReports: MatchReport[];
-  setActiveTab: (tab: 'inicio' | 'plan_semanal' | 'players' | 'matchReports' | 'teams' | 'data_reports') => void;
+  setActiveTab: (tab: 'inicio' | 'plan_semanal' | 'players' | 'matchReports' | 'teams' | 'tactical' | 'data_reports') => void;
   onAddPlayer: () => void;
 }
 
@@ -112,6 +112,18 @@ export default function HomeView({ players, matchReports, setActiveTab, onAddPla
       borderColor: 'border-amber-500/30 hover:border-amber-400',
       iconColor: 'text-amber-400',
       badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+    },
+    {
+      id: 'tactical' as const,
+      title: 'Campograma',
+      subtitle: 'PIZARRA TÁCTICA',
+      badge: '1ª RFEF & 2ª RFEF',
+      description: 'Sección con carpetas oficiales: CAMPOGRAMA PRIMERA RFEF y CAMPOGRAMA SEGUNDA RFEF. Configura alineaciones, tácticas y rotaciones.',
+      icon: Layout,
+      color: 'from-purple-500/20 to-pink-500/10',
+      borderColor: 'border-purple-500/30 hover:border-purple-400',
+      iconColor: 'text-purple-400',
+      badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
     },
     {
       id: 'data_reports' as const,
