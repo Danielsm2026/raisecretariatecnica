@@ -49,8 +49,13 @@ export interface SemanaPlan {
   nombre: string; // e.g. "Semana_01"
   fechaInicio: string; // e.g. "25-08-25"
   fechaFin: string; // e.g. "31-08-25"
-  filename: string; // e.g. "Semana_01 del 25-08-25 al 31-08-25.docx"
+  filename: string; // e.g. "Semana_01 del 25-08-25 al 31-08-25"
   partidos: PlanSemanalMatch[];
+}
+
+export function cleanWeekTitle(str?: string): string {
+  if (!str) return '';
+  return str.replace(/\.(docx?|pdf|xlsx?|txt)$/i, '').trim();
 }
 
 const INITIAL_SAMPLE_MATCHES: PlanSemanalMatch[] = [
@@ -117,7 +122,7 @@ const DEFAULT_WEEKS: SemanaPlan[] = [
     nombre: 'Semana_04',
     fechaInicio: '15-09-25',
     fechaFin: '21-09-25',
-    filename: 'Semana_04 del 15-09-25 al 21-09-25.docx',
+    filename: 'Semana_04 del 15-09-25 al 21-09-25',
     partidos: [
       {
         id: 'sem04_1',
@@ -137,7 +142,7 @@ const DEFAULT_WEEKS: SemanaPlan[] = [
     nombre: 'Semana_03',
     fechaInicio: '08-09-25',
     fechaFin: '14-09-25',
-    filename: 'Semana_03 del 08-09-25 al 14-09-25.docx',
+    filename: 'Semana_03 del 08-09-25 al 14-09-25',
     partidos: [
       {
         id: 'sem03_1',
@@ -157,7 +162,7 @@ const DEFAULT_WEEKS: SemanaPlan[] = [
     nombre: 'Semana_02',
     fechaInicio: '01-09-25',
     fechaFin: '07-09-25',
-    filename: 'Semana_02 del 01-09-25 al 07-09-25.docx',
+    filename: 'Semana_02 del 01-09-25 al 07-09-25',
     partidos: []
   },
   {
@@ -165,7 +170,7 @@ const DEFAULT_WEEKS: SemanaPlan[] = [
     nombre: 'Semana_01',
     fechaInicio: '25-08-25',
     fechaFin: '31-08-25',
-    filename: 'Semana_01 del 25-08-25 al 31-08-25.docx',
+    filename: 'Semana_01 del 25-08-25 al 31-08-25',
     partidos: []
   },
   {
@@ -173,7 +178,7 @@ const DEFAULT_WEEKS: SemanaPlan[] = [
     nombre: 'Semana_41',
     fechaInicio: '08-06-26',
     fechaFin: '14-06-26',
-    filename: 'Semana_41 del 08-06-26 al 14-06-26.docx',
+    filename: 'Semana_41 del 08-06-26 al 14-06-26',
     partidos: INITIAL_SAMPLE_MATCHES
   }
 ];
@@ -213,12 +218,15 @@ export default function PlanSemanal() {
     const saved = localStorage.getItem('plan_semanal_weeks_v2');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map(w => ({ ...w, filename: cleanWeekTitle(w.filename) }));
+        }
       } catch (e) {
         console.error('Error loading weeks:', e);
       }
     }
-    return DEFAULT_WEEKS;
+    return DEFAULT_WEEKS.map(w => ({ ...w, filename: cleanWeekTitle(w.filename) }));
   });
 
   const [supabaseConnected] = useState<boolean>(isSupabaseConfigured());
@@ -275,8 +283,9 @@ export default function PlanSemanal() {
     setIsSyncing(false);
     if (res.success) {
       if (Array.isArray(res.data) && res.data.length > 0) {
-        setWeeks(res.data);
-        localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(res.data));
+        const cleanedData = res.data.map(w => ({ ...w, filename: cleanWeekTitle(w.filename) }));
+        setWeeks(cleanedData);
+        localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(cleanedData));
         setSyncSuccessMsg('¡Datos cargados correctamente desde Supabase Nube!');
       } else {
         setSyncSuccessMsg('Conectado a Supabase (no hay semanas en la nube aún).');
@@ -317,8 +326,9 @@ export default function PlanSemanal() {
 
       if (res.success) {
         if (Array.isArray(res.data) && res.data.length > 0) {
-          setWeeks(res.data);
-          localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(res.data));
+          const cleanedData = res.data.map(w => ({ ...w, filename: cleanWeekTitle(w.filename) }));
+          setWeeks(cleanedData);
+          localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(cleanedData));
           setSyncSuccessMsg('Sincronizado con Supabase');
         }
       } else {
@@ -377,7 +387,7 @@ export default function PlanSemanal() {
     setConfirmModal({
       isOpen: true,
       title: 'Eliminar Semana del Plan',
-      message: `¿Seguro que deseas eliminar "${sem?.nombre || sem?.filename || 'esta semana'}"? Se eliminarán todos los partidos asociados a esta semana.`,
+      message: `¿Seguro que deseas eliminar "${sem?.nombre || cleanWeekTitle(sem?.filename) || 'esta semana'}"? Se eliminarán todos los partidos asociados a esta semana.`,
       onConfirm: () => {
         setWeeks(prev => prev.filter(w => w.id !== semId));
         if (selectedWeekId === semId) setSelectedWeekId(null);
@@ -390,7 +400,7 @@ export default function PlanSemanal() {
     const nombreClean = formNombreSemana.trim() || 'Semana_Nueva';
     const inicioClean = formFechaInicio.trim() || '01-01-26';
     const finClean = formFechaFin.trim() || '07-01-26';
-    const filenameClean = `${nombreClean} del ${inicioClean} al ${finClean}.docx`;
+    const filenameClean = `${nombreClean} del ${inicioClean} al ${finClean}`;
 
     if (editingWeek) {
       setWeeks(prev => prev.map(w => w.id === editingWeek.id ? {
@@ -570,7 +580,7 @@ export default function PlanSemanal() {
   };
 
   const filteredWeeks = weeks.filter(w => 
-    w.filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cleanWeekTitle(w.filename).toLowerCase().includes(searchTerm.toLowerCase()) ||
     w.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -616,7 +626,7 @@ export default function PlanSemanal() {
             </div>
             <p className="text-xs text-slate-400 font-mono mt-0.5">
               {selectedWeek 
-                ? `Mostrando detalles de la agenda: ${selectedWeek.filename}`
+                ? `Mostrando detalles de la agenda: ${cleanWeekTitle(selectedWeek.filename)}`
                 : 'Registro general de archivos y semanas de seguimiento técnico'}
             </p>
           </div>
@@ -624,37 +634,16 @@ export default function PlanSemanal() {
 
         <div className="flex items-center flex-wrap gap-2.5 w-full md:w-auto justify-end">
           {supabaseConnected && (
-            <>
-              <button
-                onClick={handlePullFromCloud}
-                disabled={isSyncing}
-                className="px-3 py-2 text-xs font-mono font-bold text-sky-300 hover:text-white bg-sky-950/50 hover:bg-sky-900/60 border border-sky-800/60 rounded-xl flex items-center space-x-1.5 transition disabled:opacity-50"
-                title="Cargar última versión guardada en Supabase"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Cargar de Nube</span>
-              </button>
-
-              <button
-                onClick={handlePushToCloud}
-                disabled={isSyncing}
-                className="px-3 py-2 text-xs font-mono font-bold text-emerald-300 hover:text-white bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-800/60 rounded-xl flex items-center space-x-1.5 transition disabled:opacity-50"
-                title="Guardar Plan Semanal actual en Supabase Nube"
-              >
-                <UploadCloud className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Guardar en Nube</span>
-              </button>
-            </>
+            <button
+              onClick={handlePushToCloud}
+              disabled={isSyncing}
+              className="px-3 py-2 text-xs font-mono font-bold text-emerald-300 hover:text-white bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-800/60 rounded-xl flex items-center space-x-1.5 transition disabled:opacity-50"
+              title="Guardar Plan Semanal actual en Supabase Nube"
+            >
+              <UploadCloud className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Guardar en Nube</span>
+            </button>
           )}
-
-          <button
-            onClick={() => setIsSqlModalOpen(true)}
-            className="px-3 py-2 text-xs font-mono font-bold text-purple-300 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 rounded-xl flex items-center space-x-1.5 transition"
-            title="Ver o copiar el código SQL para Supabase"
-          >
-            <Database className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden sm:inline">SQL Supabase</span>
-          </button>
 
           {selectedWeek && (
             <button
@@ -665,15 +654,6 @@ export default function PlanSemanal() {
               <span>Volver</span>
             </button>
           )}
-
-          <button
-            onClick={handleReset}
-            className="px-3 py-2 text-xs font-mono font-bold text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center space-x-1.5 transition"
-            title="Restaurar semanas predeterminadas"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Restaurar</span>
-          </button>
 
           {!selectedWeek ? (
             <button
@@ -778,7 +758,7 @@ export default function PlanSemanal() {
 
                     <div className="min-w-0">
                       <h3 className="text-sm sm:text-base font-semibold text-slate-200 group-hover:text-white font-sans truncate tracking-tight">
-                        {sem.filename}
+                        {cleanWeekTitle(sem.filename)}
                       </h3>
                       <div className="flex items-center space-x-3 text-[11px] font-mono text-slate-400 mt-0.5">
                         <span className="text-blue-400 font-bold">{sem.nombre}</span>
@@ -840,7 +820,7 @@ export default function PlanSemanal() {
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-extrabold text-white tracking-wide font-sans">
-                  {selectedWeek.filename}
+                  {cleanWeekTitle(selectedWeek.filename)}
                 </h3>
                 <p className="text-xs font-mono text-slate-400">
                   Semana del <span className="text-blue-400">{selectedWeek.fechaInicio}</span> al <span className="text-blue-400">{selectedWeek.fechaFin}</span>
@@ -1029,8 +1009,8 @@ export default function PlanSemanal() {
               </div>
 
               <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg text-[11px] font-mono text-slate-400">
-                <span className="text-blue-400 font-bold block mb-1">Formato de archivo generado:</span>
-                {`${formNombreSemana.trim() || 'Semana_XX'} del ${formFechaInicio.trim() || 'DD-MM-YY'} al ${formFechaFin.trim() || 'DD-MM-YY'}.docx`}
+                <span className="text-blue-400 font-bold block mb-1">Nombre generado:</span>
+                {`${formNombreSemana.trim() || 'Semana_XX'} del ${formFechaInicio.trim() || 'DD-MM-YY'} al ${formFechaFin.trim() || 'DD-MM-YY'}`}
               </div>
 
               <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-800">
