@@ -617,6 +617,45 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     e.target.value = '';
   };
 
+  const [showQuickAddPlayerModal, setShowQuickAddPlayerModal] = useState(false);
+  const [quickPlayerName, setQuickPlayerName] = useState('');
+  const [quickPlayerTeam, setQuickPlayerTeam] = useState('');
+  const [quickPlayerCategory, setQuickPlayerCategory] = useState('Primera RFEF');
+  const [quickPlayerPos, setQuickPlayerPos] = useState('Mediocentro');
+  const [quickPlayerYear, setQuickPlayerYear] = useState('2001');
+  const [quickPlayerFoot, setQuickPlayerFoot] = useState('Diestro');
+  const [quickPlayerRec, setQuickPlayerRec] = useState('SEGUIR');
+  const [quickPlayerRating, setQuickPlayerRating] = useState('7');
+
+  const handleCreateQuickPlayer = () => {
+    if (!quickPlayerName.trim()) {
+      showNotification('Escribe el nombre del jugador para crearlo', 'error');
+      return;
+    }
+
+    const newPlayerPayload: Omit<ScoutedPlayer, 'id' | 'fechaRegistro'> = {
+      nombre: quickPlayerName.trim(),
+      equipo: quickPlayerTeam.trim() || 'Sin Equipo',
+      categoria: quickPlayerCategory,
+      posicion: quickPlayerPos,
+      anoNacimiento: Number(quickPlayerYear) || 2000,
+      lateralidad: quickPlayerFoot,
+      calificacion: Number(quickPlayerRating) || 7,
+      recomendacion: quickPlayerRec,
+      notas: 'Creado desde el Campograma Táctico y sincronizado en Supabase',
+      atributos: { fisico: 7, tecnica: 7, tactica: 7, mental: 7 }
+    };
+
+    if (onUpdatePlayer) {
+      onUpdatePlayer(newPlayerPayload as ScoutedPlayer);
+      showNotification(`Jugador "${quickPlayerName}" guardado y registrado en Supabase.`, 'success');
+    }
+
+    setShowQuickAddPlayerModal(false);
+    setQuickPlayerName('');
+    setQuickPlayerTeam('');
+  };
+
   // Active Campograma helper
   const activeCamp = campogramas.find(c => c.id === activeCampogramaId) || null;
 
@@ -1930,9 +1969,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 <Users className="w-4 h-4 text-blue-400" />
                 <span>Plantilla Ojeada</span>
               </h3>
-              <span className="text-[10px] bg-slate-950 px-2 py-0.5 border border-slate-800 rounded-full font-mono text-slate-400">
-                {players.length} Total
-              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowQuickAddPlayerModal(true)}
+                  className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-mono font-bold flex items-center gap-1 shadow transition-all cursor-pointer"
+                  title="Añadir un nuevo jugador a Supabase y la plantilla"
+                >
+                  <UserPlus className="w-3 h-3" />
+                  <span>+ Nuevo</span>
+                </button>
+                <span className="text-[10px] bg-slate-950 px-2 py-0.5 border border-slate-800 rounded-full font-mono text-slate-400">
+                  {players.length} Total
+                </span>
+              </div>
             </div>
             <p className="text-[11px] text-slate-400 leading-tight mb-3">
               Arrastra un jugador hacia un círculo del campo o pulsa el círculo para elegirlo directamente.
@@ -2345,6 +2394,159 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       </div>
 
       </div>
+
+      {/* Modal: Quick Add Player to Database & Campograma */}
+      {showQuickAddPlayerModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold font-display uppercase tracking-wide text-white flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-blue-400" />
+                <span>Añadir Jugador a Cartera (Supabase)</span>
+              </h3>
+              <button
+                onClick={() => setShowQuickAddPlayerModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs font-mono">
+              <div>
+                <label className="block text-[10px] text-slate-400 uppercase mb-1">Nombre Completo / Apodo *</label>
+                <input
+                  type="text"
+                  placeholder="Ej. Lucas Pérez"
+                  value={quickPlayerName}
+                  onChange={(e) => setQuickPlayerName(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-400 uppercase mb-1">Equipo Actual</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Deportivo de La Coruña"
+                    value={quickPlayerTeam}
+                    onChange={(e) => setQuickPlayerTeam(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 uppercase mb-1">Categoría</label>
+                  <select
+                    value={quickPlayerCategory}
+                    onChange={(e) => setQuickPlayerCategory(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="Primera RFEF">Primera RFEF</option>
+                    <option value="Segunda RFEF">Segunda RFEF</option>
+                    <option value="LaLiga Hypermotion">LaLiga Hypermotion</option>
+                    <option value="Tercera RFEF">Tercera RFEF</option>
+                    <option value="Internacional">Internacional</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-400 uppercase mb-1">Posición Principal</label>
+                  <select
+                    value={quickPlayerPos}
+                    onChange={(e) => setQuickPlayerPos(e.target.value)}
+                    className="w-full px-2 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-[11px]"
+                  >
+                    <option value="Portero">Portero</option>
+                    <option value="Defensa Central">Defensa Central</option>
+                    <option value="Lateral Derecho">Lateral Derecho</option>
+                    <option value="Lateral Izquierdo">Lateral Izquierdo</option>
+                    <option value="Mediocentro Defensivo">Mediocentro Defensivo</option>
+                    <option value="Mediocentro">Mediocentro</option>
+                    <option value="Mediapunta">Mediapunta</option>
+                    <option value="Extremo Derecho">Extremo Derecho</option>
+                    <option value="Extremo Izquierdo">Extremo Izquierdo</option>
+                    <option value="Delantero Centro">Delantero Centro</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 uppercase mb-1">Año Nacimiento</label>
+                  <input
+                    type="number"
+                    value={quickPlayerYear}
+                    onChange={(e) => setQuickPlayerYear(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 uppercase mb-1">Lateralidad</label>
+                  <select
+                    value={quickPlayerFoot}
+                    onChange={(e) => setQuickPlayerFoot(e.target.value)}
+                    className="w-full px-2 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-[11px]"
+                  >
+                    <option value="Diestro">Diestro</option>
+                    <option value="Zurdo">Zurdo</option>
+                    <option value="Ambidextro">Ambidextro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-400 uppercase mb-1">Valoración / Dictamen</label>
+                  <select
+                    value={quickPlayerRec}
+                    onChange={(e) => setQuickPlayerRec(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="FIRMAR">⭐ FIRMAR / CONTRATAR</option>
+                    <option value="SEGUIR">👀 SEGUIR</option>
+                    <option value="INTERESANTE">💡 EVALUAR / INTERESANTE</option>
+                    <option value="DESCARTAR">❌ DESCARTAR</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 uppercase mb-1">Nota (1 - 10)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={quickPlayerRating}
+                    onChange={(e) => setQuickPlayerRating(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowQuickAddPlayerModal(false)}
+                className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-400 hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateQuickPlayer}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg transition-all"
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>Guardar en Supabase</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {renderConfirmationModal()}
     </>
   );
