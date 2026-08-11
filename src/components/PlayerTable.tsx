@@ -528,7 +528,7 @@ export default function PlayerTable({
 
       {/* Actual Players Table */}
       <div className="overflow-x-auto flex-1">
-        <table id="players-database-table" className="w-full border-collapse text-left text-sm text-slate-300">
+        <table id="players-database-table" className="w-full border-collapse text-left text-xs sm:text-sm text-slate-300 min-w-[850px]">
           <thead className="bg-slate-800/50 sticky top-0 border-b border-slate-700 z-10 text-slate-400 uppercase text-[10px] tracking-widest font-bold">
             <tr>
               <th 

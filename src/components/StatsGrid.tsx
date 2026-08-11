@@ -42,7 +42,7 @@ export default function StatsGrid({ players }: StatsGridProps) {
   const ambiPct = total > 0 ? Math.round((feetDistribution.Ambidiestro / total) * 100) : 0;
 
   return (
-    <div id="stats-dashboard-grid" className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div id="stats-dashboard-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
       {/* Stat 1: Total Players */}
       <div id="stat-card-total" className="bg-slate-900 p-4 rounded-lg border border-slate-800 shadow-sm flex items-center justify-between">
         <div>

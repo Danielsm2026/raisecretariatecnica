@@ -1503,7 +1503,7 @@ export default function App() {
 
             {/* Match Reports List/Table */}
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-xs font-mono">
+              <table className="w-full border-collapse text-left text-xs font-mono min-w-[700px]">
                 <thead className="bg-slate-950/60 uppercase font-bold text-[9px] tracking-wider text-slate-400 border-b border-slate-800">
                   <tr>
                     <th className="px-4 py-3 text-center w-36">Fecha</th>
