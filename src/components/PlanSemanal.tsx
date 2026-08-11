@@ -41,7 +41,7 @@ export interface PlanSemanalMatch {
   grupo: string; // e.g. 'PLAYOFF ASCENSO'
   scout: string; // e.g. 'MIGUEL/ANTONIO'
   modalidad: 'DIRECTO' | 'VÍDEO' | 'TELEVISIÓN';
-  acreditaciones: 'CONFIRMADA' | 'PENDIENTE' | 'SOLICITADA' | 'NO REQUERIDA' | 'DENEGADA';
+  acreditaciones: 'SOLICITAR' | 'SOLICITADA' | 'CONFIRMADA' | 'DENEGADA';
 }
 
 export interface SemanaPlan {
@@ -68,7 +68,7 @@ const INITIAL_SAMPLE_MATCHES: PlanSemanalMatch[] = [
     grupo: 'SEGUNDA RFEF',
     scout: 'ANTONIO',
     modalidad: 'VÍDEO',
-    acreditaciones: 'NO REQUERIDA'
+    acreditaciones: 'SOLICITADA'
   },
   {
     id: 'plan_3',
@@ -112,7 +112,7 @@ const INITIAL_SAMPLE_MATCHES: PlanSemanalMatch[] = [
     grupo: 'PLAYOFF ASCENSO',
     scout: 'ANTONIO',
     modalidad: 'DIRECTO',
-    acreditaciones: 'PENDIENTE'
+    acreditaciones: 'SOLICITAR'
   }
 ];
 
@@ -546,22 +546,22 @@ export default function PlanSemanal() {
 
   const getAcreditacionBadge = (status: PlanSemanalMatch['acreditaciones']) => {
     switch (status) {
-      case 'CONFIRMADA':
-        return (
-          <span className="inline-block bg-[#00e600] text-slate-950 font-black px-2.5 py-0.5 text-[11px] sm:text-xs rounded-xs uppercase tracking-wider shadow-sm">
-            CONFIRMADA
-          </span>
-        );
-      case 'PENDIENTE':
+      case 'SOLICITAR':
         return (
           <span className="inline-block bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 text-[11px] sm:text-xs rounded-xs uppercase tracking-wider shadow-sm">
-            PENDIENTE
+            SOLICITAR
           </span>
         );
       case 'SOLICITADA':
         return (
           <span className="inline-block bg-sky-400 text-slate-950 font-black px-2.5 py-0.5 text-[11px] sm:text-xs rounded-xs uppercase tracking-wider shadow-sm">
             SOLICITADA
+          </span>
+        );
+      case 'CONFIRMADA':
+        return (
+          <span className="inline-block bg-[#00e600] text-slate-950 font-black px-2.5 py-0.5 text-[11px] sm:text-xs rounded-xs uppercase tracking-wider shadow-sm">
+            CONFIRMADA
           </span>
         );
       case 'DENEGADA':
@@ -589,6 +589,15 @@ export default function PlanSemanal() {
       {/* Header Banner */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
+          {selectedWeek && (
+            <button
+              onClick={() => setSelectedWeekId(null)}
+              className="w-10 h-10 rounded-full bg-slate-950 border border-slate-700/80 hover:border-blue-500/80 hover:bg-slate-800 text-blue-400 hover:text-blue-300 flex items-center justify-center transition shadow-lg shrink-0 group"
+              title="Volver a la pantalla anterior"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+            </button>
+          )}
           <div className="p-3.5 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 shadow-inner">
             <Calendar className="w-7 h-7" />
           </div>
@@ -815,6 +824,13 @@ export default function PlanSemanal() {
           {/* Week Info Banner */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setSelectedWeekId(null)}
+                className="w-10 h-10 rounded-full bg-slate-950 border border-slate-700/80 hover:border-blue-500/80 hover:bg-slate-800 text-blue-400 hover:text-blue-300 flex items-center justify-center transition shadow-md shrink-0 group"
+                title="Volver a la pantalla anterior"
+              >
+                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+              </button>
               <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
                 <FileText className="w-5 h-5 text-blue-400" />
               </div>
@@ -1153,10 +1169,9 @@ export default function PlanSemanal() {
                     onChange={(e) => setFormAcreditaciones(e.target.value as PlanSemanalMatch['acreditaciones'])}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase font-mono font-bold text-blue-400"
                   >
-                    <option value="CONFIRMADA">CONFIRMADA</option>
-                    <option value="PENDIENTE">PENDIENTE</option>
+                    <option value="SOLICITAR">SOLICITAR</option>
                     <option value="SOLICITADA">SOLICITADA</option>
-                    <option value="NO REQUERIDA">NO REQUERIDA</option>
+                    <option value="CONFIRMADA">CONFIRMADA</option>
                     <option value="DENEGADA">DENEGADA</option>
                   </select>
                 </div>
