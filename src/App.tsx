@@ -273,6 +273,7 @@ export default function App() {
             }
           }
           if (teamName.toLowerCase().includes('pontevedra')) {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
