@@ -15,15 +15,31 @@ import {
   Eye, 
   ExternalLink,
   PlusCircle,
-  Video
+  Video,
+  Database,
+  Upload,
+  Copy,
+  Check,
+  Loader2,
+  FileVideo,
+  RefreshCw,
+  Code2
 } from 'lucide-react';
+import { 
+  dbFetchVideos, 
+  dbSaveVideo, 
+  dbDeleteVideo, 
+  dbUploadVideoFile, 
+  isSupabaseConfigured, 
+  GET_SUPABASE_VIDEOS_SQL 
+} from '../utils/supabaseClient';
 
 interface VideoLibraryProps {
   players: ScoutedPlayer[];
   showNotification: (message: string, type?: 'success' | 'info' | 'error') => void;
 }
 
-// Initial demo videos
+// Initial demo videos fallback
 const INITIAL_VIDEOS: VideoItem[] = [
   {
     id: 'v1',
@@ -61,6 +77,13 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
   const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null);
   const [videoToDelete, setVideoToDelete] = useState<VideoItem | null>(null);
   
+  // Loading & Sync States
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
+  const [isTableMissing, setIsTableMissing] = useState(false);
+
   // Form states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<VideoItem | null>(null);
@@ -69,6 +92,8 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
   const [formDescripcion, setFormDescripcion] = useState('');
   const [formCategoria, setFormCategoria] = useState('Análisis Individual');
   const [formJugadorId, setFormJugadorId] = useState('');
+  const [sourceType, setSourceType] = useState<'youtube' | 'file'>('youtube');
+  const [isUploading, setIsUploading] = useState(false);
 
   // Categories list
   const CATEGORIES = [
@@ -81,22 +106,56 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
     'Otros'
   ];
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedVideos = localStorage.getItem('scouting_videoteca_db');
-    if (savedVideos) {
+  // Fetch videos from Supabase or localStorage on mount
+  const loadVideosFromSource = async () => {
+    setIsLoading(true);
+    if (isSupabaseConfigured()) {
       try {
-        setVideos(JSON.parse(savedVideos));
-      } catch (err) {
-        setVideos(INITIAL_VIDEOS);
+        const { videos: dbData, tableMissing } = await dbFetchVideos();
+        if (tableMissing) {
+          setIsTableMissing(true);
+          const savedVideos = localStorage.getItem('scouting_videoteca_db');
+          setVideos(savedVideos ? JSON.parse(savedVideos) : INITIAL_VIDEOS);
+        } else {
+          setIsTableMissing(false);
+          if (dbData && dbData.length > 0) {
+            setVideos(dbData);
+            localStorage.setItem('scouting_videoteca_db', JSON.stringify(dbData));
+          } else {
+            // If database table is empty, seed with initial demo videos in Supabase
+            const savedLocal = localStorage.getItem('scouting_videoteca_db');
+            const initial = savedLocal ? JSON.parse(savedLocal) : INITIAL_VIDEOS;
+            setVideos(initial);
+            for (const v of initial) {
+              try { await dbSaveVideo(v); } catch (e) { /* silent seed fallback */ }
+            }
+          }
+        }
+      } catch (err: any) {
+        const savedVideos = localStorage.getItem('scouting_videoteca_db');
+        if (savedVideos) {
+          try { setVideos(JSON.parse(savedVideos)); } catch (e) { setVideos(INITIAL_VIDEOS); }
+        } else {
+          setVideos(INITIAL_VIDEOS);
+        }
       }
     } else {
-      setVideos(INITIAL_VIDEOS);
-      localStorage.setItem('scouting_videoteca_db', JSON.stringify(INITIAL_VIDEOS));
+      const savedVideos = localStorage.getItem('scouting_videoteca_db');
+      if (savedVideos) {
+        try { setVideos(JSON.parse(savedVideos)); } catch (e) { setVideos(INITIAL_VIDEOS); }
+      } else {
+        setVideos(INITIAL_VIDEOS);
+        localStorage.setItem('scouting_videoteca_db', JSON.stringify(INITIAL_VIDEOS));
+      }
     }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadVideosFromSource();
   }, []);
 
-  // Save to localStorage
+  // Sync state & localStorage
   const saveVideosToDb = (updatedVideos: VideoItem[]) => {
     setVideos(updatedVideos);
     localStorage.setItem('scouting_videoteca_db', JSON.stringify(updatedVideos));
@@ -104,6 +163,7 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
 
   // Extract YouTube ID
   const getYouTubeId = (url: string): string | null => {
+    if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
@@ -114,7 +174,6 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
     if (id) {
       return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
     }
-    // Return a soccer-related placeholder image fallback
     return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=60';
   };
 
@@ -125,6 +184,7 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
     setFormDescripcion('');
     setFormCategoria('Análisis Individual');
     setFormJugadorId('');
+    setSourceType('youtube');
     setIsFormOpen(true);
   };
 
@@ -136,10 +196,36 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
     setFormDescripcion(video.descripcion || '');
     setFormCategoria(video.categoria || 'Análisis Individual');
     setFormJugadorId(video.jugadorId || '');
+    setSourceType(getYouTubeId(video.url) ? 'youtube' : 'file');
     setIsFormOpen(true);
   };
 
-  const handleSaveVideo = (e: React.FormEvent) => {
+  // Upload direct video file to Supabase Storage
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isSupabaseConfigured()) {
+      showNotification('Para subir archivos de vídeo directamente, configura las claves de Supabase en .env', 'error');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      showNotification('Subiendo archivo de vídeo a Supabase Storage...', 'info');
+      const publicUrl = await dbUploadVideoFile(file);
+      setFormUrl(publicUrl);
+      showNotification('Vídeo subido con éxito a Supabase Storage.', 'success');
+    } catch (error: any) {
+      console.error(error);
+      showNotification(error.message || 'Error al subir el vídeo a Supabase Storage', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Save video to Local & Supabase
+  const handleSaveVideo = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formTitulo.trim()) {
@@ -148,41 +234,39 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
     }
 
     if (!formUrl.trim()) {
-      showNotification('Por favor, introduce el enlace del vídeo de YouTube.', 'error');
+      showNotification('Por favor, introduce una URL de YouTube o sube un archivo de vídeo.', 'error');
       return;
     }
 
-    const videoId = getYouTubeId(formUrl);
-    if (!videoId) {
-      showNotification('El enlace introducido no parece ser un vídeo de YouTube válido.', 'error');
-      return;
-    }
+    const newVideoItem: VideoItem = {
+      id: editingVideo ? editingVideo.id : 'vid_' + Date.now(),
+      titulo: formTitulo.trim(),
+      url: formUrl.trim(),
+      descripcion: formDescripcion.trim(),
+      categoria: formCategoria,
+      jugadorId: formJugadorId || undefined,
+      fechaRegistro: editingVideo ? editingVideo.fechaRegistro : new Date().toISOString().split('T')[0]
+    };
 
+    // Update local state first
     if (editingVideo) {
-      // Edit mode
-      const updated = videos.map(v => v.id === editingVideo.id ? {
-        ...v,
-        titulo: formTitulo.trim(),
-        url: formUrl.trim(),
-        descripcion: formDescripcion.trim(),
-        categoria: formCategoria,
-        jugadorId: formJugadorId || undefined,
-      } : v);
+      const updated = videos.map(v => v.id === editingVideo.id ? newVideoItem : v);
       saveVideosToDb(updated);
-      showNotification('Vídeo actualizado correctamente.', 'success');
     } else {
-      // Create mode
-      const newVideo: VideoItem = {
-        id: 'vid_' + Date.now(),
-        titulo: formTitulo.trim(),
-        url: formUrl.trim(),
-        descripcion: formDescripcion.trim(),
-        categoria: formCategoria,
-        jugadorId: formJugadorId || undefined,
-        fechaRegistro: new Date().toISOString().split('T')[0]
-      };
-      saveVideosToDb([newVideo, ...videos]);
-      showNotification('Vídeo añadido a la Videoteca.', 'success');
+      saveVideosToDb([newVideoItem, ...videos]);
+    }
+
+    // Save to Supabase table
+    if (isSupabaseConfigured()) {
+      try {
+        await dbSaveVideo(newVideoItem);
+        showNotification('Vídeo guardado y vinculado correctamente en Supabase.', 'success');
+      } catch (err: any) {
+        console.error('Error saving video to Supabase:', err);
+        showNotification('Guardado en almacenamiento local. Supabase error: ' + (err.message || 'Comprueba la tabla scouting_videos'), 'error');
+      }
+    } else {
+      showNotification(editingVideo ? 'Vídeo actualizado.' : 'Vídeo añadido a la Videoteca.', 'success');
     }
 
     setIsFormOpen(false);
@@ -196,15 +280,41 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
     }
   };
 
-  const confirmDeleteVideo = () => {
+  const confirmDeleteVideo = async () => {
     if (!videoToDelete) return;
-    const filtered = videos.filter(v => v.id !== videoToDelete.id);
+    const targetId = videoToDelete.id;
+    const filtered = videos.filter(v => v.id !== targetId);
     saveVideosToDb(filtered);
-    showNotification('Vídeo eliminado de la Videoteca.', 'info');
-    if (activeVideo?.id === videoToDelete.id) {
+
+    if (isSupabaseConfigured()) {
+      try {
+        await dbDeleteVideo(targetId);
+        showNotification('Vídeo eliminado de Supabase.', 'info');
+      } catch (err: any) {
+        console.warn('Error borrando de Supabase:', err);
+      }
+    } else {
+      showNotification('Vídeo eliminado de la Videoteca.', 'info');
+    }
+
+    if (activeVideo?.id === targetId) {
       setActiveVideo(null);
     }
     setVideoToDelete(null);
+  };
+
+  const handleSyncSupabase = async () => {
+    setIsSyncing(true);
+    await loadVideosFromSource();
+    showNotification('Videoteca sincronizada con Supabase.', 'success');
+    setIsSyncing(false);
+  };
+
+  const handleCopySql = () => {
+    navigator.clipboard.writeText(GET_SUPABASE_VIDEOS_SQL());
+    setCopiedSql(true);
+    showNotification('Código SQL copiado al portapapeles.', 'success');
+    setTimeout(() => setCopiedSql(false), 3000);
   };
 
   // Filter conditions
@@ -229,27 +339,85 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
       />
 
       <div className="space-y-6">
-      {/* HEADER SECTION METRICS */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/40 p-5 rounded-xl border border-slate-800/80 backdrop-blur-md">
+      {/* MISSING TABLE WARNING BANNER */}
+      {isTableMissing && isSupabaseConfigured() && (
+        <div className="bg-amber-950/40 border border-amber-800/80 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-amber-200">
+          <div className="flex items-start space-x-3">
+            <Database className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-bold font-mono">Tabla 'scouting_videos' pendiente de crear en Supabase</p>
+              <p className="text-[11px] text-amber-300/80 mt-0.5 font-sans">
+                La aplicación está guardando localmente. Para guardar tus vídeos directamente en la nube de Supabase, ejecuta el script SQL en el Editor SQL de tu proyecto Supabase.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsSqlModalOpen(true)}
+            className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-mono font-bold rounded-lg transition shadow flex items-center space-x-1.5 shrink-0"
+          >
+            <Code2 className="w-3.5 h-3.5" />
+            <span>Ver y Copiar SQL</span>
+          </button>
+        </div>
+      )}
+
+      {/* HEADER SECTION METRICS & SUPABASE STATUS */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/40 p-5 rounded-xl border border-slate-800/80 backdrop-blur-md">
         <div>
-          <h2 className="text-lg font-bold font-sans text-slate-150 flex items-center space-x-2">
-            <span className="p-1.5 bg-red-600/10 text-red-500 rounded-lg">
-              <Film className="w-5 h-5" />
-            </span>
-            <span>Videoteca de Scouting</span>
-          </h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-lg font-bold font-sans text-slate-150 flex items-center space-x-2">
+              <span className="p-1.5 bg-red-600/10 text-red-500 rounded-lg">
+                <Film className="w-5 h-5" />
+              </span>
+              <span>Videoteca & Análisis Multimedia</span>
+            </h2>
+
+            {isSupabaseConfigured() ? (
+              <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-800 text-emerald-400">
+                <Database className="w-3 h-3" />
+                <span>Supabase Conectado</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-950/80 border border-amber-800 text-amber-400">
+                <Database className="w-3 h-3" />
+                <span>Modo Local</span>
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-400 mt-1">
-            Visualiza, organiza y asocia clips analíticos de YouTube directamente con tu cartera de futbolistas y pizarras tácticas.
+            Sube o enlaza vídeos analíticos a Supabase, organizados por categoría y vinculados a futbolistas.
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAddForm}
-          className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-xs font-mono uppercase tracking-wider rounded-lg shadow-md hover:shadow-red-900/20 active:scale-95 transition-all flex items-center justify-center space-x-2 shrink-0 self-start md:self-auto"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Añadir vídeo analítico</span>
-        </button>
+        <div className="flex items-center flex-wrap gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsSqlModalOpen(true)}
+            className="px-3 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-300 font-mono text-xs font-bold rounded-lg transition flex items-center space-x-1.5"
+            title="Ver script de creación de tabla 'scouting_videos' en Supabase"
+          >
+            <Code2 className="w-3.5 h-3.5 text-blue-400" />
+            <span>SQL Supabase</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSyncSupabase}
+            disabled={isSyncing}
+            className="px-3 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-300 font-mono text-xs font-bold rounded-lg transition flex items-center space-x-1.5"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>Sincronizar</span>
+          </button>
+
+          <button
+            onClick={handleOpenAddForm}
+            className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-xs font-mono uppercase tracking-wider rounded-lg shadow-md hover:shadow-red-900/20 active:scale-95 transition-all flex items-center justify-center space-x-2 shrink-0"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Añadir vídeo</span>
+          </button>
+        </div>
       </div>
 
       {/* QUICK STATUS STATS GRID */}
@@ -259,7 +427,7 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
           <p className="text-white font-extrabold text-lg mt-1 font-mono">{videos.length}</p>
         </div>
         <div className="bg-slate-950 p-3 rounded-lg border border-slate-850 flex flex-col justify-between">
-          <p className="text-slate-500 font-bold uppercase text-[9px] font-mono tracking-wider">Metraje de Análisis</p>
+          <p className="text-slate-500 font-bold uppercase text-[9px] font-mono tracking-wider">Metraje Táctico</p>
           <p className="text-rose-400 font-extrabold text-lg mt-1 font-mono">
             {videos.filter(v => v.categoria === 'Táctica').length} Tácticos
           </p>
@@ -271,9 +439,9 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
           </p>
         </div>
         <div className="bg-slate-950 p-3 rounded-lg border border-slate-850 flex flex-col justify-between">
-          <p className="text-slate-500 font-bold uppercase text-[9px] font-mono tracking-wider">Última Adición</p>
-          <p className="text-blue-400 font-extrabold text-xs mt-1.5 font-mono">
-            {videos.length > 0 ? videos[0].fechaRegistro : 'N/A'}
+          <p className="text-slate-500 font-bold uppercase text-[9px] font-mono tracking-wider">Origen Datos</p>
+          <p className="text-blue-400 font-extrabold text-xs mt-1.5 font-mono truncate">
+            {isSupabaseConfigured() ? 'Supabase DB' : 'LocalStorage'}
           </p>
         </div>
       </div>
@@ -324,120 +492,157 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
       </div>
 
       {/* VIDEOS GRID VIEW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredVideos.map((video) => {
-          const linkedPlayer = players.find(p => p.id === video.jugadorId);
-          const ytId = getYouTubeId(video.url);
+      {isLoading ? (
+        <div className="py-20 text-center flex flex-col items-center justify-center space-y-3">
+          <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
+          <p className="text-slate-400 text-xs font-mono font-bold">Cargando vídeos desde Supabase...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredVideos.map((video) => {
+            const linkedPlayer = players.find(p => p.id === video.jugadorId);
+            const isYouTube = !!getYouTubeId(video.url);
 
-          return (
-            <div 
-              key={video.id}
-              onClick={() => ytId && setActiveVideo(video)}
-              className="group bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 hover:border-red-500/30 rounded-xl overflow-hidden shadow-md transition-all duration-300 cursor-pointer flex flex-col"
-            >
-              {/* Thumbnail Area with hover play icon */}
-              <div className="relative aspect-video w-full overflow-hidden bg-black">
-                <img 
-                  src={getThumbnailUrl(video.url)}
-                  alt={video.titulo}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80"
-                />
-                
-                {/* Visual badges/overlays */}
-                <span className="absolute top-2.5 left-2.5 bg-black/75 border border-slate-800 text-slate-300 font-mono font-bold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider">
-                  {video.categoria || 'Análisis'}
-                </span>
-
-                <span className="absolute bottom-2.5 right-2.5 bg-black/85 text-slate-400 font-mono text-[9px] px-1.5 py-0.5 rounded">
-                  {video.fechaRegistro}
-                </span>
-
-                {/* Overlaid Play Button */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
-                  <div className="p-3 bg-red-600 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
-                    <Play className="w-5 h-5 fill-current ml-0.5" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Details */}
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div className="space-y-1.5">
-                  <h3 className="text-sm font-bold text-slate-200 line-clamp-1 group-hover:text-red-400 transition-colors">
-                    {video.titulo}
-                  </h3>
+            return (
+              <div 
+                key={video.id}
+                onClick={() => setActiveVideo(video)}
+                className="group bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 hover:border-red-500/30 rounded-xl overflow-hidden shadow-md transition-all duration-300 cursor-pointer flex flex-col"
+              >
+                {/* Thumbnail Area with hover play icon */}
+                <div className="relative aspect-video w-full overflow-hidden bg-black flex items-center justify-center">
+                  <img 
+                    src={getThumbnailUrl(video.url)}
+                    alt={video.titulo}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80"
+                  />
                   
-                  <p className="text-xs text-slate-400 line-clamp-2 h-8">
-                    {video.descripcion || 'Sin descripción descriptiva.'}
-                  </p>
+                  {/* Visual badges/overlays */}
+                  <span className="absolute top-2.5 left-2.5 bg-black/80 border border-slate-800 text-slate-300 font-mono font-bold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider flex items-center space-x-1">
+                    {isYouTube ? <Video className="w-2.5 h-2.5 text-red-500" /> : <FileVideo className="w-2.5 h-2.5 text-blue-400" />}
+                    <span>{video.categoria || 'Análisis'}</span>
+                  </span>
+
+                  <span className="absolute bottom-2.5 right-2.5 bg-black/85 text-slate-400 font-mono text-[9px] px-1.5 py-0.5 rounded">
+                    {video.fechaRegistro}
+                  </span>
+
+                  {/* Overlaid Play Button */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
+                    <div className="p-3 bg-red-600 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="w-5 h-5 fill-current ml-0.5" />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Card Sub-actions / Tags */}
-                <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    {linkedPlayer ? (
-                      <span className="inline-flex items-center space-x-1 max-w-full bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded text-[9px] text-emerald-400 font-mono tracking-tight font-semibold">
-                        <User className="w-2.5 h-2.5 shrink-0" />
-                        <span className="truncate">{linkedPlayer.nombre}</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center space-x-1 bg-slate-950/40 text-[9px] px-1.5 py-0.5 rounded text-slate-550 font-mono">
-                        <Video className="w-2.5 h-2.5" />
-                        <span>Clasificación general</span>
-                      </span>
-                    )}
+                {/* Card Details */}
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <h3 className="text-sm font-bold text-slate-200 line-clamp-1 group-hover:text-red-400 transition-colors">
+                      {video.titulo}
+                    </h3>
+                    
+                    <p className="text-xs text-slate-400 line-clamp-2 h-8">
+                      {video.descripcion || 'Sin descripción o anotación técnica.'}
+                    </p>
                   </div>
 
-                  <div className="flex items-center space-x-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={(e) => handleOpenEditForm(video, e)}
-                      className="p-1 hover:bg-slate-800 text-slate-450 hover:text-white rounded transition"
-                      title="Editar metadatos"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => handleDeleteVideo(video.id, e)}
-                      className="p-1 hover:bg-red-950/30 text-slate-500 hover:text-red-400 rounded transition"
-                      title="Eliminar vídeo"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                  {/* Card Sub-actions / Tags */}
+                  <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      {linkedPlayer ? (
+                        <span className="inline-flex items-center space-x-1 max-w-full bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded text-[9px] text-emerald-400 font-mono tracking-tight font-semibold">
+                          <User className="w-2.5 h-2.5 shrink-0" />
+                          <span className="truncate">{linkedPlayer.nombre}</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center space-x-1 bg-slate-950/40 text-[9px] px-1.5 py-0.5 rounded text-slate-550 font-mono">
+                          <Video className="w-2.5 h-2.5" />
+                          <span>Clasificación general</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => handleOpenEditForm(video, e)}
+                        className="p-1 hover:bg-slate-800 text-slate-450 hover:text-white rounded transition"
+                        title="Editar metadatos"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteVideo(video.id, e)}
+                        className="p-1 hover:bg-red-950/30 text-slate-500 hover:text-red-400 rounded transition"
+                        title="Eliminar vídeo"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+            );
+          })}
+
+          {filteredVideos.length === 0 && (
+            <div className="col-span-full bg-slate-900/20 border-2 border-dashed border-slate-850 px-4 py-16 text-center rounded-2xl flex flex-col items-center justify-center">
+              <Film className="w-10 h-10 text-slate-600 mb-3 animate-pulse" />
+              <p className="text-sm font-bold text-slate-400">Ningún clip coincide con el filtro</p>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                Ajusta los términos de búsqueda o añade un nuevo vídeo de YouTube o archivo MP4 presionando "Añadir vídeo".
+              </p>
             </div>
-          );
-        })}
+          )}
+        </div>
+      )}
 
-        {filteredVideos.length === 0 && (
-          <div className="col-span-full bg-slate-900/20 border-2 border-dashed border-slate-850 px-4 py-16 text-center rounded-2xl flex flex-col items-center justify-center">
-            <Film className="w-10 h-10 text-slate-600 mb-3 animate-pulse" />
-            <p className="text-sm font-bold text-slate-400">Ningún clip coincide con el filtro</p>
-            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-              Ajusta los términos de búsqueda o añade un nuevo vídeo de YouTube presionando "Añadir vídeo analítico".
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* DETAILED PLAYER & ADDING MODAL FORM OVERLAY */}
+      {/* ADD/EDIT FORM OVERLAY MODAL */}
       {isFormOpen && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-850 bg-slate-950 flex items-center justify-between">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
-                {editingVideo ? '📝 Modificar Vídeo' : '📹 Añadir Clip de YouTube'}
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
+                <Video className="w-4 h-4 text-red-500" />
+                <span>{editingVideo ? '📝 Modificar Vídeo' : '📹 Añadir Clip / Vídeo Analítico'}</span>
               </span>
               <button 
                 onClick={() => setIsFormOpen(false)}
                 className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
               >
                 <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Source Type Selector Tabs */}
+            <div className="flex border-b border-slate-850 bg-slate-950/50">
+              <button
+                type="button"
+                onClick={() => setSourceType('youtube')}
+                className={`flex-1 py-2.5 text-xs font-mono font-bold border-b-2 transition flex items-center justify-center space-x-1.5 ${
+                  sourceType === 'youtube'
+                    ? 'border-red-500 text-red-400 bg-red-950/20'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Video className="w-3.5 h-3.5" />
+                <span>Enlace YouTube</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSourceType('file')}
+                className={`flex-1 py-2.5 text-xs font-mono font-bold border-b-2 transition flex items-center justify-center space-x-1.5 ${
+                  sourceType === 'file'
+                    ? 'border-blue-500 text-blue-400 bg-blue-950/20'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Subir Archivo MP4/Vídeo</span>
               </button>
             </div>
 
@@ -457,25 +662,66 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
-                  Enlace de YouTube *
-                </label>
-                <div className="relative">
-                  <Link className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
-                  <input
-                    type="url"
-                    required
-                    placeholder="Ej. https://www.youtube.com/watch?v=... o https://youtu.be/..."
-                    value={formUrl}
-                    onChange={(e) => setFormUrl(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-855 rounded pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+              {sourceType === 'youtube' ? (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
+                    Enlace de YouTube *
+                  </label>
+                  <div className="relative">
+                    <Link className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
+                    <input
+                      type="url"
+                      required={sourceType === 'youtube'}
+                      placeholder="Ej. https://www.youtube.com/watch?v=... o https://youtu.be/..."
+                      value={formUrl}
+                      onChange={(e) => setFormUrl(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-855 rounded pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <p className="text-[9px] text-slate-500 italic font-sans">
+                    Soporta enlaces clásicos de YouTube, URLs recortadas o de móviles.
+                  </p>
                 </div>
-                <p className="text-[9px] text-slate-500 italic font-sans">
-                  Soporta enlaces clásicos de YouTube, URLs con IDs rápidos y formatos recortados para móviles.
-                </p>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
+                    Subir Vídeo a Supabase Storage (MP4 / WebM / MOV)
+                  </label>
+
+                  <div className="border-2 border-dashed border-slate-800 hover:border-blue-500/50 bg-slate-950 p-4 rounded-lg text-center transition">
+                    {isUploading ? (
+                      <div className="flex flex-col items-center py-2 space-y-2">
+                        <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                        <p className="text-xs text-blue-300 font-mono">Subiendo vídeo a Supabase Storage...</p>
+                      </div>
+                    ) : formUrl && !getYouTubeId(formUrl) ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-emerald-400 font-mono font-bold flex items-center justify-center space-x-1">
+                          <Check className="w-4 h-4" />
+                          <span>Vídeo alojado en Supabase</span>
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-mono truncate max-w-full bg-slate-900 p-1.5 rounded border border-slate-800">
+                          {formUrl}
+                        </p>
+                        <label className="inline-block px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono font-bold rounded cursor-pointer transition">
+                          Cambiar archivo
+                          <input type="file" accept="video/*" onChange={handleFileUpload} className="hidden" />
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="w-8 h-8 text-slate-500 mx-auto" />
+                        <p className="text-xs text-slate-300 font-bold">Haz clic o arrastra aquí tu clip de vídeo</p>
+                        <p className="text-[10px] text-slate-500">Formatos compatibles: MP4, WebM, MOV, OGG</p>
+                        <label className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold rounded cursor-pointer transition shadow-md">
+                          Seleccionar vídeo local
+                          <input type="file" accept="video/*" onChange={handleFileUpload} className="hidden" />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -536,9 +782,11 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-xs font-mono font-bold rounded uppercase tracking-wider transition shadow-md"
+                  disabled={isUploading}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-xs font-mono font-bold rounded uppercase tracking-wider transition shadow-md flex items-center space-x-1"
                 >
-                  Guardar Clip
+                  {isUploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Guardar en Supabase</span>
                 </button>
               </div>
             </form>
@@ -546,7 +794,7 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
         </div>
       )}
 
-      {/* EMBEDDED INTUITIVE IFRAME PLAYER MODAL */}
+      {/* EMBEDDED PLAYER MODAL (YouTube or Native MP4/Video) */}
       {activeVideo && (
         <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 md:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh]">
@@ -554,8 +802,9 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
             {/* Player Head */}
             <div className="p-4 border-b border-slate-850 bg-slate-950/90 flex items-center justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-[9px] font-mono font-bold text-rose-500 uppercase tracking-widest">
-                  Reproducción Analítica: {activeVideo.categoria || 'Generales'}
+                <p className="text-[9px] font-mono font-bold text-rose-500 uppercase tracking-widest flex items-center space-x-1.5">
+                  <Video className="w-3 h-3" />
+                  <span>Reproducción Analítica: {activeVideo.categoria || 'Generales'}</span>
                 </p>
                 <h3 className="text-sm font-bold text-white truncate max-w-lg mt-0.5">
                   {activeVideo.titulo}
@@ -568,7 +817,7 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition"
-                  title="Abrir en YouTube externo"
+                  title="Abrir en enlace externo"
                 >
                   <ExternalLink className="w-4 h-4" />
                 </a>
@@ -582,7 +831,7 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
               </div>
             </div>
 
-            {/* Video Canvas Sandbox Aspect-Video */}
+            {/* Video Canvas Aspect-Video */}
             <div className="bg-black relative aspect-video flex items-center justify-center">
               {getYouTubeId(activeVideo.url) ? (
                 <iframe
@@ -593,11 +842,12 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
                   className="w-full h-full border-0"
                 />
               ) : (
-                <div className="text-center p-8 space-y-2">
-                  <Video className="w-12 h-12 text-slate-500 mx-auto animate-bounce" />
-                  <p className="text-slate-300 text-sm font-bold">No se puede reproducir este formato</p>
-                  <p className="text-slate-500 text-xs">Asegúrate de que es un enlace de YouTube válido.</p>
-                </div>
+                <video
+                  src={activeVideo.url}
+                  controls
+                  autoPlay
+                  className="w-full h-full max-h-[70vh] bg-black object-contain"
+                />
               )}
             </div>
 
@@ -632,7 +882,51 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
         </div>
       )}
 
+      {/* SQL SCHEMA MODAL */}
+      {isSqlModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="p-4 border-b border-slate-850 bg-slate-950 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Code2 className="w-4 h-4 text-blue-400" />
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+                  Script SQL para tabla "scouting_videos" en Supabase
+                </span>
+              </div>
+              <button 
+                onClick={() => setIsSqlModalOpen(false)}
+                className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3 overflow-y-auto font-mono text-xs">
+              <p className="text-slate-400 text-[11px]">
+                Ejecuta estas sentencias en el <strong className="text-slate-200">SQL Editor</strong> de tu proyecto Supabase para habilitar la tabla de la videoteca y los permisos de subida de archivos:
+              </p>
+
+              <div className="relative bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300 font-mono text-[11px] overflow-x-auto whitespace-pre">
+                {GET_SUPABASE_VIDEOS_SQL()}
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-850 bg-slate-950 flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 font-mono">Tabla: scouting_videos & Bucket: scouting_assets</span>
+              <button
+                type="button"
+                onClick={handleCopySql}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold rounded-lg transition flex items-center space-x-1.5 shadow"
+              >
+                {copiedSql ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedSql ? 'Copiado' : 'Copiar SQL'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   </>
-);
+  );
 }

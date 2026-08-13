@@ -1047,3 +1047,179 @@ export async function dbUploadFile(file: File, folderName: 'player_photos' | 'te
 
   return publicUrl;
 }
+
+/**
+ * Fetch all video clips from Supabase table 'scouting_videos'.
+ */
+export async function dbFetchVideos(): Promise<{ videos: any[]; tableMissing?: boolean }> {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized.');
+  }
+
+  const { data, error } = await supabase
+    .from('scouting_videos')
+    .select('*');
+
+  if (error) {
+    const isMissing = error.message?.includes('schema cache') || 
+                      error.message?.includes('does not exist') || 
+                      error.code === '42P01' || 
+                      error.code === 'PGRST301';
+    
+    if (isMissing) {
+      return { videos: [], tableMissing: true };
+    }
+    throw new Error(error.message || 'Error al conectar con la tabla scouting_videos en Supabase');
+  }
+
+  const sortedData = (data || []).sort((a: any, b: any) => {
+    const dateA = a.fecha_registro || a.fechaRegistro || '';
+    const dateB = b.fecha_registro || b.fechaRegistro || '';
+    return dateB.localeCompare(dateA);
+  });
+
+  const videos = sortedData.map((row: any) => ({
+    id: row.id,
+    titulo: row.titulo || 'Sin título',
+    url: row.url || '',
+    descripcion: row.descripcion || '',
+    jugadorId: row.jugador_id || row.jugadorId || undefined,
+    categoria: row.categoria || 'Análisis Individual',
+    fechaRegistro: row.fecha_registro || row.fechaRegistro || new Date().toISOString().split('T')[0]
+  }));
+
+  return { videos, tableMissing: false };
+}
+
+/**
+ * Saves or updates a single video clip in Supabase table 'scouting_videos'.
+ */
+export async function dbSaveVideo(video: any): Promise<void> {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized.');
+  }
+
+  const payload = {
+    id: video.id,
+    titulo: video.titulo,
+    url: video.url,
+    descripcion: video.descripcion || '',
+    jugador_id: video.jugadorId || null,
+    jugadorId: video.jugadorId || null,
+    categoria: video.categoria || 'Análisis Individual',
+    fecha_registro: video.fechaRegistro || new Date().toISOString().split('T')[0],
+    fechaRegistro: video.fechaRegistro || new Date().toISOString().split('T')[0]
+  };
+
+  try {
+    await safeUpsert('scouting_videos', payload, 'id');
+  } catch (error) {
+    console.error('Error saving video to Supabase:', error);
+    throw error;
+  }
+}
+
+/**
+ * Deletes a video clip from Supabase table 'scouting_videos'.
+ */
+export async function dbDeleteVideo(id: string): Promise<void> {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized.');
+  }
+
+  const { error } = await supabase
+    .from('scouting_videos')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting video from Supabase:', error);
+    throw error;
+  }
+}
+
+/**
+ * Uploads a local video clip file (mp4, webm, mov, etc.) directly to Supabase Storage bucket 'scouting_assets'.
+ */
+export async function dbUploadVideoFile(file: File): Promise<string> {
+  if (!supabase) {
+    throw new Error('Supabase client is not initialized or configured in .env.');
+  }
+
+  const fileExt = file.name.split('.').pop() || 'mp4';
+  const cleanFileName = file.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  const uniqueName = `video_${Date.now()}_${Math.floor(Math.random() * 100000)}.${fileExt}`;
+  const filePath = `videos/${uniqueName}`;
+
+  try {
+    await supabase.storage.createBucket('scouting_assets', {
+      public: true,
+      allowedMimeTypes: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'image/jpeg', 'image/png']
+    });
+  } catch (err) {
+    // Bucket might already exist or RLS issue
+  }
+
+  const { data, error } = await supabase.storage
+    .from('scouting_assets')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true
+    });
+
+  if (error) {
+    console.error('Error uploading video to Supabase Storage:', error);
+    throw new Error(`Error al subir vídeo a Supabase Storage: ${error.message}`);
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('scouting_assets')
+    .getPublicUrl(filePath);
+
+  return publicUrl;
+}
+
+/**
+ * SQL Generator script specifically for Video Library & Storage
+ */
+export function GET_SUPABASE_VIDEOS_SQL(): string {
+  return `-- TABLA DEDICADA PARA LA VIDEOTECA Y ANÁLISIS MULTIMEDIA
+CREATE TABLE IF NOT EXISTS scouting_videos (
+  id TEXT PRIMARY KEY,
+  titulo TEXT NOT NULL,
+  url TEXT NOT NULL,
+  descripcion TEXT,
+  jugador_id TEXT,
+  "jugadorId" TEXT,
+  categoria TEXT DEFAULT 'Análisis Individual',
+  fecha_registro TEXT NOT NULL,
+  "fechaRegistro" TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Habilitar el acceso RLS para la videoteca
+ALTER TABLE scouting_videos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir todo en videoteca" ON scouting_videos;
+CREATE POLICY "Permitir todo en videoteca" ON scouting_videos
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- BUCKET Y PERMISOS DE STORAGE PARA SUBIR VÍDEOS MP4/WEBM DIRECTOS Y MOCKUPS:
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('scouting_assets', 'scouting_assets', true) 
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Acceso publico lectura" ON storage.objects;
+CREATE POLICY "Acceso publico lectura" ON storage.objects FOR SELECT USING (bucket_id = 'scouting_assets');
+
+DROP POLICY IF EXISTS "Acceso publico insercion" ON storage.objects;
+CREATE POLICY "Acceso publico insercion" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'scouting_assets');
+
+DROP POLICY IF EXISTS "Acceso publico actualizacion" ON storage.objects;
+CREATE POLICY "Acceso publico actualizacion" ON storage.objects FOR UPDATE USING (bucket_id = 'scouting_assets') WITH CHECK (bucket_id = 'scouting_assets');
+
+DROP POLICY IF EXISTS "Acceso publico borrado" ON storage.objects;
+CREATE POLICY "Acceso publico borrado" ON storage.objects FOR DELETE USING (bucket_id = 'scouting_assets');
+`;
+}
+
