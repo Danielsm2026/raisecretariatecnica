@@ -14,6 +14,44 @@ export function isSupabaseConfigured(): boolean {
   return !!supabase;
 }
 
+/**
+ * Supabase Auth helper functions
+ */
+export async function getSupabaseSession() {
+  if (!supabase) return null;
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error) {
+    console.error('Error fetching Supabase session:', error);
+    return null;
+  }
+  return session;
+}
+
+export async function getSupabaseUser() {
+  if (!supabase) return null;
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error) {
+    console.error('Error fetching Supabase user:', error);
+    return null;
+  }
+  return user;
+}
+
+export function onSupabaseAuthStateChange(callback: (event: string, session: any) => void) {
+  if (!supabase) return { data: { subscription: { unsubscribe: () => {} } } };
+  return supabase.auth.onAuthStateChange(callback);
+}
+
+export async function supabaseSignIn(email: string, password: string) {
+  if (!supabase) throw new Error('Supabase no está configurado');
+  return await supabase.auth.signInWithPassword({ email, password });
+}
+
+export async function supabaseSignOut() {
+  if (!supabase) return;
+  return await supabase.auth.signOut();
+}
+
 export interface SupabaseSyncResult {
   success: boolean;
   message: string;

@@ -15,11 +15,29 @@ import DataReportsView from './components/DataReportsView';
 import HomeView from './components/HomeView';
 import PlanSemanal from './components/PlanSemanal';
 import { ConfirmationModal } from './components/ConfirmationModal';
+import LoginScreen from './components/LoginScreen';
 import { DEFAULT_TEAM_ESCUDOS } from './utils/escudoHelper';
-import { isSupabaseConfigured, dbFetchPlayers, dbSavePlayer, dbDeletePlayer, dbBulkUpsert, dbFetchMatchReports, dbSaveMatchReport, dbDeleteMatchReport, dbBulkUpsertMatchReports, dbSaveSetting } from './utils/supabaseClient';
-import { Trophy, HelpCircle, FileJson, Info, Calendar, Plus, Trash2, Edit, FileText, ChevronRight, BarChart3 } from 'lucide-react';
+import { 
+  isSupabaseConfigured, 
+  dbFetchPlayers, 
+  dbSavePlayer, 
+  dbDeletePlayer, 
+  dbBulkUpsert, 
+  dbFetchMatchReports, 
+  dbSaveMatchReport, 
+  dbDeleteMatchReport, 
+  dbBulkUpsertMatchReports, 
+  dbSaveSetting,
+  getSupabaseUser,
+  getSupabaseSession,
+  onSupabaseAuthStateChange,
+  supabaseSignOut
+} from './utils/supabaseClient';
+import { Trophy, HelpCircle, FileJson, Info, Calendar, Plus, Trash2, Edit, FileText, ChevronRight, BarChart3, LogOut, User } from 'lucide-react';
 
 export default function App() {
+  const [user, setUser] = useState<any>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [players, setPlayers] = useState<ScoutedPlayer[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<ScoutedPlayer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -695,10 +713,65 @@ export default function App() {
     setIsReportEditorOpen(true);
   };
 
+  const handleSignOut = async () => {
+    try {
+      await supabaseSignOut();
+      setUser(null);
+      showNotification('Sesión cerrada correctamente', 'info');
+    } catch (err) {
+      console.error('Error al cerrar sesión:', err);
+    }
+  };
+
   useEffect(() => {
-    loadAllPlayers(true);
-    loadMatchReports();
+    // Check initial Supabase Auth session
+    if (isSupabaseConfigured()) {
+      getSupabaseSession().then((session) => {
+        setUser(session?.user || null);
+        setAuthChecked(true);
+      }).catch(() => {
+        setAuthChecked(true);
+      });
+
+      const { data: { subscription } } = onSupabaseAuthStateChange((_event, session) => {
+        setUser(session?.user || null);
+        setAuthChecked(true);
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    } else {
+      setAuthChecked(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (user || !isSupabaseConfigured()) {
+      loadAllPlayers(true);
+      loadMatchReports();
+    }
+  }, [user]);
+
+  // Loading state while checking auth session
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-3 select-none">
+        <div className="w-9 h-9 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-xs font-mono text-slate-400">Verificando sesión de scouting...</p>
+      </div>
+    );
+  }
+
+  // If Supabase is configured and user is not logged in, display full login screen
+  if (isSupabaseConfigured() && !user) {
+    return (
+      <LoginScreen onLoginSuccess={(u) => {
+        setUser(u);
+        showNotification(`Bienvenido, ${u.email}`, 'success');
+      }} />
+    );
+  }
 
   // Save changes to state, local storage and Supabase in sync
   const handleSavePlayer = async (playerData: Omit<ScoutedPlayer, 'id' | 'fechaRegistro'> & { id?: string }) => {
@@ -1242,6 +1315,26 @@ export default function App() {
               </h1>
             </div>
           </div>
+
+          {user && (
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 bg-slate-950/70 px-3 py-1.5 rounded-lg border border-slate-800 text-xs">
+                <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                <span className="font-mono text-slate-300 font-semibold truncate max-w-[200px]">
+                  {user.email}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="ml-2 p-1 hover:bg-slate-800 text-slate-400 hover:text-red-400 rounded transition flex items-center gap-1 cursor-pointer"
+                  title="Cerrar sesión"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-mono font-bold uppercase hidden sm:inline">Salir</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
