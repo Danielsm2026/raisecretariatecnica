@@ -1276,26 +1276,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 <span>{isSyncingCloud ? 'Sincronizando...' : 'Sincronizar Supabase'}</span>
               </button>
 
-              <button
-                onClick={handleExportCampogramasJSON}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all border border-slate-700 cursor-pointer"
-                title="Exportar copia de seguridad de campogramas en formato JSON"
-              >
-                <Download className="w-3.5 h-3.5 text-blue-400" />
-                <span>Exportar JSON</span>
-              </button>
-
-              <label className="px-3 py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all border border-slate-700 cursor-pointer">
-                <Upload className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Importar JSON</span>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImportCampogramasJSON}
-                  className="hidden"
-                />
-              </label>
-
               <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg text-center min-w-[90px]">
                 <span className="text-[9px] font-mono text-slate-500 uppercase block font-bold">Total Campogramas</span>
                 <span className="text-base font-bold font-mono text-blue-400">{campogramas.length}</span>
