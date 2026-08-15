@@ -1238,17 +1238,9 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-lg font-bold font-display text-white tracking-widest uppercase">
-                DEPARTAMENTO SCOUTING <span className="text-[10px] font-mono text-blue-400 px-1.5 py-0.5 bg-slate-800 rounded ml-2 font-normal">V2.4.0</span>
+                DEPARTAMENTO SCOUTING
               </h1>
-              <p className="text-[10px] text-slate-500 font-mono uppercase font-semibold">
-                SISTEMA INTEGRADO DE PROSPECCIÓN DEPORTIVA
-              </p>
             </div>
-          </div>
-          
-          <div className="flex items-center space-x-3 text-[10px] bg-slate-950/55 px-3 py-1.5 rounded border border-slate-800">
-            <span className="w-2 h-2 rounded-full bg-blue-550 animate-pulse"></span>
-            <span className="text-slate-400 font-mono font-bold">CLIENT: D_SAUGAR_SCOUT</span>
           </div>
         </div>
       </header>
@@ -1275,7 +1267,6 @@ export default function App() {
           status={supabaseStatus}
           errorMessage={supabaseErrorMsg}
           onRefresh={loadAllPlayers}
-          onForceSyncDemo={handleForceBulkUpload}
           playerCount={players.length}
           matchReportCount={matchReports.length}
         />

@@ -28,7 +28,6 @@ export default function SupabaseSyncBanner({
   status,
   errorMessage,
   onRefresh,
-  onForceSyncDemo,
   playerCount,
   matchReportCount = 0
 }: SupabaseSyncBannerProps) {
@@ -158,18 +157,6 @@ NOTIFY pgrst, 'reload schema';`;
             </button>
           )}
 
-          {configured && onForceSyncDemo && (
-            <button
-              onClick={onForceSyncDemo}
-              disabled={status === 'loading'}
-              className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-[8.5px] font-bold font-mono uppercase tracking-wider flex items-center gap-1 transition-all border border-blue-550 disabled:opacity-50 cursor-pointer"
-              title="Sincronizar y subir de forma masiva todos los jugadores locales a Supabase"
-            >
-              <Database className="w-2.5 h-2.5" />
-              <span>Forzar Subida Masiva</span>
-            </button>
-          )}
- 
           <button
             onClick={() => setShowSql(!showSql)}
             className={`px-2 py-0.5 rounded text-[8.5px] font-bold font-mono uppercase tracking-wider flex items-center gap-1 transition-all border cursor-pointer ${
