@@ -340,19 +340,6 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                 />
               </div>
 
-              {/* ELO Rating */}
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider italic">Puntuación ELO</label>
-                <input
-                  id="input-player-elo"
-                  type="number"
-                  placeholder="Ej: 58"
-                  value={elo || ''}
-                  onChange={(e) => setElo(parseInt(e.target.value) || undefined)}
-                  className="w-full text-xs px-3 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-
               {/* Escudo URL */}
               <ImageUploadInput
                 id="input-player-escudoUrl"
