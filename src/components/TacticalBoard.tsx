@@ -23,6 +23,7 @@ interface TacticalBoardProps {
   players: ScoutedPlayer[];
   showNotification: (msg: string, type?: 'success' | 'info' | 'error') => void;
   onUpdatePlayer?: (player: ScoutedPlayer) => void;
+  onBack?: () => void;
 }
 
 export type CampogramaFolderId = 'mensuales' | 'invierno' | 'verano';
@@ -322,7 +323,7 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
   }
 ];
 
-export default function TacticalBoard({ players, showNotification, onUpdatePlayer }: TacticalBoardProps) {
+export default function TacticalBoard({ players, showNotification, onUpdatePlayer, onBack }: TacticalBoardProps) {
   // Folder Navigation State
   const [currentFolder, setCurrentFolder] = useState<CampogramaFolderId | null>(null);
   const [currentSubFolder, setCurrentSubFolder] = useState<CampogramaSubFolderId | null>(null);
@@ -1252,17 +1253,29 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
           
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center space-x-2 text-xs font-mono font-bold text-blue-400 uppercase tracking-widest mb-1">
-                <Folder className="w-4 h-4" />
-                <span>DIRECCIÓN DEPORTIVA • MÓDULO CAMPOGRAMA</span>
+            <div className="flex items-start gap-3.5">
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer mt-0.5"
+                  title="Volver a la Página Inicial"
+                >
+                  <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
+                </button>
+              )}
+              <div>
+                <div className="flex items-center space-x-2 text-xs font-mono font-bold text-blue-400 uppercase tracking-widest mb-1">
+                  <Folder className="w-4 h-4" />
+                  <span>DIRECCIÓN DEPORTIVA • MÓDULO CAMPOGRAMA</span>
+                </div>
+                <h1 className="text-2xl font-black font-display text-white tracking-wide uppercase">
+                  CAMPOGRAMAS
+                </h1>
+                <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                  Selecciona una carpeta para consultar, organizar y diseñar los campogramas posicionales, alineaciones de mercado e informes tácticos.
+                </p>
               </div>
-              <h1 className="text-2xl font-black font-display text-white tracking-wide uppercase">
-                Carpetas de Campogramas Tácticos
-              </h1>
-              <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                Selecciona una carpeta para consultar, organizar y diseñar los campogramas posicionales, alineaciones de mercado e informes tácticos.
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
@@ -1342,14 +1355,15 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
           <div className="flex items-center space-x-3">
             <button
+              type="button"
               onClick={() => {
                 setCurrentFolder(null);
                 setCurrentSubFolder(null);
               }}
-              className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-950 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
+              className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer"
               title="Volver a todas las carpetas"
             >
-              <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
             </button>
 
             <div>
@@ -1430,13 +1444,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
           <div className="flex items-center space-x-3">
             <button
+              type="button"
               onClick={() => {
                 setCurrentSubFolder(null);
               }}
-              className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-950 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
+              className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer"
               title="Volver a Categorías Mensuales"
             >
-              <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
             </button>
 
             <div>
@@ -1536,6 +1551,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg">
           <div className="flex items-center space-x-3">
             <button
+              type="button"
               onClick={() => {
                 if (currentFolder === 'mensuales') {
                   setCurrentMonthFolder(null);
@@ -1543,10 +1559,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   setCurrentFolder(null);
                 }
               }}
-              className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-950 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
+              className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer"
               title={currentFolder === 'mensuales' ? 'Volver a Carpetas de Meses' : 'Volver a Carpetas'}
             >
-              <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
             </button>
 
             <div>
@@ -1868,11 +1884,12 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       <div className="bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
         <div className="flex items-center space-x-3">
           <button
+            type="button"
             onClick={() => setActiveCampogramaId(null)}
-            className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-950 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
+            className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer"
             title={`Volver a ${currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle}`}
           >
-            <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
           </button>
 
           <div className="min-w-0">

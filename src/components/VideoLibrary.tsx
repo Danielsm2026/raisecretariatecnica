@@ -23,7 +23,8 @@ import {
   Loader2,
   FileVideo,
   RefreshCw,
-  Code2
+  Code2,
+  ArrowLeft
 } from 'lucide-react';
 import { 
   dbFetchVideos, 
@@ -37,6 +38,7 @@ import {
 interface VideoLibraryProps {
   players: ScoutedPlayer[];
   showNotification: (message: string, type?: 'success' | 'info' | 'error') => void;
+  onBack?: () => void;
 }
 
 // Initial demo videos fallback
@@ -67,7 +69,7 @@ const INITIAL_VIDEOS: VideoItem[] = [
   }
 ];
 
-export default function VideoLibrary({ players, showNotification }: VideoLibraryProps) {
+export default function VideoLibrary({ players, showNotification, onBack }: VideoLibraryProps) {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -363,30 +365,42 @@ export default function VideoLibrary({ players, showNotification }: VideoLibrary
 
       {/* HEADER SECTION METRICS & SUPABASE STATUS */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/40 p-5 rounded-xl border border-slate-800/80 backdrop-blur-md">
-        <div>
-          <div className="flex items-center space-x-3">
-            <h2 className="text-lg font-bold font-sans text-slate-150 flex items-center space-x-2">
-              <span className="p-1.5 bg-red-600/10 text-red-500 rounded-lg">
-                <Film className="w-5 h-5" />
-              </span>
-              <span>Videoteca & Análisis Multimedia</span>
-            </h2>
+        <div className="flex items-start gap-3.5">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer mt-0.5"
+              title="Volver a la Página Inicial"
+            >
+              <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
+            </button>
+          )}
+          <div>
+            <div className="flex items-center space-x-3">
+              <h2 className="text-lg font-bold font-sans text-slate-150 flex items-center space-x-2">
+                <span className="p-1.5 bg-red-600/10 text-red-500 rounded-lg">
+                  <Film className="w-5 h-5" />
+                </span>
+                <span>Videoteca & Análisis Multimedia</span>
+              </h2>
 
-            {isSupabaseConfigured() ? (
-              <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-800 text-emerald-400">
-                <Database className="w-3 h-3" />
-                <span>Supabase Conectado</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-950/80 border border-amber-800 text-amber-400">
-                <Database className="w-3 h-3" />
-                <span>Modo Local</span>
-              </span>
-            )}
+              {isSupabaseConfigured() ? (
+                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-800 text-emerald-400">
+                  <Database className="w-3 h-3" />
+                  <span>Supabase Conectado</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-950/80 border border-amber-800 text-amber-400">
+                  <Database className="w-3 h-3" />
+                  <span>Modo Local</span>
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Sube o enlaza vídeos analíticos a Supabase, organizados por categoría y vinculados a futbolistas.
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Sube o enlaza vídeos analíticos a Supabase, organizados por categoría y vinculados a futbolistas.
-          </p>
         </div>
 
         <div className="flex items-center flex-wrap gap-2 shrink-0">

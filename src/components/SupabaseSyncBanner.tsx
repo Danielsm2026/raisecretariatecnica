@@ -59,6 +59,23 @@ ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS besoccer_url TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "besoccerUrl" TEXT;
 ALTER TABLE scouting_match_reports ADD COLUMN IF NOT EXISTS categoria TEXT;
 
+-- TABLA DEDICADA PARA EL PLAN SEMANAL (AGENDA DE SCOUTING)
+CREATE TABLE IF NOT EXISTS scouting_plan_semanal (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  fecha_inicio TEXT,
+  "fechaInicio" TEXT,
+  fecha_fin TEXT,
+  "fechaFin" TEXT,
+  filename TEXT,
+  partidos JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+ALTER TABLE scouting_plan_semanal ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en plan semanal" ON scouting_plan_semanal;
+CREATE POLICY "Permitir todo en plan semanal" ON scouting_plan_semanal FOR ALL USING (true) WITH CHECK (true);
+
 CREATE TABLE IF NOT EXISTS scouting_settings (
   key TEXT PRIMARY KEY,
   value JSONB NOT NULL,

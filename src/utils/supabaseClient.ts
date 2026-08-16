@@ -680,14 +680,38 @@ export async function dbSaveSettingWithStatus(key: string, value: any): Promise<
 }
 
 /**
- * Fetch Plan Semanal weeks from Supabase settings storage.
+ * Fetch Plan Semanal weeks from Supabase dedicated table scouting_plan_semanal with fallback to settings storage.
  */
 export async function dbFetchPlanSemanalWeeks<T = any>(defaultWeeks: T): Promise<T> {
-  const res = await dbFetchSettingWithStatus<T>('plan_semanal_weeks_v2', defaultWeeks);
+  const res = await dbFetchPlanSemanalWeeksWithStatus<T>(defaultWeeks);
   return res.data;
 }
 
 export async function dbFetchPlanSemanalWeeksWithStatus<T = any>(defaultWeeks: T): Promise<{ success: boolean; data: T; error?: string }> {
+  if (!supabase) {
+    return { success: false, data: defaultWeeks, error: 'Supabase no está configurado.' };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('scouting_plan_semanal')
+      .select('*');
+
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const mapped = data.map((row: any) => ({
+        id: row.id,
+        nombre: row.nombre || '',
+        fechaInicio: row.fecha_inicio || row.fechaInicio || '',
+        fechaFin: row.fecha_fin || row.fechaFin || '',
+        filename: row.filename || `${row.nombre || ''} del ${row.fecha_inicio || row.fechaInicio || ''} al ${row.fecha_fin || row.fechaFin || ''}`.trim(),
+        partidos: typeof row.partidos === 'string' ? JSON.parse(row.partidos) : (row.partidos || [])
+      }));
+      return { success: true, data: mapped as unknown as T };
+    }
+  } catch (e) {
+    console.warn('Error reading from scouting_plan_semanal, falling back to settings:', e);
+  }
+
   return dbFetchSettingWithStatus<T>('plan_semanal_weeks_v2', defaultWeeks);
 }
 
@@ -832,11 +856,48 @@ export async function dbBulkUpsertCampogramas(campogramas: any[]): Promise<void>
  * Save Plan Semanal weeks to Supabase settings storage.
  */
 export async function dbSavePlanSemanalWeeks(weeks: any): Promise<void> {
-  await dbSaveSettingWithStatus('plan_semanal_weeks_v2', weeks);
+  await dbSavePlanSemanalWeeksWithStatus(weeks);
 }
 
-export async function dbSavePlanSemanalWeeksWithStatus(weeks: any): Promise<{ success: boolean; error?: string }> {
-  return dbSaveSettingWithStatus('plan_semanal_weeks_v2', weeks);
+export async function dbSavePlanSemanalWeeksWithStatus(weeks: any[]): Promise<{ success: boolean; error?: string }> {
+  if (!supabase) {
+    return { success: false, error: 'Supabase no está configurado.' };
+  }
+
+  let tableSuccess = false;
+  let tableErrorMsg: string | undefined;
+
+  try {
+    const payloads = (weeks || []).map((w: any) => ({
+      id: w.id,
+      nombre: w.nombre,
+      fecha_inicio: w.fechaInicio || w.fecha_inicio || '',
+      fechaInicio: w.fechaInicio || w.fecha_inicio || '',
+      fecha_fin: w.fechaFin || w.fecha_fin || '',
+      fechaFin: w.fechaFin || w.fecha_fin || '',
+      filename: w.filename || `${w.nombre} del ${w.fechaInicio || ''} al ${w.fechaFin || ''}`,
+      partidos: w.partidos || [],
+      updated_at: Date.now(),
+      updatedAt: Date.now()
+    }));
+
+    if (payloads.length > 0) {
+      await safeBulkUpsert('scouting_plan_semanal', payloads, 'id');
+      tableSuccess = true;
+    }
+  } catch (err: any) {
+    console.warn('Upsert to scouting_plan_semanal failed, saving to settings fallback:', err);
+    tableErrorMsg = err?.message || String(err);
+  }
+
+  // Also save to settings table as resilient backup
+  const settingsRes = await dbSaveSettingWithStatus('plan_semanal_weeks_v2', weeks);
+
+  if (tableSuccess || settingsRes.success) {
+    return { success: true };
+  }
+
+  return { success: false, error: tableErrorMsg || settingsRes.error || 'Error al guardar el plan semanal en Supabase.' };
 }
 
 /**
@@ -844,7 +905,7 @@ export async function dbSavePlanSemanalWeeksWithStatus(weeks: any): Promise<{ su
  * their table automatically.
  */
 export function getSQLInstructions(): string {
-  return `-- Opción A: Si ya tienes las tablas creadas y quieres habilitar las valoraciones físicas, fichajes 2026 y sincronización de campogramas, ejecuta esto en el SQL Editor de Supabase:
+  return `-- Opción A: Si ya tienes las tablas creadas y quieres habilitar las valoraciones físicas, fichajes 2026, campogramas y plan semanal, ejecuta esto en el SQL Editor de Supabase:
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS categoria TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS valoracion_fisica JSONB;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "valoracionFisica" JSONB;
@@ -859,6 +920,24 @@ ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "esFichajeVerano2026" BOOL
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS besoccer_url TEXT;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "besoccerUrl" TEXT;
 ALTER TABLE scouting_match_reports ADD COLUMN IF NOT EXISTS categoria TEXT;
+
+-- TABLA DEDICADA PARA EL PLAN SEMANAL (AGENDA DE SCOUTING)
+CREATE TABLE IF NOT EXISTS scouting_plan_semanal (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  fecha_inicio TEXT,
+  "fechaInicio" TEXT,
+  fecha_fin TEXT,
+  "fechaFin" TEXT,
+  filename TEXT,
+  partidos JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_plan_semanal ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en plan semanal" ON scouting_plan_semanal;
+CREATE POLICY "Permitir todo en plan semanal" ON scouting_plan_semanal FOR ALL USING (true) WITH CHECK (true);
 
 -- TABLA DEDICADA PARA CAMPOGRAMAS
 CREATE TABLE IF NOT EXISTS scouting_campogramas (
@@ -896,8 +975,6 @@ CREATE TABLE IF NOT EXISTS scouting_settings (
 ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
 CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
-
--- La tabla 'scouting_settings' guarda la agenda del Plan Semanal (key: 'plan_semanal_weeks_v2'), alineaciones tácticas y preferencias de la app.
 
 -- Forzar recarga de cache del esquema en Supabase (PostgREST)
 NOTIFY pgrst, 'reload schema';
@@ -1002,6 +1079,26 @@ ALTER TABLE scouting_match_reports ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Permitir todo en informes de partidos" ON scouting_match_reports;
 CREATE POLICY "Permitir todo en informes de partidos" ON scouting_match_reports
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- TABLA DEDICADA PARA EL PLAN SEMANAL (AGENDA DE SCOUTING)
+CREATE TABLE IF NOT EXISTS scouting_plan_semanal (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  fecha_inicio TEXT,
+  "fechaInicio" TEXT,
+  fecha_fin TEXT,
+  "fechaFin" TEXT,
+  filename TEXT,
+  partidos JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_plan_semanal ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir todo en plan semanal" ON scouting_plan_semanal;
+CREATE POLICY "Permitir todo en plan semanal" ON scouting_plan_semanal
   FOR ALL USING (true) WITH CHECK (true);
 
 -- TABLA DEDICADA PARA CAMPOGRAMAS Y PIZARRAS TÁCTICAS

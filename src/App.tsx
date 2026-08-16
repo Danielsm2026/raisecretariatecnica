@@ -1704,6 +1704,7 @@ export default function App() {
             players={players}
             showNotification={showNotification}
             onUpdatePlayer={handleSavePlayer}
+            onBack={() => setActiveTab('inicio')}
           />
         )}
 
@@ -1711,6 +1712,7 @@ export default function App() {
           <VideoLibrary
             players={players}
             showNotification={showNotification}
+            onBack={() => setActiveTab('inicio')}
           />
         )}
 

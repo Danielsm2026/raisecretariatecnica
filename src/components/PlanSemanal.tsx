@@ -118,6 +118,14 @@ const INITIAL_SAMPLE_MATCHES: PlanSemanalMatch[] = [
 
 const DEFAULT_WEEKS: SemanaPlan[] = [
   {
+    id: 'sem_01',
+    nombre: 'Semana_01',
+    fechaInicio: '17-08-2026',
+    fechaFin: '23-08-2026',
+    filename: 'Semana_01 del 17-08-2026 al 23-08-2026',
+    partidos: []
+  },
+  {
     id: 'sem_04',
     nombre: 'Semana_04',
     fechaInicio: '15-09-25',
@@ -163,14 +171,6 @@ const DEFAULT_WEEKS: SemanaPlan[] = [
     fechaInicio: '01-09-25',
     fechaFin: '07-09-25',
     filename: 'Semana_02 del 01-09-25 al 07-09-25',
-    partidos: []
-  },
-  {
-    id: 'sem_01',
-    nombre: 'Semana_01',
-    fechaInicio: '25-08-25',
-    fechaFin: '31-08-25',
-    filename: 'Semana_01 del 25-08-25 al 31-08-25',
     partidos: []
   },
   {
@@ -220,7 +220,33 @@ export default function PlanSemanal() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          return parsed.map(w => ({ ...w, filename: cleanWeekTitle(w.filename) }));
+          const list = parsed.map(w => {
+            if (w.id === 'sem_01' || w.nombre === 'Semana_01') {
+              return {
+                ...w,
+                id: w.id || 'sem_01',
+                nombre: 'Semana_01',
+                fechaInicio: '17-08-2026',
+                fechaFin: '23-08-2026',
+                filename: 'Semana_01 del 17-08-2026 al 23-08-2026'
+              };
+            }
+            return { ...w, filename: cleanWeekTitle(w.filename) };
+          });
+
+          // Ensure sem_01 exists in the list
+          const hasSem01 = list.some(w => w.id === 'sem_01' || w.nombre === 'Semana_01');
+          if (!hasSem01) {
+            list.unshift({
+              id: 'sem_01',
+              nombre: 'Semana_01',
+              fechaInicio: '17-08-2026',
+              fechaFin: '23-08-2026',
+              filename: 'Semana_01 del 17-08-2026 al 23-08-2026',
+              partidos: []
+            });
+          }
+          return list;
         }
       } catch (e) {
         console.error('Error loading weeks:', e);
@@ -1194,18 +1220,36 @@ export default function PlanSemanal() {
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              Esta sentencia crea la tabla <code className="text-purple-300 font-mono font-bold bg-slate-950 px-1 py-0.5 rounded">scouting_settings</code> y configura sus políticas de acceso público para que la agenda del Plan Semanal y las configuraciones de la app se sincronicen en la nube entre AI Studio y Vercel:
+              Esta sentencia crea la tabla dedicada <code className="text-emerald-300 font-mono font-bold bg-slate-950 px-1 py-0.5 rounded">scouting_plan_semanal</code> y <code className="text-purple-300 font-mono font-bold bg-slate-950 px-1 py-0.5 rounded">scouting_settings</code> para que la agenda de semanas y partidos se sincronice automáticamente en tiempo real entre AI Studio, Vercel y todos los dispositivos:
             </p>
 
             <div className="relative bg-slate-950 rounded-xl p-4 border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto flex-1 max-h-[300px]">
-              <pre>{`CREATE TABLE IF NOT EXISTS scouting_settings (
+              <pre>{`-- TABLA DEDICADA PARA EL PLAN SEMANAL
+CREATE TABLE IF NOT EXISTS scouting_plan_semanal (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  fecha_inicio TEXT,
+  "fechaInicio" TEXT,
+  fecha_fin TEXT,
+  "fechaFin" TEXT,
+  filename TEXT,
+  partidos JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_plan_semanal ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en plan semanal" ON scouting_plan_semanal;
+CREATE POLICY "Permitir todo en plan semanal" ON scouting_plan_semanal FOR ALL USING (true) WITH CHECK (true);
+
+-- TABLA DE CONFIGURACIONES Y RESPALDO
+CREATE TABLE IF NOT EXISTS scouting_settings (
   key TEXT PRIMARY KEY,
   value JSONB NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
 CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
 
@@ -1220,14 +1264,32 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                 <button
                   type="button"
                   onClick={() => {
-                    const sql = `CREATE TABLE IF NOT EXISTS scouting_settings (
+                    const sql = `-- TABLA DEDICADA PARA EL PLAN SEMANAL
+CREATE TABLE IF NOT EXISTS scouting_plan_semanal (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  fecha_inicio TEXT,
+  "fechaInicio" TEXT,
+  fecha_fin TEXT,
+  "fechaFin" TEXT,
+  filename TEXT,
+  partidos JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_plan_semanal ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en plan semanal" ON scouting_plan_semanal;
+CREATE POLICY "Permitir todo en plan semanal" ON scouting_plan_semanal FOR ALL USING (true) WITH CHECK (true);
+
+-- TABLA DE CONFIGURACIONES Y RESPALDO
+CREATE TABLE IF NOT EXISTS scouting_settings (
   key TEXT PRIMARY KEY,
   value JSONB NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 ALTER TABLE scouting_settings ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Permitir todo en settings" ON scouting_settings;
 CREATE POLICY "Permitir todo en settings" ON scouting_settings FOR ALL USING (true) WITH CHECK (true);
 
