@@ -962,7 +962,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       doc.setTextColor(15, 23, 42);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(15);
-      doc.text(`DEPARTAMENTO SCOUTING — ${campName.toUpperCase()}`, 22, 21);
+      doc.text(`DIRECCIÓN DEPORTIVA — ${campName.toUpperCase()}`, 22, 21);
 
       doc.setTextColor(100, 116, 139);
       doc.setFont('helvetica', 'normal');
@@ -1091,7 +1091,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       doc.setTextColor(148, 163, 184);
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(7.5);
-      doc.text(`Página 1 de 1 | Departamento Scouting — ${campName} | Generado automáticamente.`, 15, 282);
+      doc.text(`Página 1 de 1 | Dirección Deportiva — ${campName} | Generado automáticamente.`, 15, 282);
 
       doc.save(`Campograma_${campName.replace(/\s+/g, '_')}.pdf`);
       showNotification(`Campograma '${campName}' exportado exitosamente en PDF`, 'success');
@@ -1255,7 +1255,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             <div>
               <div className="flex items-center space-x-2 text-xs font-mono font-bold text-blue-400 uppercase tracking-widest mb-1">
                 <Folder className="w-4 h-4" />
-                <span>DEPARTAMENTO SCOUTING • MÓDULO CAMPOGRAMA</span>
+                <span>DIRECCIÓN DEPORTIVA • MÓDULO CAMPOGRAMA</span>
               </div>
               <h1 className="text-2xl font-black font-display text-white tracking-wide uppercase">
                 Carpetas de Campogramas Tácticos

@@ -1311,7 +1311,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-lg font-bold font-display text-white tracking-widest uppercase">
-                DEPARTAMENTO SCOUTING
+                DIRECCIÓN DEPORTIVA
               </h1>
             </div>
           </div>

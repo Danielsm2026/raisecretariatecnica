@@ -86,7 +86,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           </div>
           
           <h1 className="text-base font-bold tracking-[0.2em] uppercase font-mono text-white">
-            DEPARTAMENTO SCOUTING
+            DIRECCIÓN DEPORTIVA
           </h1>
           <p className="text-[11px] text-slate-400 font-mono mt-1 flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />

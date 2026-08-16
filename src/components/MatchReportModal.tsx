@@ -1223,7 +1223,7 @@ export default function MatchReportModal({
             <div className="hidden print:flex items-center justify-between border-b pb-2 mb-4">
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-bold tracking-widest text-slate-800">
-                  DEPARTAMENTO SCOUTING REPORT_DOC
+                  DIRECCIÓN DEPORTIVA REPORT_DOC
                 </span>
               </div>
               <span className="text-xs font-mono text-slate-500">
