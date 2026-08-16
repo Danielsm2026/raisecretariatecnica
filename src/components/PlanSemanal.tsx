@@ -53,6 +53,10 @@ export interface SemanaPlan {
   partidos: PlanSemanalMatch[];
 }
 
+export interface PlanSemanalProps {
+  onBack?: () => void;
+}
+
 export function cleanWeekTitle(str?: string): string {
   if (!str) return '';
   return str.replace(/\.(docx?|pdf|xlsx?|txt)$/i, '').trim();
@@ -213,7 +217,7 @@ function getDatesForWeek(fechaInicioStr: string): { key: PlanSemanalMatch['diaSe
   });
 }
 
-export default function PlanSemanal() {
+export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
   const [weeks, setWeeks] = useState<SemanaPlan[]>(() => {
     const saved = localStorage.getItem('plan_semanal_weeks_v2');
     if (saved) {
@@ -615,13 +619,20 @@ export default function PlanSemanal() {
       {/* Header Banner */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
-          {selectedWeek && (
+          {(selectedWeek || onBack) && (
             <button
-              onClick={() => setSelectedWeekId(null)}
-              className="w-10 h-10 rounded-full bg-slate-950 border border-slate-700/80 hover:border-blue-500/80 hover:bg-slate-800 text-blue-400 hover:text-blue-300 flex items-center justify-center transition shadow-lg shrink-0 group"
-              title="Volver a la pantalla anterior"
+              type="button"
+              onClick={() => {
+                if (selectedWeek) {
+                  setSelectedWeekId(null);
+                } else if (onBack) {
+                  onBack();
+                }
+              }}
+              className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer"
+              title={selectedWeek ? "Volver a la lista de semanas" : "Volver a la Página Inicial"}
             >
-              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
             </button>
           )}
           <div className="p-3.5 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 shadow-inner">

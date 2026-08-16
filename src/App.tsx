@@ -1474,7 +1474,7 @@ export default function App() {
         )}
 
         {activeTab === 'plan_semanal' && (
-          <PlanSemanal />
+          <PlanSemanal onBack={() => setActiveTab('inicio')} />
         )}
 
         {activeTab === 'players' && (
