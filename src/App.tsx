@@ -1502,6 +1502,7 @@ export default function App() {
                   onUpdatePlayer={handleSavePlayer}
                   matchReports={matchReports}
                   onUpdateMatchReport={handleSaveMatchReport}
+                  onBack={() => setActiveTab('inicio')}
                 />
               </section>
             </div>

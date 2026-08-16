@@ -22,7 +22,8 @@ import {
   Trash2,
   FileDown,
   Activity,
-  ExternalLink
+  ExternalLink,
+  ArrowLeft
 } from 'lucide-react';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
 import PlayerSeguimientoModal from './PlayerSeguimientoModal';
@@ -41,6 +42,7 @@ interface PlayerTableProps {
   onUpdatePlayer?: (player: ScoutedPlayer) => void;
   matchReports?: MatchReport[];
   onUpdateMatchReport?: (report: MatchReport) => void;
+  onBack?: () => void;
 }
 
 type SortField = 'nombre' | 'equipo' | 'categoria' | 'posicion' | 'anoNacimiento' | 'lateralidad' | 'valorMercado' | 'notas' | 'besoccerUrl';
@@ -58,7 +60,8 @@ export default function PlayerTable({
   onDeletePlayer,
   onUpdatePlayer,
   matchReports = [],
-  onUpdateMatchReport = () => {}
+  onUpdateMatchReport = () => {},
+  onBack
 }: PlayerTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPosFilter, setSelectedPosFilter] = useState<string>('All');
@@ -170,28 +173,15 @@ export default function PlayerTable({
     // Map table row content
     const tableData = playersToExport.map((p, index) => {
       const edad = new Date().getFullYear() - p.anoNacimiento;
-      const ratingStars = '★'.repeat(p.calificacion) + '☆'.repeat(5 - p.calificacion);
-      const valorStr = p.valorMercado 
-        ? p.valorMercado >= 1000000 
-          ? `${(p.valorMercado / 1000000).toFixed(1)}M €` 
-          : `${(p.valorMercado / 1000).toFixed(0)}K €`
-        : 'N/D';
 
       return [
         index + 1,
         p.nombre.toUpperCase(),
         p.equipo || 'Agente Libre',
+        p.categoria || 'N/D',
         p.posicion,
         `${p.anoNacimiento} (${edad} años)`,
-        p.lateralidad,
-        p.besoccerUrl || 'N/D',
-        p.elo !== undefined ? `${p.elo}` : 'N/D',
-        `${p.atributos?.fisico ?? 0}/10`,
-        `${p.atributos?.tecnica ?? 0}/10`,
-        `${p.atributos?.tactica ?? 0}/10`,
-        `${p.atributos?.mental ?? 0}/10`,
-        ratingStars,
-        valorStr
+        p.lateralidad || 'N/D'
       ];
     });
 
@@ -199,17 +189,10 @@ export default function PlayerTable({
       '#',
       'Nombre de Jugador',
       'Club Actual',
+      'Categoría',
       'Posición',
       'Año (Edad)',
-      'Pie',
-      'Perfil BeSoccer',
-      'ELO',
-      'FÍS',
-      'TÉC',
-      'TÁC',
-      'MEN',
-      'Calificación',
-      'Valor de Mercado'
+      'Pie'
     ]];
 
     autoTable(doc, {
@@ -220,29 +203,23 @@ export default function PlayerTable({
       headStyles: {
         fillColor: [15, 23, 42],
         textColor: [255, 255, 255],
-        fontSize: 8.5,
+        fontSize: 9,
         font: 'helvetica',
         fontStyle: 'bold',
         halign: 'center'
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 8 },
-        1: { fontStyle: 'bold', cellWidth: 40 },
-        2: { cellWidth: 32 },
-        3: { cellWidth: 35 },
-        4: { halign: 'center', cellWidth: 23 },
-        5: { halign: 'center', cellWidth: 22 },
-        6: { halign: 'center', cellWidth: 12 },
-        7: { halign: 'center', cellWidth: 11 },
-        8: { halign: 'center', cellWidth: 11 },
-        9: { halign: 'center', cellWidth: 11 },
-        10: { halign: 'center', cellWidth: 11 },
-        11: { halign: 'center', fontStyle: 'bold', textColor: [217, 119, 6], cellWidth: 22 }, // Amber color
-        12: { halign: 'right', fontStyle: 'bold', textColor: [22, 163, 74], cellWidth: 29 } // Green color
+        0: { halign: 'center', cellWidth: 14 },
+        1: { fontStyle: 'bold', cellWidth: 60 },
+        2: { cellWidth: 48 },
+        3: { halign: 'center', cellWidth: 38 },
+        4: { cellWidth: 45 },
+        5: { halign: 'center', cellWidth: 34 },
+        6: { halign: 'center', cellWidth: 28 }
       },
       styles: {
-        fontSize: 8,
-        cellPadding: 2.5,
+        fontSize: 8.5,
+        cellPadding: 3,
         valign: 'middle'
       },
       alternateRowStyles: {
@@ -394,16 +371,28 @@ export default function PlayerTable({
         
         {/* Row 1: Add or export */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-            <input
-              id="search-player-input"
-              type="text"
-              placeholder="Buscar por Nombre / Club..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full text-xs pl-9 pr-4 py-2 bg-slate-800 text-slate-200 border border-slate-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-550 placeholder-slate-500"
-            />
+          <div className="flex items-center gap-2.5 w-full sm:w-auto flex-1 max-w-md">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer"
+                title="Volver a la Página Inicial"
+              >
+                <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+            )}
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+              <input
+                id="search-player-input"
+                type="text"
+                placeholder="Buscar por Nombre / Club..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full text-xs pl-9 pr-4 py-2 bg-slate-800 text-slate-200 border border-slate-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-550 placeholder-slate-500"
+              />
+            </div>
           </div>
 
           <div id="actions-scouting-group" className="flex flex-wrap gap-2 w-full sm:w-auto">
