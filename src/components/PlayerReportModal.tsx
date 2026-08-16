@@ -6,6 +6,7 @@ import {
   User, 
   FileText, 
   Edit3, 
+  Eye,
   Globe, 
   Award, 
   Calendar, 
@@ -107,7 +108,7 @@ export default function PlayerReportModal({
   const [fotoUrl, setFotoUrl] = useState('');
   const [besoccerUrl, setBesoccerUrl] = useState('');
   const [altura, setAltura] = useState('');
-  const [recomendacion, setRecomendacion] = useState('FIRMAR');
+  const [recomendacion, setRecomendacion] = useState('SIN VALORAR');
   const [recomendacionComentario, setRecomendacionComentario] = useState('');
   const [descripcionGeneral, setDescripcionGeneral] = useState('');
   const [fortalezas, setFortalezas] = useState('');
@@ -122,19 +123,19 @@ export default function PlayerReportModal({
   useEffect(() => {
     if (player && isOpen) {
       const fullReport = ensureReportFields(player);
-      setNombre(fullReport.nombre);
-      setEquipo(fullReport.equipo);
-      setAltura(fullReport.altura);
-      setRecomendacion(fullReport.recomendacion);
-      setRecomendacionComentario(fullReport.recomendacionComentario);
-      setDescripcionGeneral(fullReport.descripcionGeneral);
-      setFortalezas(fullReport.fortalezas);
-      setDebilidades(fullReport.debilidades);
-      setEnSuEquipo(fullReport.enSuEquipo);
-      setEnPocasPalabras(fullReport.enPocasPalabras);
-      setTieneValorPor(fullReport.tieneValorPor);
-      setPitchX(fullReport.pitchX);
-      setPitchY(fullReport.pitchY);
+      setNombre(fullReport.nombre || '');
+      setEquipo(fullReport.equipo || '');
+      setAltura(fullReport.altura || '');
+      setRecomendacion(fullReport.recomendacion || 'SIN VALORAR');
+      setRecomendacionComentario(fullReport.recomendacionComentario || '');
+      setDescripcionGeneral(fullReport.descripcionGeneral || '');
+      setFortalezas(fullReport.fortalezas || '');
+      setDebilidades(fullReport.debilidades || '');
+      setEnSuEquipo(fullReport.enSuEquipo || '');
+      setEnPocasPalabras(fullReport.enPocasPalabras || '');
+      setTieneValorPor(fullReport.tieneValorPor || '');
+      setPitchX(fullReport.pitchX ?? 50);
+      setPitchY(fullReport.pitchY ?? 45);
       setEscudoUrl(player.escudoUrl || '');
       setFotoUrl(player.fotoUrl || '');
       setBesoccerUrl(player.besoccerUrl || '');
@@ -145,28 +146,28 @@ export default function PlayerReportModal({
   if (!isOpen || !player) return null;
 
   const currentYear = 2026;
-  const edad = currentYear - player.anoNacimiento;
+  const edad = currentYear - (player.anoNacimiento || 2000);
 
   // Save edits back to parent state
   const handleSave = () => {
     const updatedPlayer: ScoutedPlayer = {
       ...player,
-      nombre: nombre.trim(),
-      equipo: equipo.trim(),
-      altura,
-      recomendacion,
-      recomendacionComentario: recomendacionComentario.trim(),
-      descripcionGeneral: descripcionGeneral.trim(),
-      fortalezas: fortalezas.trim(),
-      debilidades: debilidades.trim(),
-      enSuEquipo: enSuEquipo.trim(),
-      enPocasPalabras: enPocasPalabras.trim(),
-      tieneValorPor: tieneValorPor.trim(),
-      pitchX,
-      pitchY,
-      escudoUrl: escudoUrl.trim() || undefined,
-      fotoUrl: fotoUrl.trim() || undefined,
-      besoccerUrl: besoccerUrl.trim() || undefined
+      nombre: (nombre || '').trim(),
+      equipo: (equipo || '').trim(),
+      altura: altura || '',
+      recomendacion: recomendacion || 'SIN VALORAR',
+      recomendacionComentario: (recomendacionComentario || '').trim(),
+      descripcionGeneral: (descripcionGeneral || '').trim(),
+      fortalezas: (fortalezas || '').trim(),
+      debilidades: (debilidades || '').trim(),
+      enSuEquipo: (enSuEquipo || '').trim(),
+      enPocasPalabras: (enPocasPalabras || '').trim(),
+      tieneValorPor: (tieneValorPor || '').trim(),
+      pitchX: pitchX ?? 50,
+      pitchY: pitchY ?? 45,
+      escudoUrl: (escudoUrl || '').trim() || undefined,
+      fotoUrl: (fotoUrl || '').trim() || undefined,
+      besoccerUrl: (besoccerUrl || '').trim() || undefined
     };
 
     onSaveReport(updatedPlayer);
@@ -176,28 +177,28 @@ export default function PlayerReportModal({
   const handleDownloadPDF = async () => {
     if (!player) return;
     await exportPlayerReportPDF(player, {
-      equipo,
-      altura,
-      fotoUrl,
+      equipo: equipo || player.equipo || '',
+      altura: altura || player.altura || '',
+      fotoUrl: fotoUrl || player.fotoUrl || '',
       escudoUrl: escudoUrl || getPlayerEscudoUrl(player),
-      recomendacion,
-      recomendacionComentario,
-      descripcionGeneral,
-      fortalezas,
-      debilidades,
-      enSuEquipo,
-      enPocasPalabras,
-      tieneValorPor,
-      pitchX,
-      pitchY
+      recomendacion: recomendacion || player.recomendacion || 'SIN VALORAR',
+      recomendacionComentario: recomendacionComentario || player.recomendacionComentario || '',
+      descripcionGeneral: descripcionGeneral || player.descripcionGeneral || '',
+      fortalezas: fortalezas || player.fortalezas || '',
+      debilidades: debilidades || player.debilidades || '',
+      enSuEquipo: enSuEquipo || player.enSuEquipo || '',
+      enPocasPalabras: enPocasPalabras || player.enPocasPalabras || '',
+      tieneValorPor: tieneValorPor || player.tieneValorPor || '',
+      pitchX: pitchX ?? 50,
+      pitchY: pitchY ?? 45
     });
   };
 
   // Helper lists renderer for Bullets
-  const renderStringBullets = (text: string) => {
-    if (!text.trim()) return <li className="text-slate-400 italic text-[11px]">Ningún punto documentado</li>;
+  const renderStringBullets = (text?: string | null) => {
+    if (!text || !text.trim()) return <li className="text-slate-400 italic text-[11px]">Ningún punto documentado</li>;
     return text.split('\n').map((line, idx) => {
-      const cleaned = line.trim().replace(/^[\s·•\-*\d+.)]+/, '');
+      const cleaned = (line || '').trim().replace(/^[\s·•\-*\d+.)]+/, '');
       if (!cleaned) return null;
       return (
         <li key={idx} className="flex items-start gap-2 text-slate-700 leading-snug">
@@ -208,10 +209,10 @@ export default function PlayerReportModal({
     });
   };
 
-  const renderRedStringBullets = (text: string) => {
-    if (!text.trim()) return <li className="text-slate-400 italic text-[11px]">Ningún punto documentado</li>;
+  const renderRedStringBullets = (text?: string | null) => {
+    if (!text || !text.trim()) return <li className="text-slate-400 italic text-[11px]">Ningún punto documentado</li>;
     return text.split('\n').map((line, idx) => {
-      const cleaned = line.trim().replace(/^[\s·•\-*\d+.)]+/, '');
+      const cleaned = (line || '').trim().replace(/^[\s·•\-*\d+.)]+/, '');
       if (!cleaned) return null;
       return (
         <li key={idx} className="flex items-start gap-2 text-slate-800 leading-snug font-medium">
@@ -257,23 +258,38 @@ export default function PlayerReportModal({
           </div>
           
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className={`px-3 py-1 text-2xs rounded font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                isEditing 
-                  ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30' 
-                  : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-750 border border-slate-700'
-              }`}
-              title="Alternar entre modo de vista y modo de edición directa de las secciones"
-            >
-              <Edit3 className="w-3 h-3" />
-              <span>{isEditing ? 'Editar' : 'Previsualizar'}</span>
-            </button>
-
+            <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-750">
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className={`px-3 py-1.5 text-xs rounded-md font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isEditing 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="Modo de edición directa del informe"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Editar</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className={`px-3 py-1.5 text-xs rounded-md font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  !isEditing 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="Modo de previsualización del documento final"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Previsualizar</span>
+              </button>
+            </div>
 
             <button 
               onClick={onClose}
-              className="p-1 px-2 text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-750 rounded transition-all active:scale-95"
+              className="p-1 px-2 text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 rounded transition-all active:scale-95 cursor-pointer ml-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -554,10 +570,10 @@ export default function PlayerReportModal({
 
             {/* Block 2: DESCRIPCIÓN GENERAL (SmartBank Black Title Bar) */}
             <div className="my-3.5">
-              <div className="bg-slate-950 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm">
+              <div className="bg-slate-900 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm shadow-sm">
                 DESCRIPCIÓN GENERAL
               </div>
-              <div className="bg-slate-50 p-3.5 text-[11px] text-slate-750 border-x border-b border-slate-250 leading-relaxed font-sans text-justify">
+              <div className="bg-slate-50 p-3.5 text-[11px] text-slate-800 border-x border-b border-slate-200 leading-relaxed font-sans text-justify">
                 {isEditing ? (
                   <textarea
                     rows={3}
@@ -574,10 +590,10 @@ export default function PlayerReportModal({
 
             {/* Block 3: FORTALEZAS (Gray bar style) */}
             <div className="my-3.5">
-              <div className="bg-slate-500 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm">
+              <div className="bg-slate-700 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm shadow-sm">
                 FORTALEZAS
               </div>
-              <div className="bg-slate-50 p-3.5 border-x border-b border-slate-250">
+              <div className="bg-slate-50 p-3.5 border-x border-b border-slate-200">
                 {isEditing ? (
                   <div>
                     <span className="text-[9px] text-slate-500 italic mb-1 block">Escriba una fortaleza por línea (sin viñetas):</span>
@@ -597,15 +613,15 @@ export default function PlayerReportModal({
               </div>
             </div>
 
-            {/* Block 4: DEBILIDADES (Crimson red bar style) */}
+            {/* Block 4: ASPECTOS A MEJORAR (Crimson red bar style) */}
             <div className="my-3.5">
-              <div className="bg-red-800 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm">
-                DEBILIDADES
+              <div className="bg-red-800 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm shadow-sm">
+                ASPECTOS A MEJORAR
               </div>
-              <div className="bg-red-50/15 p-3.5 border-x border-b border-slate-250">
+              <div className="bg-red-50/20 p-3.5 border-x border-b border-slate-200">
                 {isEditing ? (
                   <div>
-                    <span className="text-[9px] text-slate-500 italic mb-1 block">Escriba una debilidad por línea (sin viñetas):</span>
+                    <span className="text-[9px] text-slate-500 italic mb-1 block">Escriba un aspecto a mejorar por línea (sin viñetas):</span>
                     <textarea
                       rows={3}
                       value={debilidades}
@@ -622,18 +638,18 @@ export default function PlayerReportModal({
               </div>
             </div>
 
-            {/* Block 5: EN SU EQUIPO */}
+            {/* Block 5: EN SU EQUIPO (Solid Blue Bar) */}
             <div className="my-3.5">
-              <div className="bg-slate-750 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm">
+              <div className="bg-blue-600 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm shadow-sm">
                 EN SU EQUIPO
               </div>
-              <div className="bg-slate-50 p-3.5 text-[11px] text-slate-750 border-x border-b border-slate-250 leading-relaxed font-sans text-justify">
+              <div className="bg-slate-50 p-3.5 text-[11px] text-slate-800 border-x border-b border-slate-200 leading-relaxed font-sans text-justify">
                 {isEditing ? (
                   <textarea
                     rows={2}
                     value={enSuEquipo}
                     onChange={(e) => setEnSuEquipo(e.target.value)}
-                    className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-600 leading-relaxed font-sans shadow-inner"
+                    className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded p-2 focus:outline-none focus:border-blue-500 leading-relaxed font-sans shadow-inner"
                     placeholder="Escriba su rol táctico e importancia del jugador en el club actual..."
                   />
                 ) : (
@@ -642,22 +658,22 @@ export default function PlayerReportModal({
               </div>
             </div>
 
-            {/* Block 6: Side-by-side grids (EN POCAS PALABRAS vs TIENE VALOR POR) */}
+            {/* Block 6: Side-by-side grids (ROL EN NUESTRO EQUIPO Y POTENCIAL vs TIENE VALOR POR) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               
               {/* Box 1 */}
               <div>
-                <div className="bg-emerald-800 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm">
-                  EN POCAS PALABRAS
+                <div className="bg-emerald-800 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm shadow-sm">
+                  ROL EN NUESTRO EQUIPO Y POTENCIAL
                 </div>
-                <div className="bg-slate-50 p-3 border-x border-b border-slate-250 min-h-36 max-h-48 overflow-y-auto">
+                <div className="bg-slate-50 p-3 border-x border-b border-slate-200 min-h-36 max-h-48 overflow-y-auto">
                   {isEditing ? (
                     <textarea
                       rows={4}
                       value={enPocasPalabras}
                       onChange={(e) => setEnPocasPalabras(e.target.value)}
                       className="w-full text-[10px] font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none focus:border-emerald-600 h-full"
-                      placeholder="Palabras clave en línea..."
+                      placeholder="Rol y proyección en nuestro equipo..."
                     />
                   ) : (
                     <ul className="space-y-1.5">
@@ -669,10 +685,10 @@ export default function PlayerReportModal({
 
               {/* Box 2 */}
               <div>
-                <div className="bg-emerald-800 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm">
+                <div className="bg-emerald-800 font-bold text-white text-[10px] py-1 px-3 uppercase tracking-wider text-center rounded-t-sm shadow-sm">
                   TIENE VALOR POR
                 </div>
-                <div className="bg-slate-50 p-3 border-x border-b border-slate-250 min-h-36 max-h-48 overflow-y-auto">
+                <div className="bg-slate-50 p-3 border-x border-b border-slate-200 min-h-36 max-h-48 overflow-y-auto">
                   {isEditing ? (
                     <textarea
                       rows={4}
@@ -705,7 +721,7 @@ export default function PlayerReportModal({
             <button
               type="button"
               onClick={handleDownloadPDF}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs bg-red-600 hover:bg-red-550 text-white rounded font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs bg-red-600 hover:bg-red-500 text-white rounded font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
               title="Exportar documento oficial a PDF"
             >
               <Download className="w-4 h-4 text-red-100" />
@@ -717,7 +733,7 @@ export default function PlayerReportModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-755 text-slate-300 hover:text-white rounded border border-slate-700 font-bold transition-all hover:scale-102 active:scale-95"
+              className="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded border border-slate-700 font-bold transition-all hover:scale-102 active:scale-95 cursor-pointer"
             >
               Cancelar
             </button>
@@ -725,7 +741,7 @@ export default function PlayerReportModal({
             <button
               type="button"
               onClick={handleSave}
-              className="inline-flex items-center gap-2 px-5 py-2 text-xs bg-emerald-600 hover:bg-emerald-550 text-white rounded font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95"
+              className="inline-flex items-center gap-2 px-5 py-2 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
             >
               <Check className="w-4 h-4 text-emerald-100" />
               <span>Guardar Informe Oficial</span>

@@ -106,7 +106,7 @@ export async function exportPlayerReportPDF(
 
   const equipo = reportData?.equipo || player.equipo || 'Real Avilés Industrial';
   const altura = reportData?.altura || player.altura || '-';
-  const recomendacion = reportData?.recomendacion || player.recomendacion || 'SEGUIR';
+  const recomendacion = reportData?.recomendacion || player.recomendacion || 'SIN VALORAR';
   const recomendacionComentario = reportData?.recomendacionComentario || player.recomendacionComentario || '';
   const descripcionGeneral = reportData?.descripcionGeneral || player.descripcionGeneral || '';
   const fortalezas = reportData?.fortalezas || player.fortalezas || '';
@@ -448,15 +448,15 @@ export async function exportPlayerReportPDF(
   const colGap = 4;
   
   const fortLines: string[] = [];
-  fortalezas.split('\n').forEach(l => {
-    const cleaned = l.trim().replace(/^[\s·•\-*\d+.)]+/, '');
+  (fortalezas || '').split('\n').forEach(l => {
+    const cleaned = (l || '').trim().replace(/^[\s·•\-*\d+.)]+/, '');
     if (cleaned) fortLines.push(...doc.splitTextToSize(`• ${cleaned}`, colW - 6));
   });
   if (fortLines.length === 0) fortLines.push('Sin puntos destacados.');
 
   const debLines: string[] = [];
-  debilidades.split('\n').forEach(l => {
-    const cleaned = l.trim().replace(/^[\s·•\-*\d+.)]+/, '');
+  (debilidades || '').split('\n').forEach(l => {
+    const cleaned = (l || '').trim().replace(/^[\s·•\-*\d+.)]+/, '');
     if (cleaned) debLines.push(...doc.splitTextToSize(`• ${cleaned}`, colW - 6));
   });
   if (debLines.length === 0) debLines.push('Sin aspectos señalados.');
@@ -476,13 +476,13 @@ export async function exportPlayerReportPDF(
   doc.setTextColor(255, 255, 255);
   doc.text('PUNTOS FUERTES / VIRTUDES', 15, y + 3.8);
 
-  // Right col header: DEBILIDADES
+  // Right col header: ASPECTOS A MEJORAR
   doc.setFillColor(153, 27, 27); // red-800
   doc.rect(12 + colW + colGap, y, colW, 5.5, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(255, 255, 255);
-  doc.text('ASPECTOS A MEJORAR / DEBILIDADES', 12 + colW + colGap + 3, y + 3.8);
+  doc.text('ASPECTOS A MEJORAR', 12 + colW + colGap + 3, y + 3.8);
 
   const bodyY = y + 5.5;
 
@@ -520,15 +520,15 @@ export async function exportPlayerReportPDF(
 
   // --- Two Columns Bottom: EN POCAS PALABRAS & TIENE VALOR POR ---
   const pocasLines: string[] = [];
-  enPocasPalabras.split('\n').forEach(l => {
-    const cleaned = l.trim().replace(/^[\s·•\-*\d+.)]+/, '');
+  (enPocasPalabras || '').split('\n').forEach(l => {
+    const cleaned = (l || '').trim().replace(/^[\s·•\-*\d+.)]+/, '');
     if (cleaned) pocasLines.push(...doc.splitTextToSize(`• ${cleaned}`, colW - 6));
   });
   if (pocasLines.length === 0) pocasLines.push('Sin notas.');
 
   const valorLines: string[] = [];
-  tieneValorPor.split('\n').forEach(l => {
-    const cleaned = l.trim().replace(/^[\s·•\-*\d+.)]+/, '');
+  (tieneValorPor || '').split('\n').forEach(l => {
+    const cleaned = (l || '').trim().replace(/^[\s·•\-*\d+.)]+/, '');
     if (cleaned) valorLines.push(...doc.splitTextToSize(`• ${cleaned}`, colW - 6));
   });
   if (valorLines.length === 0) valorLines.push('Sin notas.');
@@ -540,13 +540,13 @@ export async function exportPlayerReportPDF(
     y = 15;
   }
 
-  // Header 1: EN POCAS PALABRAS
+  // Header 1: ROL EN NUESTRO EQUIPO Y POTENCIAL
   doc.setFillColor(30, 58, 138); // blue-900
   doc.rect(12, y, colW, 5.5, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setTextColor(255, 255, 255);
-  doc.text('EN POCAS PALABRAS', 15, y + 3.8);
+  doc.text('ROL EN NUESTRO EQUIPO Y POTENCIAL', 14, y + 3.8);
 
   // Header 2: TIENE VALOR POR
   doc.setFillColor(6, 78, 59); // emerald-900
@@ -597,6 +597,6 @@ export async function exportPlayerReportPDF(
   doc.text('Departamento de scouting Real Avilés Industrial', 105, footerY, { align: 'center' });
 
   // Save the PDF
-  const filename = `Informe_${player.nombre.replace(/\s+/g, '_')}_RealAviles.pdf`;
+  const filename = `Informe_${(player.nombre || 'Jugador').replace(/\s+/g, '_')}_RealAviles.pdf`;
   doc.save(filename);
 }

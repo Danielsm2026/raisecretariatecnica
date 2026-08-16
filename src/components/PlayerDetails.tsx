@@ -17,7 +17,9 @@ import {
   User,
   Download,
   ArrowLeft,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  Edit3
 } from 'lucide-react';
 import { ensureReportFields } from '../utils/reportDefaults';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
@@ -115,7 +117,7 @@ export default function PlayerDetails({
   const [fotoUrl, setFotoUrl] = useState('');
   const [besoccerUrl, setBesoccerUrl] = useState('');
   const [altura, setAltura] = useState('1.78 m');
-  const [recomendacion, setRecomendacion] = useState('FIRMAR');
+  const [recomendacion, setRecomendacion] = useState('SIN VALORAR');
   const [recomendacionComentario, setRecomendacionComentario] = useState('');
   const [descripcionGeneral, setDescripcionGeneral] = useState('');
   const [fortalezas, setFortalezas] = useState('');
@@ -130,19 +132,19 @@ export default function PlayerDetails({
   useEffect(() => {
     if (player) {
       const fullReport = ensureReportFields(player);
-      setNombre(fullReport.nombre);
-      setEquipo(fullReport.equipo);
-      setAltura(fullReport.altura);
-      setRecomendacion(fullReport.recomendacion);
-      setRecomendacionComentario(fullReport.recomendacionComentario);
-      setDescripcionGeneral(fullReport.descripcionGeneral);
-      setFortalezas(fullReport.fortalezas);
-      setDebilidades(fullReport.debilidades);
-      setEnSuEquipo(fullReport.enSuEquipo);
-      setEnPocasPalabras(fullReport.enPocasPalabras);
-      setTieneValorPor(fullReport.tieneValorPor);
-      setPitchX(fullReport.pitchX);
-      setPitchY(fullReport.pitchY);
+      setNombre(fullReport.nombre || '');
+      setEquipo(fullReport.equipo || '');
+      setAltura(fullReport.altura || '');
+      setRecomendacion(fullReport.recomendacion || 'SIN VALORAR');
+      setRecomendacionComentario(fullReport.recomendacionComentario || '');
+      setDescripcionGeneral(fullReport.descripcionGeneral || '');
+      setFortalezas(fullReport.fortalezas || '');
+      setDebilidades(fullReport.debilidades || '');
+      setEnSuEquipo(fullReport.enSuEquipo || '');
+      setEnPocasPalabras(fullReport.enPocasPalabras || '');
+      setTieneValorPor(fullReport.tieneValorPor || '');
+      setPitchX(fullReport.pitchX ?? 50);
+      setPitchY(fullReport.pitchY ?? 50);
       setEscudoUrl(player.escudoUrl || '');
       setFotoUrl(player.fotoUrl || '');
       setBesoccerUrl(player.besoccerUrl || '');
@@ -165,23 +167,24 @@ export default function PlayerDetails({
   }
 
   const currentYear = 2026;
-  const edad = currentYear - player.anoNacimiento;
+  const edad = currentYear - (player.anoNacimiento || 2000);
 
   // Render yellow stars based on rating
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }).map((_, i) => (
       <Star 
         key={i} 
-        className={`w-3.5 h-3.5 ${i < rating ? 'text-amber-400 fill-amber-400' : 'text-slate-750'}`} 
+        className={`w-3.5 h-3.5 ${i < rating ? 'text-amber-400 fill-amber-400' : 'text-slate-700'}`} 
       />
     ));
   };
 
   // SVG Radar coordinates
-  const fVal = player.atributos.fisico;
-  const tVal = player.atributos.tecnica;
-  const tacVal = player.atributos.tactica;
-  const mVal = player.atributos.mental;
+  const attrs = player.atributos || { fisico: 7, tecnica: 7, tactica: 7, mental: 7 };
+  const fVal = attrs.fisico ?? 7;
+  const tVal = attrs.tecnica ?? 7;
+  const tacVal = attrs.tactica ?? 7;
+  const mVal = attrs.mental ?? 7;
 
   const pFisico = { x: 50, y: 50 - (40 * fVal) / 10 };
   const pTecnica = { x: 50 + (40 * tVal) / 10, y: 50 };
@@ -205,22 +208,22 @@ export default function PlayerDetails({
     // Package the new values back to the parent state
     const updatedPlayer: ScoutedPlayer = {
       ...player,
-      nombre: nombre.trim(),
-      equipo: equipo.trim(),
-      altura,
-      recomendacion,
-      recomendacionComentario: recomendacionComentario.trim(),
-      descripcionGeneral: descripcionGeneral.trim(),
-      fortalezas: fortalezas.trim(),
-      debilidades: debilidades.trim(),
-      enSuEquipo: enSuEquipo.trim(),
-      enPocasPalabras: enPocasPalabras.trim(),
-      tieneValorPor: tieneValorPor.trim(),
-      pitchX,
-      pitchY,
-      escudoUrl: escudoUrl.trim() || undefined,
-      fotoUrl: fotoUrl.trim() || undefined,
-      besoccerUrl: besoccerUrl.trim() || undefined
+      nombre: (nombre || '').trim(),
+      equipo: (equipo || '').trim(),
+      altura: altura || '',
+      recomendacion: recomendacion || 'SIN VALORAR',
+      recomendacionComentario: (recomendacionComentario || '').trim(),
+      descripcionGeneral: (descripcionGeneral || '').trim(),
+      fortalezas: (fortalezas || '').trim(),
+      debilidades: (debilidades || '').trim(),
+      enSuEquipo: (enSuEquipo || '').trim(),
+      enPocasPalabras: (enPocasPalabras || '').trim(),
+      tieneValorPor: (tieneValorPor || '').trim(),
+      pitchX: pitchX ?? 50,
+      pitchY: pitchY ?? 50,
+      escudoUrl: (escudoUrl || '').trim() || undefined,
+      fotoUrl: (fotoUrl || '').trim() || undefined,
+      besoccerUrl: (besoccerUrl || '').trim() || undefined
     };
 
     onSaveReport(updatedPlayer);
@@ -230,28 +233,28 @@ export default function PlayerDetails({
   const handleDownloadPDF = async () => {
     if (!player) return;
     await exportPlayerReportPDF(player, {
-      equipo,
-      altura,
-      fotoUrl: fotoUrl || player.fotoUrl,
+      equipo: equipo || player.equipo || '',
+      altura: altura || player.altura || '',
+      fotoUrl: fotoUrl || player.fotoUrl || '',
       escudoUrl: escudoUrl || getPlayerEscudoUrl(player),
-      recomendacion,
-      recomendacionComentario,
-      descripcionGeneral,
-      fortalezas,
-      debilidades,
-      enSuEquipo,
-      enPocasPalabras,
-      tieneValorPor,
-      pitchX,
-      pitchY
+      recomendacion: recomendacion || player.recomendacion || 'SIN VALORAR',
+      recomendacionComentario: recomendacionComentario || player.recomendacionComentario || '',
+      descripcionGeneral: descripcionGeneral || player.descripcionGeneral || '',
+      fortalezas: fortalezas || player.fortalezas || '',
+      debilidades: debilidades || player.debilidades || '',
+      enSuEquipo: enSuEquipo || player.enSuEquipo || '',
+      enPocasPalabras: enPocasPalabras || player.enPocasPalabras || '',
+      tieneValorPor: tieneValorPor || player.tieneValorPor || '',
+      pitchX: pitchX ?? 50,
+      pitchY: pitchY ?? 50
     });
   };
 
   // Format single multiline text into visual list elements
-  const renderStringBullets = (text: string) => {
-    if (!text.trim()) return <li className="text-slate-500 italic">Ningún punto documentado</li>;
+  const renderStringBullets = (text?: string | null) => {
+    if (!text || !text.trim()) return <li className="text-slate-500 italic">Ningún punto documentado</li>;
     return text.split('\n').map((line, idx) => {
-      const cleaned = line.trim().replace(/^[\s·•\-*\d+.)]+/, ''); // strip existing bullet points
+      const cleaned = (line || '').trim().replace(/^[\s·•\-*\d+.)]+/, ''); // strip existing bullet points
       if (!cleaned) return null;
       return (
         <li key={idx} className="flex items-start gap-2 text-slate-700 leading-snug">
@@ -262,10 +265,10 @@ export default function PlayerDetails({
     });
   };
 
-  const renderRedStringBullets = (text: string) => {
-    if (!text.trim()) return <li className="text-slate-500 italic">Ningún punto documentado</li>;
+  const renderRedStringBullets = (text?: string | null) => {
+    if (!text || !text.trim()) return <li className="text-slate-500 italic">Ningún punto documentado</li>;
     return text.split('\n').map((line, idx) => {
-      const cleaned = line.trim().replace(/^[\s·•\-*\d+.)]+/, '');
+      const cleaned = (line || '').trim().replace(/^[\s·•\-*\d+.)]+/, '');
       if (!cleaned) return null;
       return (
         <li key={idx} className="flex items-start gap-2 text-slate-800 leading-snug font-medium">
@@ -284,7 +287,7 @@ export default function PlayerDetails({
       {/* RENDER TAB 1: TRADITIONAL RADAR & METRICS VIEW */}
       {activeTab === 'radar' && (
         <div className="p-6 space-y-5">
-          <div className="bg-slate-950/40 p-4 rounded border border-slate-850">
+          <div className="bg-slate-950/40 p-4 rounded border border-slate-800">
             <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-bold border border-blue-500/20 inline-block mb-2 uppercase tracking-widest font-mono">
               {player.posicion}
             </span>
@@ -318,7 +321,7 @@ export default function PlayerDetails({
                   <Briefcase className="w-4 h-4 text-slate-500 mr-1.5" />
                   <span>{formatVal(player.valorMercado)}</span>
                 </div>
-                <div className="flex items-center space-x-0.5 bg-slate-800/40 px-2 py-0.5 rounded border border-slate-750">
+                <div className="flex items-center space-x-0.5 bg-slate-800/40 px-2 py-0.5 rounded border border-slate-700">
                   {renderStars(player.calificacion)}
                 </div>
               </div>
@@ -331,7 +334,7 @@ export default function PlayerDetails({
               <Award className="w-4 h-4 text-blue-500 mr-1.5" /> MATRIZ DE RENDIMIENTO RADAR
             </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-slate-950/40 p-4 rounded border border-slate-850">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-slate-950/40 p-4 rounded border border-slate-800">
               {/* Radar Drawing */}
               <div className="flex justify-center">
                 <svg viewBox="0 0 100 100" className="w-28 h-28 text-slate-600">
@@ -414,22 +417,68 @@ export default function PlayerDetails({
 
       {/* RENDER TAB 2: RICH DOCUMENTARY "INFORME DESCRIPTIVO" */}
       {activeTab === 'document' && (
-        <div className="p-4 bg-slate-100 text-slate-900 font-sans border border-slate-350 shadow-inner max-h-[82vh] overflow-y-auto rounded-b">
+        <div className="p-4 bg-slate-100 text-slate-900 font-sans border border-slate-300 shadow-inner max-h-[82vh] overflow-y-auto rounded-b">
           
-          {/* Export PDF Control Toolbar */}
-          <div className="mb-3 flex items-center justify-between bg-slate-900 text-white px-3 py-2 rounded border border-slate-800 shadow-sm">
-            <span className="text-[11px] font-bold font-mono uppercase tracking-wider text-slate-300">
-              Documento Oficial de Scouting
-            </span>
-            <button
-              type="button"
-              onClick={handleDownloadPDF}
-              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs bg-red-600 hover:bg-red-550 text-white rounded font-bold transition-all shadow active:scale-95 cursor-pointer"
-              title="Exportar este Informe Descriptivo a PDF"
-            >
-              <Download className="w-3.5 h-3.5 text-red-100" />
-              <span>Exportar PDF</span>
-            </button>
+          {/* Export PDF & Mode Control Toolbar */}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 bg-slate-900 text-white px-3 py-2 rounded border border-slate-800 shadow-sm">
+            <div className="flex items-center space-x-3">
+              <span className="text-[11px] font-bold font-mono uppercase tracking-wider text-slate-300">
+                Documento Oficial de Scouting
+              </span>
+
+              {/* Segmented Mode Switch */}
+              <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingReport(true)}
+                  className={`px-3 py-1 text-2xs rounded-md font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isEditingReport 
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                  title="Modo de edición del informe"
+                >
+                  <Edit3 className="w-3 h-3" />
+                  <span>Editar</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingReport(false)}
+                  className={`px-3 py-1 text-2xs rounded-md font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                    !isEditingReport 
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                  title="Modo de previsualización del documento"
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>Previsualizar</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {isEditingReport && (
+                <button
+                  type="button"
+                  onClick={handleSaveReportEdits}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold transition-all shadow active:scale-95 cursor-pointer"
+                  title="Guardar cambios del informe"
+                >
+                  <Check className="w-3.5 h-3.5 text-emerald-100" />
+                  <span>Guardar</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleDownloadPDF}
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded font-bold transition-all shadow active:scale-95 cursor-pointer"
+                title="Exportar este Informe Descriptivo a PDF"
+              >
+                <Download className="w-3.5 h-3.5 text-red-100" />
+                <span>Exportar PDF</span>
+              </button>
+            </div>
           </div>
 
           {/* Mock PDF Document Box Sheet container */}
@@ -473,7 +522,7 @@ export default function PlayerDetails({
               </div>
               
               <div className="text-center">
-                <h3 className="font-extrabold text-[15px] font-sans text-slate-850 tracking-wider uppercase border-b border-slate-300 pb-0.5 inline-block">
+                <h3 className="font-extrabold text-[15px] font-sans text-slate-900 tracking-wider uppercase border-b border-slate-300 pb-0.5 inline-block">
                   INFORME DESCRIPTIVO
                 </h3>
               </div>
@@ -484,7 +533,7 @@ export default function PlayerDetails({
                   <div className="w-full max-w-[150px] bg-slate-900 text-white p-2 rounded border border-slate-800 text-left">
                     <label className="block text-[8px] uppercase tracking-wider text-slate-400 font-bold mb-1">Recomendación</label>
                     <select
-                      value={recomendacion}
+                      value={recomendacion || 'SIN VALORAR'}
                       onChange={(e) => setRecomendacion(e.target.value)}
                       className="w-full text-2xs bg-slate-800 text-white border border-slate-700 rounded px-1 py-0.5 focus:outline-none"
                     >
@@ -493,6 +542,7 @@ export default function PlayerDetails({
                       <option value="SEGUIR">SEGUIR</option>
                       <option value="INTERESANTE">INTERESANTE</option>
                       <option value="EVALUAR">EVALUAR</option>
+                      <option value="DESCARTAR">DESCARTAR</option>
                     </select>
                     <input
                       type="text"
@@ -503,7 +553,7 @@ export default function PlayerDetails({
                     />
                   </div>
                 ) : (
-                  <div className="bg-slate-950 text-white px-3 py-2 rounded text-right max-w-[180px] border border-slate-850">
+                  <div className="bg-slate-950 text-white px-3 py-2 rounded text-right max-w-[180px] border border-slate-800">
                     <p className={`text-center font-extrabold text-xs tracking-widest uppercase transition-colors ${
                       (recomendacion === 'FIRMAR' || recomendacion === 'CONTRATAR') ? 'text-green-400' :
                       (recomendacion === 'SEGUIR' || recomendacion === 'SEGUIMIENTO') ? 'text-blue-400' :
@@ -716,16 +766,16 @@ export default function PlayerDetails({
 
             {/* Block 2: DESCRIPCIÓN GENERAL (LaLiga SmartBank style black header) */}
             <div className="my-3">
-              <div className="bg-slate-950 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center">
+              <div className="bg-slate-900 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center shadow-sm">
                 DESCRIPCIÓN GENERAL
               </div>
-              <div className="bg-slate-100/70 p-3 text-[11px] text-slate-700 border-x border-b border-slate-250 leading-relaxed font-sans text-justify">
+              <div className="bg-slate-50 p-3 text-[11px] text-slate-800 border-x border-b border-slate-200 leading-relaxed font-sans text-justify">
                 {isEditingReport ? (
                   <textarea
                     rows={3}
                     value={descripcionGeneral}
                     onChange={(e) => setDescripcionGeneral(e.target.value)}
-                    className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none leading-relaxed font-sans"
+                    className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none focus:border-blue-500 leading-relaxed font-sans"
                     placeholder="Redacte la síntesis analítica general de las características..."
                   />
                 ) : (
@@ -736,10 +786,10 @@ export default function PlayerDetails({
 
             {/* Block 3: FORTALEZAS (Gray header plate) */}
             <div className="my-3">
-              <div className="bg-slate-500 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center">
+              <div className="bg-slate-700 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center shadow-sm">
                 FORTALEZAS
               </div>
-              <div className="bg-slate-100/70 p-3 border-x border-b border-slate-250">
+              <div className="bg-slate-50 p-3 border-x border-b border-slate-200">
                 {isEditingReport ? (
                   <div>
                     <span className="text-[9px] text-slate-500 italic mb-1 block">Ingrese una fortaleza por línea (sin viñetas):</span>
@@ -747,7 +797,7 @@ export default function PlayerDetails({
                       rows={3}
                       value={fortalezas}
                       onChange={(e) => setFortalezas(e.target.value)}
-                      className="w-full text-xs font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none"
+                      className="w-full text-xs font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none focus:border-slate-500"
                       placeholder="Ej: Técnicamente muy bueno en portería."
                     />
                   </div>
@@ -759,20 +809,20 @@ export default function PlayerDetails({
               </div>
             </div>
 
-            {/* Block 4: DEBILIDADES (Crimson red header plate) */}
+            {/* Block 4: ASPECTOS A MEJORAR (Crimson red header plate) */}
             <div className="my-3">
-              <div className="bg-red-800 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center">
-                DEBILIDADES
+              <div className="bg-red-800 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center shadow-sm">
+                ASPECTOS A MEJORAR
               </div>
-              <div className="bg-slate-100/70 p-3 border-x border-b border-slate-250">
+              <div className="bg-red-50/20 p-3 border-x border-b border-slate-200">
                 {isEditingReport ? (
                   <div>
-                    <span className="text-[9px] text-slate-500 italic mb-1 block">Ingrese una debilidad por línea (sin viñetas):</span>
+                    <span className="text-[9px] text-slate-500 italic mb-1 block">Ingrese un aspecto a mejorar por línea (sin viñetas):</span>
                     <textarea
                       rows={2.5}
                       value={debilidades}
                       onChange={(e) => setDebilidades(e.target.value)}
-                      className="w-full text-xs font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none"
+                      className="w-full text-xs font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none focus:border-red-400"
                       placeholder="Ej: Le falta algo de altura."
                     />
                   </div>
@@ -784,18 +834,18 @@ export default function PlayerDetails({
               </div>
             </div>
 
-            {/* Block 5: EN SU EQUIPO */}
+            {/* Block 5: EN SU EQUIPO (Solid Blue Header) */}
             <div className="my-3">
-              <div className="bg-slate-700 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center">
+              <div className="bg-blue-600 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center shadow-sm">
                 EN SU EQUIPO
               </div>
-              <div className="bg-slate-100/70 p-3 text-[11px] text-slate-700 border-x border-b border-slate-250 leading-relaxed font-sans text-justify">
+              <div className="bg-slate-50 p-3 text-[11px] text-slate-800 border-x border-b border-slate-200 leading-relaxed font-sans text-justify">
                 {isEditingReport ? (
                   <textarea
                     rows={2}
                     value={enSuEquipo}
                     onChange={(e) => setEnSuEquipo(e.target.value)}
-                    className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none leading-relaxed font-sans"
+                    className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none focus:border-blue-500 leading-relaxed font-sans"
                     placeholder="Redacte su situación de minutos/rol actual..."
                   />
                 ) : (
@@ -804,22 +854,22 @@ export default function PlayerDetails({
               </div>
             </div>
 
-            {/* Block 6: Side-by-side grids (EN POCAS PALABRAS vs TIENE VALOR POR) */}
+            {/* Block 6: Side-by-side grids (ROL EN NUESTRO EQUIPO Y POTENCIAL vs TIENE VALOR POR) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-4">
-              
+               
               {/* Column 1 */}
               <div>
-                <div className="bg-emerald-800 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center">
-                  EN POCAS PALABRAS
+                <div className="bg-emerald-800 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center shadow-sm">
+                  ROL EN NUESTRO EQUIPO Y POTENCIAL
                 </div>
-                <div className="bg-slate-100/70 p-3 border-x border-b border-slate-250 h-36 overflow-y-auto">
+                <div className="bg-slate-50 p-3 border-x border-b border-slate-200 h-36 overflow-y-auto">
                   {isEditingReport ? (
                     <textarea
                       rows={4}
                       value={enPocasPalabras}
                       onChange={(e) => setEnPocasPalabras(e.target.value)}
-                      className="w-full text-[10px] font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none h-full"
-                      placeholder="Puntos rápidos por línea..."
+                      className="w-full text-[10px] font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none focus:border-emerald-600 h-full"
+                      placeholder="Rol y proyección en nuestro equipo..."
                     />
                   ) : (
                     <ul className="space-y-1.5 text-[10.5px]">
@@ -831,16 +881,16 @@ export default function PlayerDetails({
 
               {/* Column 2 */}
               <div>
-                <div className="bg-emerald-800 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center">
+                <div className="bg-emerald-800 font-bold text-white text-[9.5px] py-1 px-3 uppercase tracking-wider text-center shadow-sm">
                   TIENE VALOR POR
                 </div>
-                <div className="bg-slate-100/70 p-3 border-x border-b border-slate-250 h-36 overflow-y-auto">
+                <div className="bg-slate-50 p-3 border-x border-b border-slate-200 h-36 overflow-y-auto">
                   {isEditingReport ? (
                     <textarea
                       rows={4}
                       value={tieneValorPor}
                       onChange={(e) => setTieneValorPor(e.target.value)}
-                      className="w-full text-[10px] font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none h-full"
+                      className="w-full text-[10px] font-mono bg-white text-slate-900 border border-slate-300 rounded p-1.5 focus:outline-none focus:border-emerald-600 h-full"
                       placeholder="Atributos de valor por línea..."
                     />
                   ) : (

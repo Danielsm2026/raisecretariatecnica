@@ -606,32 +606,6 @@ export default function PlanSemanal() {
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
                 Plan Semanal
               </h2>
-              <span className="px-2.5 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-mono font-bold rounded-md uppercase">
-                Scouting Agenda
-              </span>
-              {supabaseConnected ? (
-                syncError ? (
-                  <span className="px-2.5 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1" title={syncError}>
-                    <AlertTriangle className="w-3 h-3 text-rose-400" />
-                    <span>Error Supabase</span>
-                  </span>
-                ) : isSyncing ? (
-                  <span className="px-2.5 py-0.5 bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1">
-                    <RefreshCw className="w-3 h-3 animate-spin text-sky-400" />
-                    <span>Sincronizando...</span>
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1" title="Sincronizado automáticamente en la nube con Supabase">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                    <span>Supabase Nube</span>
-                  </span>
-                )
-              ) : (
-                <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-mono font-bold rounded-md uppercase flex items-center space-x-1">
-                  <Info className="w-3 h-3 text-amber-400" />
-                  <span>Sin Supabase (Solo Local)</span>
-                </span>
-              )}
             </div>
             <p className="text-xs text-slate-400 font-mono mt-0.5">
               {selectedWeek 

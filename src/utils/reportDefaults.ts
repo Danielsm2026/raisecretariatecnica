@@ -13,11 +13,41 @@ export function ensureReportFields(player: ScoutedPlayer): ScoutedPlayer & {
   pitchX: number;
   pitchY: number;
 } {
-  const currentYear = 2026;
-  const edad = currentYear - player.anoNacimiento;
+  if (!player) {
+    return {
+      id: '',
+      nombre: '',
+      equipo: '',
+      posicion: 'Mediocentro',
+      anoNacimiento: 2004,
+      lateralidad: 'Diestro',
+      valorMercado: 0,
+      calificacion: 3,
+      notas: '',
+      atributos: { fisico: 7, tecnica: 7, tactica: 7, mental: 7 },
+      fechaRegistro: new Date().toISOString(),
+      altura: '1.78 m',
+      recomendacion: 'SIN VALORAR',
+      recomendacionComentario: 'Pendiente de evaluación por el departamento.',
+      descripcionGeneral: '',
+      fortalezas: '',
+      debilidades: '',
+      enSuEquipo: '',
+      enPocasPalabras: '',
+      tieneValorPor: '',
+      pitchX: 50,
+      pitchY: 50
+    };
+  }
+
+  const attrs = player.atributos || { fisico: 7, tecnica: 7, tactica: 7, mental: 7 };
+  const fisicoVal = attrs.fisico ?? 7;
+  const tecnicaVal = attrs.tecnica ?? 7;
+  const tacticaVal = attrs.tactica ?? 7;
+  const mentalVal = attrs.mental ?? 7;
   
   // Tactical position coordinates on a 100x100 pitch representation
-  const getPitchCoords = (pos: string) => {
+  const getPitchCoords = (pos?: string) => {
     switch (pos) {
       case 'Portero': return { x: 50, y: 88 };
       case 'Defensa Central': return { x: 50, y: 72 };
@@ -34,38 +64,28 @@ export function ensureReportFields(player: ScoutedPlayer): ScoutedPlayer & {
   };
 
   const coords = getPitchCoords(player.posicion);
-  const px = player.pitchX !== undefined ? player.pitchX : coords.x;
-  const py = player.pitchY !== undefined ? player.pitchY : coords.y;
-
-  // Default recommendations based on quality
-  const getRec = (calif: number) => {
-    if (calif >= 5) return { rec: "FIRMAR", sub: "Con nivel y experiencia excelsos en la categoría." };
-    if (calif >= 4) return { rec: "SEGUIR", sub: "Monitorear su progresión de forma regular." };
-    if (calif >= 3) return { rec: "EVALUAR", sub: "Jugador útil para complementar fondo de armario." };
-    return { rec: "DESCARTAR", sub: "No cumple los requerimientos actuales del club." };
-  };
-  
-  const recInfo = getRec(player.calificacion);
+  const px = player.pitchX !== undefined && player.pitchX !== null ? player.pitchX : coords.x;
+  const py = player.pitchY !== undefined && player.pitchY !== null ? player.pitchY : coords.y;
 
   // Fallback height:
   const fallbackAltura = player.altura || (player.posicion === 'Portero' || player.posicion === 'Defensa Central' ? "1.89 m" : "1.78 m");
 
   // Default general description text:
   const descDefault = player.descripcionGeneral || player.notas || 
-    `${player.nombre} es un futbolista con muy buen presente en ${player.equipo}. Destaca técnicamente con un ${player.atributos.tecnica}/10 en nuestra escala, adaptándose eficazmente al ritmo de juego asumiendo protagonismo. Perfil equilibrado con notable lectura de juego y desborde.`;
+    `${player.nombre || 'El jugador'} es un futbolista con muy buen presente en ${player.equipo || 'su equipo'}. Destaca técnicamente con un ${tecnicaVal}/10 en nuestra escala, adaptándose eficazmente al ritmo de juego asumiendo protagonismo. Perfil equilibrado con notable lectura de juego y desborde.`;
 
   // Default strengths:
   const getStrengths = () => {
     if (player.fortalezas) return player.fortalezas;
     const list = [
-      `Técnicamente muy competente en su rol de ${player.posicion}.`,
+      `Técnicamente muy competente en su rol de ${player.posicion || 'jugador'}.`,
       `Gran criterio en la toma de decisiones rápidos en zona de definición.`,
-      `Buenas transiciones ofensivas ofensivas bajo control del esférico.`,
+      `Buenas transiciones ofensivas bajo control del esférico.`,
       `Notable inteligencia táctica, buscando siempre líneas de pase limpias.`
     ];
-    if (player.atributos.fisico >= 9) list.push("Portentoso despliegue aeróbico y potencia muscular en duelos directos.");
-    if (player.atributos.tecnica >= 9) list.push("Extraordinaria calidad en gestos técnicos complejos y controles orientados.");
-    if (player.atributos.tactica >= 9) list.push("Lectura espacial superior para la interceptación y anticipación táctica.");
+    if (fisicoVal >= 9) list.push("Portentoso despliegue aeróbico y potencia muscular en duelos directos.");
+    if (tecnicaVal >= 9) list.push("Extraordinaria calidad en gestos técnicos complejos y controles orientados.");
+    if (tacticaVal >= 9) list.push("Lectura espacial superior para la interceptación y anticipación táctica.");
     return list.join('\n');
   };
 
@@ -76,8 +96,8 @@ export function ensureReportFields(player: ScoutedPlayer): ScoutedPlayer & {
       "Margen de mejora en la contundencia de acciones a campo abierto.",
       "Necesidad de perfeccionar el juego de perfil menos hábil para salir de presiones asfixiantes."
     ];
-    if (player.atributos.fisico < 8) list.push("Le falta algo de envergadura o masa muscular para choques aéreos.");
-    if (player.atributos.mental < 8) list.push("Necesita mayor constancia mental durante lapsos desfavorables de partido.");
+    if (fisicoVal < 8) list.push("Le falta algo de envergadura o masa muscular para choques aéreos.");
+    if (mentalVal < 8) list.push("Necesita mayor constancia mental durante lapsos desfavorables de partido.");
     return list.join('\n');
   };
 
@@ -113,15 +133,19 @@ export function ensureReportFields(player: ScoutedPlayer): ScoutedPlayer & {
 
   return {
     ...player,
-    altura: fallbackAltura,
-    recomendacion: player.recomendacion || recInfo.rec,
-    recomendacionComentario: player.recomendacionComentario || recInfo.sub,
-    descripcionGeneral: descDefault,
-    fortalezas: getStrengths(),
-    debilidades: getWeaknesses(),
-    enSuEquipo: getEnSuEquipo(),
-    enPocasPalabras: getEnPocasPalabras(),
-    tieneValorPor: getTieneValorPor(),
+    nombre: player.nombre || '',
+    equipo: player.equipo || '',
+    altura: fallbackAltura || '',
+    recomendacion: player.recomendacion || 'SIN VALORAR',
+    recomendacionComentario: player.recomendacionComentario !== undefined && player.recomendacionComentario !== null 
+      ? player.recomendacionComentario 
+      : (player.recomendacion && player.recomendacion !== 'SIN VALORAR' ? '' : 'Pendiente de evaluación por el departamento.'),
+    descripcionGeneral: descDefault || '',
+    fortalezas: getStrengths() || '',
+    debilidades: getWeaknesses() || '',
+    enSuEquipo: getEnSuEquipo() || '',
+    enPocasPalabras: getEnPocasPalabras() || '',
+    tieneValorPor: getTieneValorPor() || '',
     pitchX: px,
     pitchY: py
   };

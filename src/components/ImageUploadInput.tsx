@@ -172,7 +172,7 @@ export default function ImageUploadInput({
             id={id}
             type="url"
             placeholder={placeholder}
-            value={value}
+            value={value || ''}
             onChange={(e) => {
               onChange(e.target.value);
               setError(null); // Clear error on manual change

@@ -111,8 +111,8 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    if (!nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
-    if (!equipo.trim()) newErrors.equipo = 'El equipo es obligatorio.';
+    if (!(nombre || '').trim()) newErrors.nombre = 'El nombre es obligatorio.';
+    if (!(equipo || '').trim()) newErrors.equipo = 'El equipo es obligatorio.';
     if (anoNacimiento < 1980 || anoNacimiento > 2018) {
       newErrors.anoNacimiento = 'El año de nacimiento debe estar entre 1980 y 2018.';
     }
@@ -124,22 +124,22 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       return;
     }
 
-    let finalEscudoUrl = escudoUrl.trim();
-    if (equipo.trim().toLowerCase().includes('pontevedra') && (!finalEscudoUrl || finalEscudoUrl.includes('1986.png'))) {
+    let finalEscudoUrl = (escudoUrl || '').trim();
+    if ((equipo || '').trim().toLowerCase().includes('pontevedra') && (!finalEscudoUrl || finalEscudoUrl.includes('1986.png'))) {
       finalEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
     }
 
     onSave({
       id: playerToEdit?.id,
-      nombre: nombre.trim(),
-      equipo: equipo.trim(),
-      categoria: categoria.trim(),
+      nombre: (nombre || '').trim(),
+      equipo: (equipo || '').trim(),
+      categoria: (categoria || '').trim(),
       posicion,
       anoNacimiento,
       lateralidad,
       valorMercado: valorMercado || undefined,
       calificacion,
-      notas: notas.trim(),
+      notas: (notas || '').trim(),
       atributos: {
         fisico,
         tecnica,
@@ -147,10 +147,10 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
         mental
       },
       elo: elo || undefined,
-      altura: altura.trim() || undefined,
+      altura: (altura || '').trim() || undefined,
       escudoUrl: finalEscudoUrl || undefined,
-      fotoUrl: fotoUrl.trim() || undefined,
-      besoccerUrl: besoccerUrl.trim() || undefined,
+      fotoUrl: (fotoUrl || '').trim() || undefined,
+      besoccerUrl: (besoccerUrl || '').trim() || undefined,
       valoracionFisica
     });
 
@@ -163,9 +163,8 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
         id="player-form-modal-content"
         className="bg-slate-900 rounded-lg max-w-2xl w-full shadow-2xl border border-slate-800 overflow-hidden my-8 text-slate-200"
         onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="bg-slate-950 px-6 py-4 flex items-center justify-between text-white border-b border-slate-850">
+      >        {/* Modal Header */}
+        <div className="bg-slate-950 px-6 py-4 flex items-center justify-between text-white border-b border-slate-800">
           <div>
             <h3 className="text-base font-bold font-display uppercase tracking-wider">
               {playerToEdit ? 'Editar Ficha de Scout' : 'Añadir Nuevo Futbolista'}
@@ -202,8 +201,8 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                   placeholder="Ej: Lamine Yamal"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className={`w-full text-xs px-3 py-2 bg-slate-850 text-white rounded border focus:outline-none focus:ring-1 ${
-                    errors.nombre ? 'border-red-500 focus:ring-red-200' : 'border-slate-750 focus:ring-blue-500 focus:border-blue-500'
+                  className={`w-full text-xs px-3 py-2 bg-slate-900 text-white rounded border focus:outline-none focus:ring-1 ${
+                    errors.nombre ? 'border-red-500 focus:ring-red-200' : 'border-slate-700 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                 />
                 {errors.nombre && <p className="text-red-500 text-[10px] mt-1 font-mono">{errors.nombre}</p>}
@@ -218,8 +217,8 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                   placeholder="Ej: FC Barcelona"
                   value={equipo}
                   onChange={(e) => setEquipo(e.target.value)}
-                  className={`w-full text-xs px-3 py-2 bg-slate-850 text-white rounded border focus:outline-none focus:ring-1 ${
-                    errors.equipo ? 'border-red-500 focus:ring-red-200' : 'border-slate-755 focus:ring-blue-500 focus:border-blue-500'
+                  className={`w-full text-xs px-3 py-2 bg-slate-900 text-white rounded border focus:outline-none focus:ring-1 ${
+                    errors.equipo ? 'border-red-500 focus:ring-red-200' : 'border-slate-700 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                 />
                 {errors.equipo && <p className="text-red-500 text-[10px] mt-1 font-mono">{errors.equipo}</p>}
@@ -235,7 +234,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                     placeholder="Ej: Segunda RFEF, Primera RFEF"
                     value={categoria}
                     onChange={(e) => setCategoria(e.target.value)}
-                    className="w-full text-xs px-3 py-2 bg-slate-850 text-white rounded border border-slate-750 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full text-xs px-3 py-2 bg-slate-900 text-white rounded border border-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <div className="flex flex-wrap gap-1">
                     {['Primera RFEF', 'Segunda RFEF', 'Segunda División'].map((cat) => (
@@ -246,7 +245,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                         className={`text-[9px] font-mono px-2 py-0.5 rounded transition-all active:scale-95 ${
                           categoria === cat 
                             ? 'bg-blue-600/30 border border-blue-500 text-blue-300 font-semibold' 
-                            : 'bg-slate-800/80 hover:bg-slate-700/80 border border-slate-750 text-slate-450'
+                            : 'bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-400'
                         }`}
                       >
                         {cat}
@@ -263,7 +262,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                   id="select-player-posicion"
                   value={posicion}
                   onChange={(e) => setPosicion(e.target.value as Position)}
-                  className="w-full text-xs px-3 py-2 bg-slate-850 text-white border border-slate-750 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full text-xs px-3 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   {POSITIONS.map((pos) => (
                     <option key={pos} value={pos} className="bg-slate-900">{pos}</option>
@@ -282,8 +281,8 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                   placeholder="Ej: 2004"
                   value={anoNacimiento}
                   onChange={(e) => setAnoNacimiento(parseInt(e.target.value) || 2004)}
-                  className={`w-full text-xs px-3 py-2 bg-slate-850 text-white rounded border focus:outline-none focus:ring-1 ${
-                    errors.anoNacimiento ? 'border-red-500 focus:ring-red-200' : 'border-slate-750 focus:ring-blue-500 focus:border-blue-500'
+                  className={`w-full text-xs px-3 py-2 bg-slate-900 text-white rounded border focus:outline-none focus:ring-1 ${
+                    errors.anoNacimiento ? 'border-red-500 focus:ring-red-200' : 'border-slate-700 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                 />
                 {errors.anoNacimiento && <p className="text-red-500 text-[10px] mt-1 font-mono">{errors.anoNacimiento}</p>}
@@ -322,7 +321,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                     placeholder="5000000"
                     value={valorMercado || ''}
                     onChange={(e) => setValorMercado(parseInt(e.target.value) || 0)}
-                    className="w-full text-xs pl-3 pr-12 py-2 bg-slate-850 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full text-xs pl-3 pr-12 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   <div className="absolute right-3 top-2.5 text-[10px] text-slate-500 font-mono font-bold">EUR</div>
                 </div>
@@ -337,7 +336,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                   placeholder="Ej: 1.84 m"
                   value={altura}
                   onChange={(e) => setAltura(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-slate-850 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full text-xs px-3 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -350,7 +349,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                   placeholder="Ej: 58"
                   value={elo || ''}
                   onChange={(e) => setElo(parseInt(e.target.value) || undefined)}
-                  className="w-full text-xs px-3 py-2 bg-slate-850 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full text-xs px-3 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -383,9 +382,9 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                   id="input-player-besoccerUrl"
                   type="url"
                   placeholder="Ej: https://es.besoccer.com/jugador/..."
-                  value={besoccerUrl}
+                  value={besoccerUrl || ''}
                   onChange={(e) => setBesoccerUrl(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-slate-850 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full text-xs px-3 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -399,9 +398,9 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
               id="textarea-player-notas"
               rows={3}
               placeholder="Redacta puntos clave: velocidad de decisión, polivalencia táctica, fortaleza mental..."
-              value={notas}
+              value={notas || ''}
               onChange={(e) => setNotas(e.target.value)}
-              className="w-full text-xs px-3 py-2 bg-slate-850 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans placeholder-slate-500"
+              className="w-full text-xs px-3 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans placeholder-slate-500"
             />
           </div>
 
@@ -453,7 +452,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                 id="btn-cancel-modal-form"
                 type="button"
                 onClick={onClose}
-                className="px-4 py-1.5 text-xs text-slate-350 font-bold hover:bg-slate-800 border border-slate-750 bg-slate-850 rounded transition-colors"
+                className="px-4 py-1.5 text-xs text-slate-300 font-bold hover:bg-slate-800 border border-slate-700 bg-slate-900 rounded transition-colors"
               >
                 Cancelar
               </button>

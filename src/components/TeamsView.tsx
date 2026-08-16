@@ -640,6 +640,7 @@ interface TeamsViewProps {
   onEditPlayer: (player: ScoutedPlayer) => void;
   onEditReport: (player: ScoutedPlayer) => void;
   onDeletePlayer: (id: string) => void;
+  onBack?: () => void;
 }
 
 export default function TeamsView({
@@ -647,7 +648,8 @@ export default function TeamsView({
   onSelectPlayer,
   onEditPlayer,
   onEditReport,
-  onDeletePlayer
+  onDeletePlayer,
+  onBack
 }: TeamsViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -1009,13 +1011,24 @@ export default function TeamsView({
       
       {/* Intro Context Bar inside view */}
       <div className="bg-slate-900 border border-slate-850 p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-        <div>
-          <h3 className="text-sm font-bold font-display text-white tracking-widest uppercase flex items-center space-x-2">
-            <span>🛡️ Archivo de Carpetas por Equipo</span>
-          </h3>
-          <p className="text-[10px] text-slate-500 font-mono uppercase mt-0.5">
-            Vista unificada de la cantera por entidades deportivas y clubes agrupados
-          </p>
+        <div className="flex items-center space-x-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
+              title="Volver al Inicio"
+            >
+              <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform text-blue-400" />
+            </button>
+          )}
+          <div>
+            <h3 className="text-sm font-bold font-display text-white tracking-widest uppercase flex items-center space-x-2">
+              <span>🛡️ Informes de Plantillas</span>
+            </h3>
+            <p className="text-[10px] text-slate-500 font-mono uppercase mt-0.5">
+              Vista unificada de la cantera por entidades deportivas y clubes agrupados
+            </p>
+          </div>
         </div>
         
         {/* Teams search box (when in main directory list) */}

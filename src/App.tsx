@@ -33,7 +33,7 @@ import {
   onSupabaseAuthStateChange,
   supabaseSignOut
 } from './utils/supabaseClient';
-import { Trophy, HelpCircle, FileJson, Info, Calendar, Plus, Trash2, Edit, FileText, ChevronRight, BarChart3, LogOut, User } from 'lucide-react';
+import { Trophy, HelpCircle, FileJson, Info, Calendar, Plus, Trash2, Edit, FileText, ChevronRight, BarChart3, LogOut, User, ArrowLeft } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
@@ -1518,20 +1518,20 @@ export default function App() {
               setIsReportModalOpen(true);
             }}
             onDeletePlayer={handleDeletePlayer}
+            onBack={() => setActiveTab('inicio')}
           />
         )}
 
         {activeTab === 'matchReports' && (
           <div className="bg-slate-900 border border-slate-850 rounded-lg p-5 space-y-4 shadow-xl">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-              <div>
-                <h3 className="text-sm font-bold font-display text-white tracking-widest uppercase flex items-center space-x-2">
-                  <span>⚽ Central de Actas e Informes de Partidos</span>
-                </h3>
-                <p className="text-[10px] text-slate-500 font-mono uppercase mt-0.5">
-                  Visualización, creación y edición de alineaciones tácticas y rendimiento colectivo
-                </p>
-              </div>
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <button
+                onClick={() => setActiveTab('inicio')}
+                className="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center justify-center shrink-0 shadow-md group active:scale-95 cursor-pointer"
+                title="Volver al Inicio"
+              >
+                <ArrowLeft className="w-5 h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform text-blue-400" />
+              </button>
 
               <button
                 onClick={handleNewMatchReportClick}

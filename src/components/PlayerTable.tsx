@@ -82,11 +82,12 @@ export default function PlayerTable({
   const getSelectValue = (recomendacion?: string) => {
     if (!recomendacion) return '';
     const rec = recomendacion.toUpperCase();
+    if (rec === 'SIN VALORAR' || rec === 'SIN_VALORAR') return '';
     if (rec === 'SEGUIR' || rec === 'SEGUIMIENTO') return 'SEGUIR';
     if (rec === 'INTERESANTE' || rec === 'EVALUAR') return 'INTERESANTE';
     if (rec === 'FIRMAR' || rec === 'CONTRATAR') return 'FIRMAR';
     if (rec === 'DESCARTAR') return 'DESCARTAR';
-    return rec;
+    return '';
   };
 
   // Helper for recommendation styling
@@ -766,6 +767,7 @@ export default function PlayerTable({
                       <option value="SEGUIR" className="bg-slate-900 text-slate-100">Seguir</option>
                       <option value="INTERESANTE" className="bg-slate-900 text-slate-100">Interesante</option>
                       <option value="FIRMAR" className="bg-slate-900 text-slate-100">Firmar</option>
+                      <option value="DESCARTAR" className="bg-slate-900 text-red-400">Descartar</option>
                     </select>
                   </td>
                 </tr>
