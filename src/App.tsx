@@ -165,7 +165,14 @@ export default function App() {
 
         // Merge local deleted IDs with DB deleted IDs and update local storage
         let localDeletedIds = getDeletedPlayerIds();
-        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_raul_marqueta', 'p_iker_galindo', 'p_david_alba', 'p_juanra', 'p_alvaro_perez', 'p_rui_pedro', 'p_ander_vidorreta', 'p_adrian_argos'];
+        const forceKeepIds = [
+          'p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 
+          'p_raul_marqueta', 'p_iker_galindo', 'p_david_alba', 'p_juanra', 'p_alvaro_perez', 
+          'p_rui_pedro', 'p_ander_vidorreta', 'p_adrian_argos',
+          'p_ba_simon_garcia', 'p_ba23', 'p_ba13', 'p_ba_benat_larrea', 'p_ba_telmo_zarandona', 'p_ba03', 'p_ba06',
+          'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
+          'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina'
+        ];
         if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
           localDeletedIds = localDeletedIds.filter(id => !forceKeepIds.includes(id));
           try {
@@ -274,6 +281,20 @@ export default function App() {
           if ((current.id === 'fich_2026_07' || current.id === 'fich_2026_08') && current.lateralidad !== 'Zurdo') {
             current.lateralidad = 'Zurdo';
             updated = true;
+          }
+          const bilbaoUpdatedIds = [
+            'p_ba03', 'p_ba06', 'p_ba13', 'p_ba23', 'p_ba_simon_garcia', 'p_ba_benat_larrea', 'p_ba_telmo_zarandona',
+            'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
+            'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina'
+          ];
+          if (bilbaoUpdatedIds.includes(current.id)) {
+            const freshBilbao = INITIAL_PLAYERS.find(pl => pl.id === current.id);
+            if (freshBilbao) {
+              if (current.nombre !== freshBilbao.nombre || current.dorsal !== freshBilbao.dorsal || current.altura !== freshBilbao.altura) {
+                current = { ...current, ...freshBilbao };
+                updated = true;
+              }
+            }
           }
           const teamName = current.equipo ? current.equipo.trim() : '';
           if (teamName === 'Bilbao Ath.' || teamName === 'Bilbao Athletic') {
@@ -465,7 +486,15 @@ export default function App() {
         
         // Merge missing initial players automatically (like the new goalkeepers), excluding any manually deleted ones
         let deletedIds = getDeletedPlayerIds();
-        const forceKeepIds = ['p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 'p_mangel_prendes', 'p_samu_mayo', 'p_neskes', 'p_raul_marqueta', 'p_iker_galindo', 'p_david_alba', 'p_juanra', 'p_alvaro_perez', 'p_rui_pedro', 'p_ander_vidorreta', 'p_adrian_argos'];
+        const forceKeepIds = [
+          'p16', 'p_roger_escoruela', 'fich_2026_07', 'fich_2026_08', 'p_andres_lopez', 
+          'p_mangel_prendes', 'p_samu_mayo', 'p_neskes', 'p_raul_marqueta', 'p_iker_galindo', 
+          'p_david_alba', 'p_juanra', 'p_alvaro_perez', 'p_rui_pedro', 'p_ander_vidorreta', 
+          'p_adrian_argos',
+          'p_ba_simon_garcia', 'p_ba23', 'p_ba13', 'p_ba_benat_larrea', 'p_ba_telmo_zarandona', 'p_ba03', 'p_ba06',
+          'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
+          'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina'
+        ];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
           deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
           try {
@@ -508,6 +537,20 @@ export default function App() {
           if ((current.id === 'fich_2026_07' || current.id === 'fich_2026_08') && current.lateralidad !== 'Zurdo') {
             current.lateralidad = 'Zurdo';
             updated = true;
+          }
+          const bilbaoUpdatedIds = [
+            'p_ba03', 'p_ba06', 'p_ba13', 'p_ba23', 'p_ba_simon_garcia', 'p_ba_benat_larrea', 'p_ba_telmo_zarandona',
+            'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
+            'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina'
+          ];
+          if (bilbaoUpdatedIds.includes(current.id)) {
+            const freshBilbao = INITIAL_PLAYERS.find(pl => pl.id === current.id);
+            if (freshBilbao) {
+              if (current.nombre !== freshBilbao.nombre || current.dorsal !== freshBilbao.dorsal || current.altura !== freshBilbao.altura) {
+                current = { ...current, ...freshBilbao };
+                updated = true;
+              }
+            }
           }
           const teamName = current.equipo ? current.equipo.trim() : '';
           if (teamName === 'Bilbao Ath.' || teamName === 'Bilbao Athletic') {
