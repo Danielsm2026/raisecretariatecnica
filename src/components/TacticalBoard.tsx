@@ -4,7 +4,7 @@ import {
   Shield, Trash2, SwitchCamera, UserPlus, Users, Search, HelpCircle, 
   UserCheck, Download, Folder, FolderPlus, Calendar, Snowflake, Sun, 
   ChevronRight, ArrowLeft, Edit3, Plus, Layout, FileText, Check, Copy, Sparkles, X,
-  Database, Upload, RefreshCw
+  Database, Upload, RefreshCw, Code, Zap, ExternalLink
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -13,6 +13,7 @@ import {
   dbSaveSetting, 
   isSupabaseConfigured, 
   getSQLInstructions,
+  getCampogramaAgostoSQL,
   dbFetchCampogramas,
   dbSaveCampograma,
   dbDeleteCampograma,
@@ -202,18 +203,26 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     folderId: 'mensuales',
     subFolderId: '1rfef',
     monthFolderId: 'agosto',
-    nombre: 'AGOSTO 2026 - PRIMERA RFEF GRUPO I',
+    nombre: 'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I',
     descripcion: 'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
-    fechaModificacion: '24/07/2026',
-    formation: '4-3-3',
+    fechaModificacion: '17/8/2026',
+    formation: '4-4-2',
     monthlyView: false,
     assignments: {
+      'por': 'p11',
+      'ltd': 'p14',
+      'dfc_d': 'p17',
+      'dfc_i': 'p18',
+      'lti': 'p16',
+      'md': 'p_inigo_munoz',
       'mc_d': 'p_samu_mayo',
       'mc_i': 'p_isi_gomez',
-      'dc': 'p_julian_mahicas'
+      'mi': 'p_brais_abelenda',
+      'dc_d': 'p_julian_mahicas',
+      'dc_i': 'p_mangel_prendes'
     },
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para 1ª RFEF Grupo I en Agosto 2026.'
+    notes: 'Campograma de seguimiento y alineación estándar para 1ª RFEF Grupo I en Agosto 2026.'
   },
   {
     id: 'c_agosto_2026_1rfef_g2',
@@ -408,6 +417,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
+  const [showSqlModal, setShowSqlModal] = useState(false);
+  const [activeSqlTab, setActiveSqlTab] = useState<'agosto' | 'full' | 'vercel'>('agosto');
+  const [copiedSql, setCopiedSql] = useState(false);
+
   const [campogramas, setCampogramas] = useState<CampogramaItem[]>(() => {
     const deletedSet = new Set(getLocalDeletedCampogramaIds());
     try {
@@ -415,6 +428,28 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // Check if c_agosto_2026_1rfef_g1 needs full 11-player lineup upgrade
+          const augustIdx = parsed.findIndex((c: any) => c.id === 'c_agosto_2026_1rfef_g1');
+          if (augustIdx >= 0) {
+            const currentItem = parsed[augustIdx];
+            const currentAssignmentsCount = Object.keys(currentItem.assignments || {}).length;
+            if (currentAssignmentsCount < 11 || currentItem.formation !== '4-4-2' || currentItem.nombre !== 'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I') {
+              const defAugust = DEFAULT_CAMPOGRAMAS.find(d => d.id === 'c_agosto_2026_1rfef_g1');
+              if (defAugust) {
+                parsed[augustIdx] = {
+                  ...currentItem,
+                  nombre: 'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I',
+                  fechaModificacion: '17/8/2026',
+                  formation: '4-4-2',
+                  monthlyView: false,
+                  assignments: {
+                    ...defAugust.assignments,
+                    ...(currentItem.assignments || {})
+                  }
+                };
+              }
+            }
+          }
           const clean = sanitizeCampogramas(parsed, players, deletedSet);
           localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(clean));
           return clean;
@@ -1280,6 +1315,15 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
               <button
+                onClick={() => setShowSqlModal(true)}
+                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+                title="Ver SQL y configuración de Supabase & Vercel"
+              >
+                <Code className="w-3.5 h-3.5 text-amber-400" />
+                <span>SQL Supabase & Vercel</span>
+              </button>
+
+              <button
                 onClick={handleSyncCampogramasWithCloud}
                 disabled={isSyncingCloud}
                 className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer disabled:opacity-50"
@@ -1603,18 +1647,29 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              const defaultPrefix = currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle;
-              setNewTitle(`${defaultPrefix} - ${new Date().toLocaleDateString('es-ES')}`);
-              if (currentSubFolder) setNewSubFolder(currentSubFolder);
-              setShowCreateModal(true);
-            }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-blue-600/20 transition-all shrink-0 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nuevo Campograma</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowSqlModal(true)}
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+              title="Ver SQL y configuración de Supabase & Vercel"
+            >
+              <Code className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">SQL Supabase</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const defaultPrefix = currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle;
+                setNewTitle(`${defaultPrefix} - ${new Date().toLocaleDateString('es-ES')}`);
+                if (currentSubFolder) setNewSubFolder(currentSubFolder);
+                setShowCreateModal(true);
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-blue-600/20 transition-all shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nuevo Campograma</span>
+            </button>
+          </div>
         </div>
 
         {/* Campogramas Grid inside this Folder */}
@@ -1640,16 +1695,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       {itemSubFolder?.logoImg && (
                         <img src={itemSubFolder.logoImg} alt={itemSubFolder.title} className="w-5 h-5 object-contain rounded border border-slate-700 bg-slate-950 p-0.5 shrink-0" referrerPolicy="no-referrer" />
                       )}
-                      <span className="text-[9px] font-mono font-extrabold uppercase bg-blue-950/60 text-blue-400 border border-blue-900/40 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-mono font-extrabold uppercase bg-blue-950/80 text-blue-400 border border-blue-900/40 px-2.5 py-1 rounded">
                         SISTEMA {item.formation}
                       </span>
                     </div>
-                    <span className="text-[9px] font-mono text-slate-500">
+                    <span className="text-[10px] font-mono text-slate-400 font-medium">
                       {item.fechaModificacion}
                     </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-white group-hover:text-blue-300 transition-colors line-clamp-1">
+                  <h3 className="text-base md:text-lg font-black text-white group-hover:text-blue-300 transition-colors line-clamp-1 uppercase tracking-wide">
                     {item.nombre}
                   </h3>
                   {item.descripcion && (
@@ -1658,13 +1713,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </p>
                   )}
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
-                      item.monthlyView ? 'bg-indigo-950/40 text-indigo-300 border-indigo-900/40' : 'bg-emerald-950/40 text-emerald-300 border-emerald-900/40'
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${
+                      item.monthlyView ? 'bg-indigo-950/40 text-indigo-300 border-indigo-900/40' : 'bg-emerald-950/50 text-emerald-300 border-emerald-900/40'
                     }`}>
-                      {item.monthlyView ? '📅 Posicional (5xPuesto)' : '⚽ Alineación Standard 11'}
+                      <span>{item.monthlyView ? '📅' : '🌐'}</span>
+                      <span>{item.monthlyView ? 'Posicional (5xPuesto)' : 'Alineación Standard 11'}</span>
                     </span>
-                    <span className="text-[10px] font-mono bg-slate-950 text-slate-300 border border-slate-800 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono font-bold bg-slate-950 text-slate-300 border border-slate-800 px-2.5 py-1 rounded-md">
                       {placedCount} {placedCount === 1 ? 'jugador' : 'jugadores'}
                     </span>
                   </div>
@@ -1672,18 +1728,18 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
                 {/* Actions bottom */}
                 <div className="mt-6 pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-blue-400 group-hover:text-blue-300 flex items-center space-x-1">
+                  <span className="text-xs font-mono font-bold text-cyan-400 group-hover:text-cyan-300 flex items-center space-x-1">
                     <span>Abrir / Editar</span>
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </span>
 
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center space-x-1.5">
                     <button
                       onClick={(e) => handleDuplicateCampograma(e, item)}
                       className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors"
                       title="Duplicar campograma"
                     >
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -1694,14 +1750,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors"
                       title="Cambiar nombre"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteCampograma(e, item.id, item.nombre)}
                       className="p-1.5 hover:bg-red-950 text-slate-400 hover:text-red-400 rounded transition-colors"
                       title="Eliminar campograma"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -2539,6 +2595,167 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 <Database className="w-3.5 h-3.5" />
                 <span>Guardar en Supabase</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Supabase & Vercel SQL / Config Modal */}
+      {showSqlModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400 border border-amber-500/20">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider">
+                    Vinculación Supabase & Vercel
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Campograma Agosto 1ª RFEF Grupo I • Esquema SQL y Variables
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSqlModal(false)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="flex border-b border-slate-800 space-x-2">
+              <button
+                onClick={() => setActiveSqlTab('agosto')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors ${
+                  activeSqlTab === 'agosto'
+                    ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Campograma Agosto (1ª RFEF)
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('full')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors ${
+                  activeSqlTab === 'full'
+                    ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Esquema Completo SQL
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('vercel')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors ${
+                  activeSqlTab === 'vercel'
+                    ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Variables en Vercel
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto space-y-3 font-mono text-xs">
+              {activeSqlTab === 'agosto' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Copia y pega este código SQL directamente en el <strong>SQL Editor</strong> de tu panel de Supabase para crear la tabla <code className="text-amber-300">scouting_campogramas</code> e insertar el Campograma de Agosto de Primera RFEF Grupo I con sus 11 jugadores:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-emerald-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaAgostoSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'full' && (
+                <div className="space-y-2">
+                  <p className="text-slate-400 font-sans text-xs">
+                    Sentencias DDL completas para crear y parchear todas las tablas (<code className="text-blue-300">scouting_campogramas</code>, <code className="text-blue-300">scouting_players</code>, <code className="text-blue-300">scouting_match_reports</code>, <code className="text-blue-300">scouting_plan_semanal</code>, <code className="text-blue-300">scouting_settings</code>):
+                  </p>
+                  <pre className="bg-slate-950 p-3 rounded border border-slate-800 text-[11px] text-blue-300 overflow-x-auto select-all max-h-[320px]">
+                    {getSQLInstructions()}
+                  </pre>
+                </div>
+              )}
+
+              {activeSqlTab === 'vercel' && (
+                <div className="space-y-3 font-sans text-xs text-slate-300">
+                  <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
+                    <h4 className="font-bold text-white text-sm flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-emerald-400" />
+                      <span>Cómo vincular con Vercel en 3 pasos:</span>
+                    </h4>
+                    <ol className="list-decimal list-inside space-y-1.5 text-slate-300 leading-relaxed font-sans">
+                      <li>Ve a tu proyecto en <strong>Vercel Dashboard</strong> → <strong>Settings</strong> → <strong>Environment Variables</strong>.</li>
+                      <li>Añade las siguientes variables de entorno obtenidas en <em>Supabase Dashboard → Project Settings → API</em>:</li>
+                    </ol>
+                    <div className="bg-slate-900 p-3 rounded border border-slate-800 font-mono text-[11px] space-y-1 text-amber-300">
+                      <div>VITE_SUPABASE_URL=https://tu-proyecto.supabase.co</div>
+                      <div>VITE_SUPABASE_ANON_KEY=tu-clave-anon-publica</div>
+                    </div>
+                    <p className="text-slate-400 text-[11px]">
+                      3. Realiza un <strong>Redeploy</strong> en Vercel para que las variables surtan efecto. La aplicación sincronizará automáticamente todos los campogramas y prospectos en tiempo real con la nube.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                  isSupabaseConfigured() 
+                    ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800' 
+                    : 'bg-amber-950/60 text-amber-400 border-amber-800'
+                }`}>
+                  {isSupabaseConfigured() ? '● Supabase Conectado' : '○ Supabase Modo Local'}
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const textToCopy = activeSqlTab === 'agosto' 
+                      ? getCampogramaAgostoSQL() 
+                      : activeSqlTab === 'full' 
+                        ? getSQLInstructions() 
+                        : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                    navigator.clipboard.writeText(textToCopy);
+                    setCopiedSql(true);
+                    setTimeout(() => setCopiedSql(false), 2500);
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg transition-all cursor-pointer"
+                >
+                  {copiedSql ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-300" />
+                      <span>¡Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copiar al Portapapeles</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSqlModal(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>

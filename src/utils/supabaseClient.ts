@@ -1131,12 +1131,131 @@ DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas
   FOR ALL USING (true) WITH CHECK (true);
 
--- CONFIGURACIÓN DE STORAGE EN SUPABASE (EJECUTA ESTO EN EL SQL EDITOR):
--- INSERT INTO storage.buckets (id, name, public) VALUES ('scouting_assets', 'scouting_assets', true) ON CONFLICT (id) DO NOTHING;
--- CREATE POLICY "Acceso publico lectura" ON storage.objects FOR SELECT USING (bucket_id = 'scouting_assets');
--- CREATE POLICY "Acceso publico insercion" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'scouting_assets');
--- CREATE POLICY "Acceso publico actualizacion" ON storage.objects FOR UPDATE USING (bucket_id = 'scouting_assets') WITH CHECK (bucket_id = 'scouting_assets');
--- CREATE POLICY "Acceso publico borrado" ON storage.objects FOR DELETE USING (bucket_id = 'scouting_assets');
+-- REGISTRO INICIAL DEL CAMPOGRAMA DE AGOSTO DE PRIMERA RFEF GRUPO I:
+INSERT INTO scouting_campogramas (
+  id,
+  folder_id,
+  sub_folder_id,
+  month_folder_id,
+  nombre,
+  descripcion,
+  fecha_modificacion,
+  updated_at,
+  formation,
+  monthly_view,
+  assignments,
+  monthly_assignments,
+  notes
+) VALUES (
+  'c_agosto_2026_1rfef_g1',
+  'mensuales',
+  '1rfef',
+  'agosto',
+  'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I',
+  'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
+  '17/8/2026',
+  1786968060000,
+  '4-4-2',
+  false,
+  '{"por":"p11","ltd":"p14","dfc_d":"p17","dfc_i":"p18","lti":"p16","md":"p_inigo_munoz","mc_d":"p_samu_mayo","mc_i":"p_isi_gomez","mi":"p_brais_abelenda","dc_d":"p_julian_mahicas","dc_i":"p_mangel_prendes"}'::jsonb,
+  '{}'::jsonb,
+  'Campograma oficial de 1ª RFEF Grupo I para Agosto 2026 sincronizado en Supabase y Vercel.'
+)
+ON CONFLICT (id) DO UPDATE SET
+  nombre = EXCLUDED.nombre,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  formation = EXCLUDED.formation,
+  monthly_view = EXCLUDED.monthly_view,
+  assignments = EXCLUDED.assignments,
+  notes = EXCLUDED.notes;
+
+-- Forzar recarga de cache del esquema en Supabase (PostgREST)
+NOTIFY pgrst, 'reload schema';
+`;
+}
+
+/**
+ * Returns the exact SQL script to create and initialize the "CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I" in Supabase.
+ */
+export function getCampogramaAgostoSQL(): string {
+  return `-- ==============================================================================
+-- SQL PARA VINCULAR EL CAMPOGRAMA DE AGOSTO (PRIMERA RFEF GRUPO I) EN SUPABASE
+-- ==============================================================================
+
+-- 1. Crear la tabla de campogramas tácticos si no existe
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL,
+  "folderId" TEXT,
+  sub_folder_id TEXT,
+  "subFolderId" TEXT,
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+-- 2. Habilitar seguridad RLS y permisos de acceso
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas 
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. Insertar o actualizar el Campograma de Agosto Primera RFEF Grupo I (11 jugadores, Sistema 4-4-2, Fecha 17/8/2026)
+INSERT INTO scouting_campogramas (
+  id,
+  folder_id,
+  sub_folder_id,
+  month_folder_id,
+  nombre,
+  descripcion,
+  fecha_modificacion,
+  updated_at,
+  formation,
+  monthly_view,
+  assignments,
+  monthly_assignments,
+  notes
+) VALUES (
+  'c_agosto_2026_1rfef_g1',
+  'mensuales',
+  '1rfef',
+  'agosto',
+  'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I',
+  'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
+  '17/8/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2',
+  false,
+  '{"por":"p11","ltd":"p14","dfc_d":"p17","dfc_i":"p18","lti":"p16","md":"p_inigo_munoz","mc_d":"p_samu_mayo","mc_i":"p_isi_gomez","mi":"p_brais_abelenda","dc_d":"p_julian_mahicas","dc_i":"p_mangel_prendes"}'::jsonb,
+  '{}'::jsonb,
+  'Campograma oficial de 1ª RFEF Grupo I para Agosto 2026 sincronizado en Supabase y desplegado en Vercel.'
+)
+ON CONFLICT (id) DO UPDATE SET
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  updated_at = EXCLUDED.updated_at,
+  formation = EXCLUDED.formation,
+  monthly_view = EXCLUDED.monthly_view,
+  assignments = EXCLUDED.assignments,
+  monthly_assignments = EXCLUDED.monthly_assignments,
+  notes = EXCLUDED.notes;
+
+-- 4. Notificar a PostgREST para recargar el esquema de tablas en tiempo real
+NOTIFY pgrst, 'reload schema';
 `;
 }
 
