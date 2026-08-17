@@ -1214,6 +1214,37 @@ const RAW_PLAYERS: ScoutedPlayer[] = [
     tieneValorPor: 'JERARQUÍA COMPROMETEDORA.\nEXPERIENCIA HISTÓRICA.\nDEFINICIÓN EN ÁREA SEGUVA.'
   },
   {
+    id: 'p_santi_franco',
+    dorsal: 24,
+    nombre: 'Santi Franco',
+    equipo: 'Real Avilés Industrial',
+    categoria: 'Primera RFEF',
+    posicion: 'Delantero Centro',
+    anoNacimiento: 2004,
+    lateralidad: 'Diestro',
+    altura: '1.83 m',
+    valorMercado: 250000,
+    calificacion: 4,
+    escudoUrl: 'https://cdn.resfu.com/img_data/equipos/2096.png?size=120x&lossy=1',
+    notas: 'Delantero centro Sub-23 (18/08/2004, 21 años, 1.83 m) procedente del Racing de Santander. Ariete con presencia física, movilidad en el frente de ataque, buen juego de espaldas y olfato goleador.',
+    atributos: {
+      fisico: 8,
+      tecnica: 7,
+      tactica: 7,
+      mental: 8
+    },
+    fechaRegistro: '2026-08-14',
+    elo: 54,
+    recomendacion: 'SIN VALORAR',
+    recomendacionComentario: 'Delantero joven Sub-23 con envergadura y buena capacidad para fijar centrales y rematar centros al área.',
+    descripcionGeneral: 'Santi Franco es un delantero centro corpulento y con movilidad (1.83 m) incorporado por el Real Avilés Industrial para aportar presencia ofensiva y gol.',
+    fortalezas: 'Presencia física y juego aéreo.\nFijación de centrales rivales.\nRemate de primeras en el área.\nTrabajo en la presión alta.',
+    debilidades: 'Ritmo en repliegues muy largos.\nAsociación en espacios ultra reducidos.',
+    enSuEquipo: 'Aporta juventud, fuerza y remate al ataque del Real Avilés Industrial.',
+    enPocasPalabras: 'DELANTERO SUB-23.\nPRESENCIA DE ÁREA.\nENVERGADURA.\nREMATADOR.',
+    tieneValorPor: 'PERFIL SUB-23 DE FUTURO.\nJUEGO AÉREO Y DE ESPALDAS.\nPROYECCIÓN DE GOL.'
+  },
+  {
     id: 'p37',
     nombre: 'Fran González',
     equipo: 'RM Castilla',

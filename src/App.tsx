@@ -171,7 +171,8 @@ export default function App() {
           'p_rui_pedro', 'p_ander_vidorreta', 'p_adrian_argos',
           'p_ba_simon_garcia', 'p_ba23', 'p_ba13', 'p_ba_benat_larrea', 'p_ba_telmo_zarandona', 'p_ba03', 'p_ba06',
           'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
-          'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina'
+          'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina',
+          'p_santi_franco'
         ];
         if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
           localDeletedIds = localDeletedIds.filter(id => !forceKeepIds.includes(id));
@@ -493,7 +494,8 @@ export default function App() {
           'p_adrian_argos',
           'p_ba_simon_garcia', 'p_ba23', 'p_ba13', 'p_ba_benat_larrea', 'p_ba_telmo_zarandona', 'p_ba03', 'p_ba06',
           'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
-          'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina'
+          'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina',
+          'p_santi_franco'
         ];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
           deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
