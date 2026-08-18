@@ -21,6 +21,8 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Cacereño': 'https://cdn.resfu.com/img_data/equipos/602.png?size=120x&lossy=1',
   'Pontevedra CF': 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1',
   'Pontevedra': 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1',
+  'CD Mirandés': 'https://cdn.resfu.com/img_data/equipos/1699.png?size=120x&lossy=1',
+  'Mirandés': 'https://cdn.resfu.com/img_data/equipos/1699.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -28,6 +30,11 @@ export const ESCUDO_FALLBACK = '/escudos/default.svg'; // a blurred sports turf 
 
 export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   const teamNormal = player.equipo?.trim();
+
+  // If team is CD Mirandés, override the logo explicitly with 1699.png
+  if (teamNormal && (teamNormal === 'CD Mirandés' || teamNormal === 'Mirandés' || teamNormal.toLowerCase().includes('mirandés') || teamNormal.toLowerCase().includes('mirandes'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/1699.png?size=120x&lossy=1';
+  }
 
   // If team is Real Avilés or Real Avilés Industrial, always return the 2096 logo
   if (teamNormal && (teamNormal === 'Real Avilés' || teamNormal === 'Real Avilés Industrial' || teamNormal.toLowerCase().includes('real avilés') || teamNormal.toLowerCase().includes('real aviles'))) {
