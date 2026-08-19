@@ -42,7 +42,7 @@ export interface PlanSemanalMatch {
   grupo: string; // e.g. 'PLAYOFF ASCENSO'
   scout: string; // e.g. 'MIGUEL/ANTONIO'
   modalidad: 'DIRECTO' | 'VÍDEO' | 'TELEVISIÓN';
-  acreditaciones: 'SOLICITAR' | 'SOLICITADA' | 'CONFIRMADA' | 'DENEGADA';
+  acreditaciones: 'SOLICITAR' | 'SOLICITADA' | 'CONFIRMADA' | 'DENEGADA' | 'NO NECESARIA';
 }
 
 export interface SemanaPlan {
@@ -691,6 +691,12 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
             DENEGADA
           </span>
         );
+      case 'NO NECESARIA':
+        return (
+          <span className="inline-block bg-slate-700 text-slate-300 font-bold px-2.5 py-0.5 text-[11px] sm:text-xs rounded-xs uppercase tracking-wider shadow-sm border border-slate-600/50">
+            NO NECESARIA
+          </span>
+        );
       default:
         return (
           <span className="inline-block bg-slate-700 text-slate-200 font-bold px-2 py-0.5 text-[10px] sm:text-[11px] rounded-xs uppercase tracking-wider">
@@ -1279,6 +1285,7 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
                     <option value="SOLICITADA">SOLICITADA</option>
                     <option value="CONFIRMADA">CONFIRMADA</option>
                     <option value="DENEGADA">DENEGADA</option>
+                    <option value="NO NECESARIA">NO NECESARIA</option>
                   </select>
                 </div>
               </div>
