@@ -173,7 +173,8 @@ export default function App() {
           'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
           'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina',
           'p_santi_franco',
-          'p_mirandes_jesus_ruiz', 'p_mirandes_edgar_badia', 'p_mirandes_adrian_zango', 'p_mirandes_aritz_arambarri', 'p_mirandes_peru_rodriguez', 'p_mirandes_joaquin_fernandez', 'p_mirandes_hodei_arrillaga', 'p_mirandes_pablo_perez'
+          'p_mirandes_jesus_ruiz', 'p_mirandes_edgar_badia', 'p_mirandes_adrian_zango', 'p_mirandes_aritz_arambarri', 'p_mirandes_peru_rodriguez', 'p_mirandes_joaquin_fernandez', 'p_mirandes_hodei_arrillaga', 'p_mirandes_pablo_perez',
+          'p_unionistas_emilio_bernad', 'p_unionistas_alex_daza', 'p_unionistas_christian_mutilva', 'p_unionistas_mikel_serrano', 'p_unionistas_ramiro_mayor', 'p_unionistas_alberto_retuerta', 'p_unionistas_gorka_rivera', 'p_unionistas_dani_morer', 'p_unionistas_abderrezzek_saidi', 'p_unionistas_arnau_casas', 'p_unionistas_juanma_lendinez', 'p_unionistas_alex_gil', 'p_unionistas_alejandro_marcelo', 'p_unionistas_luis_alcalde', 'p_unionistas_carlos_de_la_nava', 'p_unionistas_hugo_de_bustos', 'p_unionistas_alvaro_gomez', 'p_unionistas_dani_gonzalez', 'p_unionistas_pau_ferrer'
         ];
         if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
           localDeletedIds = localDeletedIds.filter(id => !forceKeepIds.includes(id));
@@ -324,6 +325,14 @@ export default function App() {
           if (teamName.toLowerCase().includes('mirandés') || teamName.toLowerCase().includes('mirandes')) {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/1699.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('unionistas')) {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
@@ -505,7 +514,8 @@ export default function App() {
           'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
           'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina',
           'p_santi_franco',
-          'p_mirandes_jesus_ruiz', 'p_mirandes_edgar_badia', 'p_mirandes_adrian_zango', 'p_mirandes_aritz_arambarri', 'p_mirandes_peru_rodriguez', 'p_mirandes_joaquin_fernandez', 'p_mirandes_hodei_arrillaga', 'p_mirandes_pablo_perez'
+          'p_mirandes_jesus_ruiz', 'p_mirandes_edgar_badia', 'p_mirandes_adrian_zango', 'p_mirandes_aritz_arambarri', 'p_mirandes_peru_rodriguez', 'p_mirandes_joaquin_fernandez', 'p_mirandes_hodei_arrillaga', 'p_mirandes_pablo_perez',
+          'p_unionistas_emilio_bernad', 'p_unionistas_alex_daza', 'p_unionistas_christian_mutilva', 'p_unionistas_mikel_serrano', 'p_unionistas_ramiro_mayor', 'p_unionistas_alberto_retuerta', 'p_unionistas_gorka_rivera', 'p_unionistas_dani_morer', 'p_unionistas_abderrezzek_saidi', 'p_unionistas_arnau_casas', 'p_unionistas_juanma_lendinez', 'p_unionistas_alex_gil', 'p_unionistas_alejandro_marcelo', 'p_unionistas_luis_alcalde', 'p_unionistas_carlos_de_la_nava', 'p_unionistas_hugo_de_bustos', 'p_unionistas_alvaro_gomez', 'p_unionistas_dani_gonzalez', 'p_unionistas_pau_ferrer'
         ];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
           deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
@@ -589,6 +599,14 @@ export default function App() {
           if (teamName.toLowerCase().includes('mirandés') || teamName.toLowerCase().includes('mirandes')) {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/1699.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('unionistas')) {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;

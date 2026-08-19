@@ -1,5 +1,6 @@
 import { ScoutedPlayer } from './types';
 import { INITIAL_FICHAJES } from './utils/initialFichajes';
+import { UNIONISTAS_PLAYERS } from './data/unionistasPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -4197,6 +4198,7 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...NUEVOS_PORTEROS_PRIMERA_RFEF,
   ...PONTEVEDRA_PLAYERS,
   ...CD_MIRANDES_PLAYERS,
+  ...UNIONISTAS_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4218,6 +4220,13 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       ...player,
       categoria: 'Primera RFEF',
       escudoUrl: 'https://cdn.resfu.com/img_data/equipos/1699.png?size=120x&lossy=1'
+    };
+  }
+  if (player.equipo && player.equipo.toLowerCase().includes('unionistas')) {
+    return {
+      ...player,
+      categoria: 'Primera RFEF',
+      escudoUrl: 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1'
     };
   }
   return player;

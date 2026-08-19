@@ -23,6 +23,10 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Pontevedra': 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1',
   'CD Mirandés': 'https://cdn.resfu.com/img_data/equipos/1699.png?size=120x&lossy=1',
   'Mirandés': 'https://cdn.resfu.com/img_data/equipos/1699.png?size=120x&lossy=1',
+  'Unionistas CF': 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1',
+  'Unionistas de Salamanca': 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1',
+  'Unionistas de Salamanca CF': 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1',
+  'Unionistas': 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -30,6 +34,11 @@ export const ESCUDO_FALLBACK = '/escudos/default.svg'; // a blurred sports turf 
 
 export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   const teamNormal = player.equipo?.trim();
+
+  // If team is Unionistas CF, override the logo explicitly
+  if (teamNormal && (teamNormal.toLowerCase().includes('unionistas'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1';
+  }
 
   // If team is CD Mirandés, override the logo explicitly with 1699.png
   if (teamNormal && (teamNormal === 'CD Mirandés' || teamNormal === 'Mirandés' || teamNormal.toLowerCase().includes('mirandés') || teamNormal.toLowerCase().includes('mirandes'))) {
