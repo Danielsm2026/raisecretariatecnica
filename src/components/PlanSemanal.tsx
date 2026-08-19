@@ -28,6 +28,7 @@ import {
   isSupabaseConfigured, 
   dbFetchPlanSemanalWeeksWithStatus, 
   dbSavePlanSemanalWeeksWithStatus,
+  dbDeletePlanSemanalWeek,
   getSQLInstructions
 } from '../utils/supabaseClient';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -413,14 +414,36 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
 
   const handleDeleteWeek = (semId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     const sem = weeks.find(w => w.id === semId);
     setConfirmModal({
       isOpen: true,
       title: 'Eliminar Semana del Plan',
       message: `¿Seguro que deseas eliminar "${sem?.nombre || cleanWeekTitle(sem?.filename) || 'esta semana'}"? Se eliminarán todos los partidos asociados a esta semana.`,
-      onConfirm: () => {
-        setWeeks(prev => prev.filter(w => w.id !== semId));
+      onConfirm: async () => {
+        const remainingWeeks = weeks.filter(w => w.id !== semId);
+        setWeeks(remainingWeeks);
+        localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(remainingWeeks));
         if (selectedWeekId === semId) setSelectedWeekId(null);
+
+        // Immediate direct sync to Supabase and Vercel cloud
+        if (supabaseConnected) {
+          setIsSyncing(true);
+          try {
+            await dbDeletePlanSemanalWeek(semId);
+            const res = await dbSavePlanSemanalWeeksWithStatus(remainingWeeks);
+            setIsSyncing(false);
+            if (res.success) {
+              setSyncSuccessMsg('Semana eliminada y sincronizada en Supabase / Vercel');
+              setTimeout(() => setSyncSuccessMsg(null), 3500);
+            } else {
+              setSyncError(res.error || 'Error al sincronizar eliminación en Supabase');
+            }
+          } catch (err: any) {
+            setIsSyncing(false);
+            setSyncError(err?.message || 'Error al eliminar en Supabase');
+          }
+        }
       }
     });
   };
@@ -432,14 +455,15 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
     const finClean = formFechaFin.trim() || '07-01-26';
     const filenameClean = `${nombreClean} del ${inicioClean} al ${finClean}`;
 
+    let updatedWeeks: SemanaPlan[] = [];
     if (editingWeek) {
-      setWeeks(prev => prev.map(w => w.id === editingWeek.id ? {
+      updatedWeeks = weeks.map(w => w.id === editingWeek.id ? {
         ...w,
         nombre: nombreClean,
         fechaInicio: inicioClean,
         fechaFin: finClean,
         filename: filenameClean
-      } : w));
+      } : w);
     } else {
       const newSem: SemanaPlan = {
         id: 'sem_' + Date.now(),
@@ -449,11 +473,24 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
         filename: filenameClean,
         partidos: []
       };
-      setWeeks(prev => [newSem, ...prev]);
+      updatedWeeks = [newSem, ...weeks];
       setSelectedWeekId(newSem.id);
     }
 
+    setWeeks(updatedWeeks);
+    localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(updatedWeeks));
     setIsNewWeekModalOpen(false);
+
+    if (supabaseConnected) {
+      setIsSyncing(true);
+      dbSavePlanSemanalWeeksWithStatus(updatedWeeks).then(res => {
+        setIsSyncing(false);
+        if (res.success) {
+          setSyncSuccessMsg('Semana guardada y sincronizada en Supabase / Vercel');
+          setTimeout(() => setSyncSuccessMsg(null), 3500);
+        }
+      });
+    }
   };
 
   const handleReset = () => {
@@ -461,10 +498,24 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
       isOpen: true,
       title: 'Restaurar Estado Inicial',
       message: '¿Deseas restaurar la agenda semanal al estado inicial por defecto? Se perderán las modificaciones no guardadas.',
-      onConfirm: () => {
+      onConfirm: async () => {
         setWeeks(DEFAULT_WEEKS);
         localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(DEFAULT_WEEKS));
         setSelectedWeekId(null);
+
+        if (supabaseConnected) {
+          setIsSyncing(true);
+          try {
+            const res = await dbSavePlanSemanalWeeksWithStatus(DEFAULT_WEEKS);
+            setIsSyncing(false);
+            if (res.success) {
+              setSyncSuccessMsg('Agenda restaurada y sincronizada en Supabase / Vercel');
+              setTimeout(() => setSyncSuccessMsg(null), 3500);
+            }
+          } catch (e) {
+            setIsSyncing(false);
+          }
+        }
       }
     });
   };
@@ -488,7 +539,10 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
   };
 
   const handleOpenEditMatch = (m: PlanSemanalMatch, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     setEditingMatch(m);
     setFormDia(m.diaSemana);
     setFormFecha(m.fechaStr);
@@ -502,15 +556,18 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
   };
 
   const handleDeleteMatch = (matchId: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     const match = selectedWeek?.partidos.find(p => p.id === matchId);
     setConfirmModal({
       isOpen: true,
       title: 'Eliminar Partido',
       message: `¿Seguro que deseas eliminar el partido "${match?.partido || 'seleccionado'}" del plan semanal?`,
-      onConfirm: () => {
+      onConfirm: async () => {
         if (!selectedWeekId) return;
-        setWeeks(prev => prev.map(w => {
+        const updatedWeeks = weeks.map(w => {
           if (w.id === selectedWeekId) {
             return {
               ...w,
@@ -518,7 +575,27 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
             };
           }
           return w;
-        }));
+        });
+        setWeeks(updatedWeeks);
+        localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(updatedWeeks));
+
+        // Immediate direct sync to Supabase and Vercel cloud
+        if (supabaseConnected) {
+          setIsSyncing(true);
+          try {
+            const res = await dbSavePlanSemanalWeeksWithStatus(updatedWeeks);
+            setIsSyncing(false);
+            if (res.success) {
+              setSyncSuccessMsg('Partido eliminado y sincronizado en Supabase / Vercel');
+              setTimeout(() => setSyncSuccessMsg(null), 3500);
+            } else {
+              setSyncError(res.error || 'Error al sincronizar en Supabase');
+            }
+          } catch (err: any) {
+            setIsSyncing(false);
+            setSyncError(err?.message || 'Error al sincronizar en Supabase');
+          }
+        }
       }
     });
   };
@@ -527,8 +604,9 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
     e.preventDefault();
     if (!selectedWeekId || !formPartido.trim()) return;
 
+    let updatedWeeks: SemanaPlan[] = [];
     if (editingMatch) {
-      setWeeks(prev => prev.map(w => {
+      updatedWeeks = weeks.map(w => {
         if (w.id === selectedWeekId) {
           return {
             ...w,
@@ -546,7 +624,7 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
           };
         }
         return w;
-      }));
+      });
     } else {
       const newMatch: PlanSemanalMatch = {
         id: 'plan_' + Date.now(),
@@ -560,7 +638,7 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
         acreditaciones: formAcreditaciones
       };
 
-      setWeeks(prev => prev.map(w => {
+      updatedWeeks = weeks.map(w => {
         if (w.id === selectedWeekId) {
           return {
             ...w,
@@ -568,10 +646,23 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
           };
         }
         return w;
-      }));
+      });
     }
 
+    setWeeks(updatedWeeks);
+    localStorage.setItem('plan_semanal_weeks_v2', JSON.stringify(updatedWeeks));
     setIsMatchModalOpen(false);
+
+    if (supabaseConnected) {
+      setIsSyncing(true);
+      dbSavePlanSemanalWeeksWithStatus(updatedWeeks).then(res => {
+        setIsSyncing(false);
+        if (res.success) {
+          setSyncSuccessMsg('Partido guardado y sincronizado en Supabase / Vercel');
+          setTimeout(() => setSyncSuccessMsg(null), 3500);
+        }
+      });
+    }
   };
 
   const getAcreditacionBadge = (status: PlanSemanalMatch['acreditaciones']) => {
@@ -801,17 +892,19 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition">
+                    <div className="flex items-center space-x-1 transition z-10">
                       <button
+                        type="button"
                         onClick={(e) => handleOpenEditWeek(sem, e)}
-                        className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-700/60 rounded-lg transition"
+                        className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-700/60 rounded-lg transition cursor-pointer"
                         title="Editar nombre/fechas"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
+                        type="button"
                         onClick={(e) => handleDeleteWeek(sem.id, e)}
-                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700/60 rounded-lg transition"
+                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-950/40 rounded-lg transition cursor-pointer"
                         title="Eliminar semana"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -906,17 +999,19 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
                             {/* PARTIDO */}
                             <td className="py-3 px-4 border-r border-slate-800 font-bold tracking-tight text-white flex items-center justify-between">
                               <span>{m.partido}</span>
-                              <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1 ml-2 transition shrink-0">
+                              <div className="flex items-center space-x-1 ml-2 transition shrink-0">
                                 <button
+                                  type="button"
                                   onClick={(e) => handleOpenEditMatch(m, e)}
-                                  className="p-1 hover:text-blue-400 text-slate-400 transition"
+                                  className="p-1.5 hover:text-blue-400 text-slate-400 hover:bg-slate-800 rounded transition cursor-pointer"
                                   title="Editar partido"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={(e) => handleDeleteMatch(m.id, e)}
-                                  className="p-1 hover:text-red-400 text-slate-400 transition"
+                                  className="p-1.5 hover:text-red-400 text-slate-400 hover:bg-red-950/40 rounded transition cursor-pointer"
                                   title="Eliminar partido"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />

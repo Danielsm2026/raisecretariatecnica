@@ -853,6 +853,45 @@ export async function dbBulkUpsertCampogramas(campogramas: any[]): Promise<void>
 }
 
 /**
+ * Deletes a week from Supabase scouting_plan_semanal table and settings backup.
+ */
+export async function dbDeletePlanSemanalWeek(id: string): Promise<{ success: boolean; error?: string }> {
+  if (!supabase) {
+    return { success: false, error: 'Supabase no está configurado.' };
+  }
+
+  let tableError: string | undefined;
+  try {
+    const { error } = await supabase
+      .from('scouting_plan_semanal')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      tableError = error.message;
+    }
+  } catch (err: any) {
+    tableError = err?.message || String(err);
+  }
+
+  try {
+    const { data } = await supabase
+      .from('scouting_settings')
+      .select('value')
+      .eq('key', 'plan_semanal_weeks_v2')
+      .maybeSingle();
+
+    if (data && Array.isArray(data.value)) {
+      const updated = data.value.filter((w: any) => w.id !== id);
+      await dbSaveSettingWithStatus('plan_semanal_weeks_v2', updated);
+    }
+  } catch (e) {
+    // Non-blocking fallback
+  }
+
+  return { success: !tableError, error: tableError };
+}
+
+/**
  * Save Plan Semanal weeks to Supabase settings storage.
  */
 export async function dbSavePlanSemanalWeeks(weeks: any): Promise<void> {
@@ -884,6 +923,29 @@ export async function dbSavePlanSemanalWeeksWithStatus(weeks: any[]): Promise<{ 
     if (payloads.length > 0) {
       await safeBulkUpsert('scouting_plan_semanal', payloads, 'id');
       tableSuccess = true;
+    }
+
+    // Clean up any deleted weeks from the table that are no longer in the list
+    const currentIds = (weeks || []).map((w: any) => w.id).filter(Boolean);
+    try {
+      const { data: existingRows } = await supabase
+        .from('scouting_plan_semanal')
+        .select('id');
+      
+      if (Array.isArray(existingRows)) {
+        const toDeleteIds = existingRows
+          .map(r => r.id)
+          .filter(id => id && !currentIds.includes(id));
+
+        if (toDeleteIds.length > 0) {
+          await supabase
+            .from('scouting_plan_semanal')
+            .delete()
+            .in('id', toDeleteIds);
+        }
+      }
+    } catch (cleanErr) {
+      console.warn('Non-blocking error cleaning deleted weeks in scouting_plan_semanal:', cleanErr);
     }
   } catch (err: any) {
     console.warn('Upsert to scouting_plan_semanal failed, saving to settings fallback:', err);
