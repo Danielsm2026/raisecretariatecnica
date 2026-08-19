@@ -870,6 +870,14 @@ export default function MatchReportModal({
 
     setEditingPlayerId(null);
     setEditingPlayerTeam(null);
+
+    // Desplazar suavemente la pantalla a la zona del campo de fútbol
+    setTimeout(() => {
+      const pitchArea = document.getElementById("zona-campo-futbol");
+      if (pitchArea) {
+        pitchArea.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 60);
   };
 
   const addNewPlayer = (team: "local" | "visitante") => {
@@ -1468,6 +1476,7 @@ export default function MatchReportModal({
 
             {/* Side-by-Side Tactical Pitches */}
             <div
+              id="zona-campo-futbol"
               className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${visualTab === "local" ? "flex" : visualTab === "visitante" ? "flex" : ""}`}
             >
               {/* LOCAL TEAM PITCH */}
