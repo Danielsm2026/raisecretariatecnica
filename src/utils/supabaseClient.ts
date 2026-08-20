@@ -5,9 +5,39 @@ const metaEnv = (import.meta as any).env || {};
 const supabaseUrl = (metaEnv.VITE_SUPABASE_URL as string) || '';
 const supabaseAnonKey = (metaEnv.VITE_SUPABASE_ANON_KEY as string) || '';
 
+// Helper to safely clear invalid or stale auth tokens from browser storage
+export function clearStaleSupabaseAuthStorage() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const key = window.localStorage.key(i);
+        if (key && (key.startsWith('sb-') || key.includes('supabase.auth.token') || key.includes('supabase-auth-token'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => {
+        try {
+          window.localStorage.removeItem(k);
+        } catch {
+          // Ignore
+        }
+      });
+    }
+  } catch {
+    // Ignore storage access errors
+  }
+}
+
 // Create the client only if keys are present
 export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    }) 
   : null;
 
 export function isSupabaseConfigured(): boolean {
@@ -15,41 +45,119 @@ export function isSupabaseConfigured(): boolean {
 }
 
 /**
- * Supabase Auth helper functions
+ * Supabase Auth helper functions with automatic invalid refresh token recovery
  */
 export async function getSupabaseSession() {
   if (!supabase) return null;
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error('Error fetching Supabase session:', error);
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      const msg = error.message || '';
+      if (
+        msg.toLowerCase().includes('refresh token') || 
+        msg.toLowerCase().includes('not found') || 
+        msg.toLowerCase().includes('invalid refresh') ||
+        (error as any).status === 400
+      ) {
+        console.warn('Stale/Invalid refresh token detected. Resetting local auth session:', msg);
+        clearStaleSupabaseAuthStorage();
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch {
+          // Ignore local signOut error
+        }
+      } else {
+        console.error('Error fetching Supabase session:', error);
+      }
+      return null;
+    }
+    return data?.session || null;
+  } catch (err: any) {
+    const msg = err?.message || '';
+    if (msg.toLowerCase().includes('refresh token') || msg.toLowerCase().includes('not found')) {
+      console.warn('Caught invalid refresh token exception. Resetting local auth session:', msg);
+      clearStaleSupabaseAuthStorage();
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch {
+        // Ignore
+      }
+    } else {
+      console.error('Unexpected error in getSupabaseSession:', err);
+    }
     return null;
   }
-  return session;
 }
 
 export async function getSupabaseUser() {
   if (!supabase) return null;
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error('Error fetching Supabase user:', error);
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      const msg = error.message || '';
+      if (
+        msg.toLowerCase().includes('refresh token') || 
+        msg.toLowerCase().includes('not found') || 
+        msg.toLowerCase().includes('invalid refresh') ||
+        (error as any).status === 400
+      ) {
+        console.warn('Stale/Invalid refresh token in getUser. Resetting local auth session:', msg);
+        clearStaleSupabaseAuthStorage();
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch {
+          // Ignore
+        }
+      } else {
+        console.error('Error fetching Supabase user:', error);
+      }
+      return null;
+    }
+    return data?.user || null;
+  } catch (err: any) {
+    const msg = err?.message || '';
+    if (msg.toLowerCase().includes('refresh token') || msg.toLowerCase().includes('not found')) {
+      console.warn('Caught invalid refresh token exception in getUser:', msg);
+      clearStaleSupabaseAuthStorage();
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch {
+        // Ignore
+      }
+    } else {
+      console.error('Unexpected error in getSupabaseUser:', err);
+    }
     return null;
   }
-  return user;
 }
 
 export function onSupabaseAuthStateChange(callback: (event: string, session: any) => void) {
   if (!supabase) return { data: { subscription: { unsubscribe: () => {} } } };
-  return supabase.auth.onAuthStateChange(callback);
+  return supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT' || (event as string) === 'TOKEN_REFRESH_FAILED') {
+      if (!session) {
+        clearStaleSupabaseAuthStorage();
+      }
+    }
+    callback(event, session);
+  });
 }
 
 export async function supabaseSignIn(email: string, password: string) {
   if (!supabase) throw new Error('Supabase no está configurado');
+  clearStaleSupabaseAuthStorage();
   return await supabase.auth.signInWithPassword({ email, password });
 }
 
 export async function supabaseSignOut() {
   if (!supabase) return;
-  return await supabase.auth.signOut();
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.warn('Error during supabase.auth.signOut:', err);
+  } finally {
+    clearStaleSupabaseAuthStorage();
+  }
 }
 
 export interface SupabaseSyncResult {
@@ -159,13 +267,26 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
 async function safeUpsert(table: string, payload: any, onConflict: string): Promise<any> {
   let currentPayload = { ...payload };
   while (true) {
-    const { error } = await supabase!
-      .from(table)
-      .upsert(currentPayload, { onConflict });
+    let error: any = null;
+    try {
+      const res = await supabase!
+        .from(table)
+        .upsert(currentPayload, { onConflict });
+      error = res.error;
+    } catch (fetchErr: any) {
+      const msg = fetchErr?.message || String(fetchErr);
+      console.warn(`[Supabase Network] Error al conectar con ${table}:`, msg);
+      throw fetchErr;
+    }
     
     if (!error) return;
 
     const errorMsg = error.message || '';
+    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Load failed')) {
+      console.warn(`[Supabase Network] Error de red en ${table}:`, errorMsg);
+      throw error;
+    }
+
     const match = errorMsg.match(/column "([^"]+)"/i) || 
                   errorMsg.match(/column ([a-zA-Z0-9__]+) of/i) ||
                   errorMsg.match(/find the column "([^"]+)"/i) ||
@@ -200,13 +321,26 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
 async function safeBulkUpsert(table: string, payloads: any[], onConflict: string): Promise<any> {
   let currentPayloads = payloads.map(p => ({ ...p }));
   while (true) {
-    const { error } = await supabase!
-      .from(table)
-      .upsert(currentPayloads, { onConflict });
+    let error: any = null;
+    try {
+      const res = await supabase!
+        .from(table)
+        .upsert(currentPayloads, { onConflict });
+      error = res.error;
+    } catch (fetchErr: any) {
+      const msg = fetchErr?.message || String(fetchErr);
+      console.warn(`[Supabase Network] Error de red en bulk upsert ${table}:`, msg);
+      throw fetchErr;
+    }
     
     if (!error) return;
 
     const errorMsg = error.message || '';
+    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Load failed')) {
+      console.warn(`[Supabase Network] Error de red en bulk upsert ${table}:`, errorMsg);
+      throw error;
+    }
+
     const match = errorMsg.match(/column "([^"]+)"/i) || 
                   errorMsg.match(/column ([a-zA-Z0-9__]+) of/i) ||
                   errorMsg.match(/find the column "([^"]+)"/i) ||
@@ -311,8 +445,13 @@ export async function dbSavePlayer(player: ScoutedPlayer): Promise<void> {
 
   try {
     await safeUpsert('scouting_players', payload, 'id');
-  } catch (error) {
-    console.error('Error saving player to Supabase:', error);
+  } catch (error: any) {
+    const msg = error?.message || String(error);
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+      console.warn('[Supabase] No se pudo guardar el jugador por falta de conexión:', msg);
+    } else {
+      console.error('Error saving player to Supabase:', error);
+    }
     throw error;
   }
 }
@@ -325,14 +464,29 @@ export async function dbDeletePlayer(id: string): Promise<void> {
     throw new Error('Supabase client not initialized.');
   }
 
-  const { error } = await supabase
-    .from('scouting_players')
-    .delete()
-    .eq('id', id);
+  try {
+    const { error } = await supabase
+      .from('scouting_players')
+      .delete()
+      .eq('id', id);
 
-  if (error) {
-    console.error('Error deleting player from Supabase:', error);
-    throw error;
+    if (error) {
+      const msg = error.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        console.warn(`[Supabase] No se pudo eliminar jugador ${id} por problema de conexión:`, msg);
+      } else {
+        console.error('Error deleting player from Supabase:', error);
+      }
+      throw error;
+    }
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      console.warn(`[Supabase] Error de red al eliminar jugador ${id}:`, msg);
+    } else {
+      console.error('Error deleting player from Supabase:', err);
+    }
+    throw err;
   }
 }
 
@@ -408,8 +562,13 @@ export async function dbBulkUpsert(players: ScoutedPlayer[]): Promise<void> {
 
   try {
     await safeBulkUpsert('scouting_players', payloads, 'id');
-  } catch (error) {
-    console.error('Error bulk upserting to Supabase:', error);
+  } catch (error: any) {
+    const msg = error?.message || String(error);
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      console.warn('[Supabase] Error de red en dbBulkUpsert:', msg);
+    } else {
+      console.error('Error bulk upserting to Supabase:', error);
+    }
     throw error;
   }
 }
@@ -422,13 +581,29 @@ export async function dbFetchMatchReports(): Promise<MatchReport[]> {
     throw new Error('Supabase URL or Anon Key is missing in environment variables.');
   }
 
-  const { data, error } = await supabase
-    .from('scouting_match_reports')
-    .select('*')
-    .order('fecha', { ascending: false });
+  let data: any = null;
+  let error: any = null;
+
+  try {
+    const res = await supabase
+      .from('scouting_match_reports')
+      .select('*')
+      .order('fecha', { ascending: false });
+    data = res.data;
+    error = res.error;
+  } catch (fetchErr: any) {
+    const msg = fetchErr?.message || String(fetchErr);
+    console.warn('[Supabase] Error de red al obtener informes de partidos:', msg);
+    throw fetchErr;
+  }
 
   if (error) {
-    console.error('Error fetching match reports from Supabase:', error);
+    const msg = error.message || '';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      console.warn('[Supabase] Error al obtener informes de partidos por red:', msg);
+    } else {
+      console.error('Error fetching match reports from Supabase:', error);
+    }
     throw error;
   }
 
@@ -492,23 +667,38 @@ export async function dbSaveMatchReport(report: MatchReport): Promise<void> {
     jugadoresVisitante: report.jugadoresVisitante
   };
 
-  const { error } = await supabase
-    .from('scouting_match_reports')
-    .upsert(payload, { onConflict: 'id' });
+  try {
+    const { error } = await supabase
+      .from('scouting_match_reports')
+      .upsert(payload, { onConflict: 'id' });
 
-  if (error) {
-    if (error.message && error.message.includes('categoria')) {
-      const { categoria, ...payloadWithoutCategory } = payload;
-      const { error: retryError } = await supabase
-        .from('scouting_match_reports')
-        .upsert(payloadWithoutCategory, { onConflict: 'id' });
-      if (!retryError) {
-        console.warn('Informe guardado con éxito pero omitiendo el campo "categoria" ya que no existe en tu base de datos Supabase.');
-        return;
+    if (error) {
+      if (error.message && error.message.includes('categoria')) {
+        const { categoria, ...payloadWithoutCategory } = payload;
+        const { error: retryError } = await supabase
+          .from('scouting_match_reports')
+          .upsert(payloadWithoutCategory, { onConflict: 'id' });
+        if (!retryError) {
+          console.warn('Informe guardado con éxito pero omitiendo el campo "categoria" ya que no existe en tu base de datos Supabase.');
+          return;
+        }
       }
+      const msg = error.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        console.warn('[Supabase] Error de red al guardar informe:', msg);
+      } else {
+        console.error('Error saving match report to Supabase:', error);
+      }
+      throw error;
     }
-    console.error('Error saving match report to Supabase:', error);
-    throw error;
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      console.warn('[Supabase] Error de red al guardar informe:', msg);
+    } else {
+      console.error('Error saving match report to Supabase:', err);
+    }
+    throw err;
   }
 }
 

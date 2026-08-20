@@ -206,14 +206,14 @@ export default function App() {
           };
           
           dbSavePlayer(systemDeletedPlayer).catch(err => {
-            console.error('Error syncing merged deleted IDs to Supabase on load:', err);
+            console.warn('Error syncing merged deleted IDs to Supabase on load (offline/network):', err?.message || err);
           });
 
           // Delete those players physically from Supabase to keep both databases in sync
           const newlyDeletedFromLocal = localDeletedIds.filter(id => !dbDeletedIds.includes(id));
           newlyDeletedFromLocal.forEach(id => {
             dbDeletePlayer(id).catch(err => {
-              console.error(`Error deleting player ${id} from Supabase during load reconciliation:`, err);
+              console.warn(`Error deleting player ${id} from Supabase during load reconciliation:`, err?.message || err);
             });
           });
         }
@@ -222,10 +222,9 @@ export default function App() {
         // Also ensure they are physically deleted from Supabase if we found them in fetched!
         const playersToDeleteFromDb = fetched.filter(p => mergedDeletedIds.includes(p.id));
         if (playersToDeleteFromDb.length > 0) {
-          console.log('Detectados jugadores eliminados que aún existen en Supabase. Procediendo a borrarlos físicamente:', playersToDeleteFromDb.map(p => p.id));
           playersToDeleteFromDb.forEach(p => {
             dbDeletePlayer(p.id).catch(err => {
-              console.error(`Error al purgar jugador eliminado ${p.id} de Supabase:`, err);
+              console.warn(`Error al purgar jugador eliminado ${p.id} de Supabase:`, err?.message || err);
             });
           });
         }
@@ -247,10 +246,10 @@ export default function App() {
           // Silently upsert missing players to Supabase so they persist there
           Promise.all(missingFromDb.map(p => dbSavePlayer(p)))
             .then(() => {
-              console.log('Fichajes demo (Álvaro/Nando) sincronizados en Supabase.');
+              console.log('Fichajes demo sincronizados en Supabase.');
             })
             .catch(err => {
-              console.error('Error al subir jugadores demo a Supabase:', err);
+              console.warn('Error al subir jugadores demo a Supabase (offline/network):', err?.message || err);
             });
         }
 
@@ -348,7 +347,9 @@ export default function App() {
           }
           if (updated) {
             migratedAny = true;
-            dbSavePlayer(current).catch(console.error);
+            dbSavePlayer(current).catch(err => {
+              console.warn(`Could not sync migrated player ${current.nombre} to Supabase (offline/network):`, err?.message || err);
+            });
             return current;
           }
           return p;
@@ -377,7 +378,7 @@ export default function App() {
           fetchedReports = await dbFetchMatchReports();
           reportsSuccess = true;
         } catch (reportErr: any) {
-          console.warn('Error fetching match reports from Supabase, table might not exist yet:', reportErr);
+          console.warn('Error fetching match reports from Supabase, falling back to local storage:', reportErr?.message || reportErr);
           // Fallback to local storage for match reports specifically, keeping players loaded!
           const savedReports = localStorage.getItem('scouting_match_reports_db');
           if (savedReports) {
@@ -390,10 +391,7 @@ export default function App() {
             fetchedReports = INITIAL_MATCH_REPORTS;
           }
           setSupabaseStatus('error');
-          setSupabaseErrorMsg('La tabla "scouting_match_reports" no fue encontrada. Por favor, ejecuta la sentencia SQL en Supabase.');
-          if (!silent) {
-            showNotification('Falta la tabla "scouting_match_reports" en tu Supabase. Los informes se guardarán temporalmente en local hasta que crees la tabla.', 'error');
-          }
+          setSupabaseErrorMsg('La tabla "scouting_match_reports" no fue encontrada o no hay conexión. Los informes se guardarán temporalmente en local.');
         }
 
         let finalReports = [...fetchedReports];
@@ -405,7 +403,7 @@ export default function App() {
             try {
               dbDeletedReportIds = JSON.parse(systemDeletedReportsRow.comentariosLocal);
             } catch (e) {
-              console.error('Error parsing synced deleted match report IDs from Supabase:', e);
+              console.warn('Error parsing synced deleted match report IDs from Supabase:', e);
             }
           }
 
@@ -417,9 +415,7 @@ export default function App() {
           const mergedDeletedReportIds = Array.from(new Set([...localDeletedReportIds, ...dbDeletedReportIds]));
           try {
             localStorage.setItem('scouting_deleted_match_reports_db', JSON.stringify(mergedDeletedReportIds));
-          } catch (e) {
-            console.error('Error saving merged deleted report IDs to local storage:', e);
-          }
+          } catch (e) {}
 
           // Reconcile and push back deleted reports metadata if new local deletions exist
           if (mergedDeletedReportIds.length > dbDeletedReportIds.length) {
@@ -438,17 +434,18 @@ export default function App() {
               jugadoresLocal: [],
               jugadoresVisitante: []
             };
-            dbSaveMatchReport(systemDeletedReport).catch(console.error);
+            dbSaveMatchReport(systemDeletedReport).catch(err => {
+              console.warn('Error saving system deleted reports to Supabase (offline/network):', err?.message || err);
+            });
           }
 
           // Filter out any match reports that have been marked as deleted
           // Also ensure they are physically deleted from Supabase if we found them in fetched!
           const reportsToDeleteFromDb = fetchedReports.filter(r => mergedDeletedReportIds.includes(r.id));
           if (reportsToDeleteFromDb.length > 0) {
-            console.log('Detectados informes de partidos eliminados que aún existen en Supabase. Procediendo a borrarlos físicamente:', reportsToDeleteFromDb.map(r => r.id));
             reportsToDeleteFromDb.forEach(r => {
               dbDeleteMatchReport(r.id).catch(err => {
-                console.error(`Error al purgar informe eliminado ${r.id} de Supabase:`, err);
+                console.warn(`Error al purgar informe eliminado ${r.id} de Supabase:`, err?.message || err);
               });
             });
           }
@@ -470,7 +467,7 @@ export default function App() {
                 console.log('Informes demo sincronizados en Supabase.');
               })
               .catch(err => {
-                console.error('Error al subir informes demo a Supabase:', err);
+                console.warn('Error al subir informes demo a Supabase (offline/network):', err?.message || err);
               });
           }
           finalReports = fetchedReports;
@@ -486,15 +483,22 @@ export default function App() {
 
         if (!silent) showNotification('Sincronización con Supabase finalizada.', 'success');
       } catch (err: any) {
-        console.error(err);
-        setSupabaseStatus('error');
-        setSupabaseErrorMsg(err.message || String(err));
+        const msg = err?.message || String(err);
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+          console.warn('[Supabase Offline] Sin conexión con la base de datos remota. Operando en modo local.');
+          setSupabaseStatus('error');
+          setSupabaseErrorMsg('Sin conexión con Supabase. Utilizando base de datos local.');
+        } else {
+          console.error('[Supabase Error]:', err);
+          setSupabaseStatus('error');
+          setSupabaseErrorMsg(msg);
+        }
         
         // Local fallback
         loadFromLocalStorage();
         loadMatchReports();
         if (!silent) {
-          showNotification('Error al conectar con Supabase. Utilizando almacenamiento local.', 'error');
+          showNotification('Sin conexión con Supabase. Utilizando almacenamiento local.', 'info');
         }
       }
     } else {
@@ -823,15 +827,23 @@ export default function App() {
   useEffect(() => {
     // Check initial Supabase Auth session
     if (isSupabaseConfigured()) {
-      getSupabaseSession().then((session) => {
-        setUser(session?.user || null);
-        setAuthChecked(true);
-      }).catch(() => {
-        setAuthChecked(true);
-      });
+      getSupabaseSession()
+        .then((session) => {
+          setUser(session?.user || null);
+          setAuthChecked(true);
+        })
+        .catch((err) => {
+          console.warn('Initial Supabase session check error:', err);
+          setUser(null);
+          setAuthChecked(true);
+        });
 
-      const { data: { subscription } } = onSupabaseAuthStateChange((_event, session) => {
-        setUser(session?.user || null);
+      const { data: { subscription } } = onSupabaseAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT' || (event as string) === 'TOKEN_REFRESH_FAILED') {
+          setUser(null);
+        } else {
+          setUser(session?.user || null);
+        }
         setAuthChecked(true);
       });
 
@@ -955,10 +967,16 @@ export default function App() {
         }
         showNotification(`Los datos de ${playerToSave.nombre} y el escudo del equipo han sido sincronizados en Supabase.`, 'success');
       } catch (err: any) {
-        console.error(err);
-        showNotification('Error de sincronización con Supabase. Cambios guardados localmente.', 'error');
+        const msg = err?.message || String(err);
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+          console.warn('[Supabase Offline] Guardado en local. Sin conexión a Supabase:', msg);
+          showNotification(`Guardado en local. Sin conexión con Supabase en este momento.`, 'info');
+        } else {
+          console.error('Error al guardar jugador:', err);
+          showNotification('Error de sincronización con Supabase. Cambios guardados localmente.', 'error');
+        }
         setSupabaseStatus('error');
-        setSupabaseErrorMsg(err.message || String(err));
+        setSupabaseErrorMsg(msg);
       }
     } else {
       showNotification(`Los datos de ${playerToSave.nombre} han sido actualizados correctamente.`, 'success');
@@ -988,7 +1006,7 @@ export default function App() {
       }
       updatedDeletedIds = deletedIds;
     } catch (e) {
-      console.error('Error recording deleted player:', e);
+      console.warn('Error recording deleted player in local storage:', e);
     }
 
     if (isSupabaseConfigured()) {
@@ -1014,9 +1032,7 @@ export default function App() {
         // Update local storage to have the complete merged list too!
         try {
           localStorage.setItem('scouting_deleted_players_db', JSON.stringify(finalDeletedIds));
-        } catch (e) {
-          console.error(e);
-        }
+        } catch (e) {}
 
         // Save the updated list of deleted player IDs to Supabase as system metadata
         const systemDeletedPlayer: ScoutedPlayer = {
@@ -1035,10 +1051,16 @@ export default function App() {
 
         showNotification('Jugador removido de Supabase con éxito.', 'success');
       } catch (err: any) {
-        console.error(err);
-        showNotification('Error de red con Supabase. Eliminado localmente.', 'error');
+        const msg = err?.message || String(err);
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+          console.warn('[Supabase Offline] Eliminado localmente. Sin conexión a Supabase:', msg);
+          showNotification('Eliminado en local. Sin conexión con Supabase en este momento.', 'info');
+        } else {
+          console.error('Error deleting player:', err);
+          showNotification('Error de red con Supabase. Eliminado localmente.', 'error');
+        }
         setSupabaseStatus('error');
-        setSupabaseErrorMsg(err.message || String(err));
+        setSupabaseErrorMsg(msg);
       }
     } else {
       showNotification('Jugador removido del archivo de ojeadores.', 'info');
