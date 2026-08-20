@@ -715,7 +715,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [draggingSourcePos, setDraggingSourcePos] = useState<string | null>(null);
-  const [valuationFilter, setValuationFilter] = useState<string>('All');
+  const [teamFilter, setTeamFilter] = useState<string>('All');
   const [positionFilter, setPositionFilter] = useState<string>('All');
 
   // When activeCamp changes, load its data into Pitch Editor state
@@ -1154,20 +1154,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       p.posicion.toLowerCase().includes(q) ||
       p.equipo.toLowerCase().includes(q);
 
-    const recValue = p.recomendacion ? p.recomendacion.trim().toUpperCase() : '';
-    let normRec = '';
-    if (recValue === 'FIRMAR' || recValue === 'CONTRATAR') normRec = 'FIRMAR';
-    else if (recValue === 'SEGUIR' || recValue === 'SEGUIMIENTO') normRec = 'SEGUIR';
-    else if (recValue === 'INTERESANTE' || recValue === 'EVALUAR') normRec = 'INTERESANTE';
-    else if (recValue === 'DESCARTAR') normRec = 'DESCARTAR';
-
-    const matchesValuation = valuationFilter === 'All' ||
-      (valuationFilter === 'SIN_VALORAR' && !normRec) ||
-      (valuationFilter !== 'SIN_VALORAR' && normRec === valuationFilter);
-
+    const matchesTeam = teamFilter === 'All' || p.equipo === teamFilter;
     const matchesPosition = positionFilter === 'All' || p.posicion === positionFilter;
 
-    return matchesQuery && matchesValuation && matchesPosition;
+    return matchesQuery && matchesTeam && matchesPosition;
   });
 
   const getRecTag = (recName?: string) => {
@@ -2088,15 +2078,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
             <div className="grid grid-cols-2 gap-2 mt-2">
               <select
-                value={valuationFilter}
-                onChange={(e) => setValuationFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-800 text-[10px] text-slate-300 py-1 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                value={teamFilter}
+                onChange={(e) => setTeamFilter(e.target.value)}
+                className="bg-slate-950 border border-slate-800 text-[10px] text-slate-300 py-1 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono truncate"
               >
-                <option value="All">Todas Valoraciones</option>
-                <option value="FIRMAR">⭐ FIRMAR / CONTRATAR</option>
-                <option value="SEGUIR">👀 SEGUIR</option>
-                <option value="INTERESANTE">💡 EVALUAR / INTERESANTE</option>
-                <option value="SIN_VALORAR">❓ SIN VALORAR</option>
+                <option value="All">Todos los Equipos</option>
+                {Array.from(new Set(players.map(p => p.equipo).filter(Boolean))).sort().map(team => (
+                  <option key={team} value={team}>{team}</option>
+                ))}
               </select>
 
               <select
