@@ -338,6 +338,14 @@ export default function App() {
               updated = true;
             }
           }
+          if (teamName.toLowerCase().includes('alcorcón') || teamName.toLowerCase().includes('alcorcon')) {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/64.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(console.error);
@@ -607,6 +615,14 @@ export default function App() {
           if (teamName.toLowerCase().includes('unionistas')) {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('alcorcón') || teamName.toLowerCase().includes('alcorcon')) {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/64.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;

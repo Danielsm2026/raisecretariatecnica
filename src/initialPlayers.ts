@@ -1,6 +1,7 @@
 import { ScoutedPlayer } from './types';
 import { INITIAL_FICHAJES } from './utils/initialFichajes';
 import { UNIONISTAS_PLAYERS } from './data/unionistasPlayers';
+import { ALCORCON_PLAYERS } from './data/alcorconPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -4199,6 +4200,7 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...PONTEVEDRA_PLAYERS,
   ...CD_MIRANDES_PLAYERS,
   ...UNIONISTAS_PLAYERS,
+  ...ALCORCON_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4227,6 +4229,14 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       ...player,
       categoria: 'Primera RFEF',
       escudoUrl: 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1'
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('alcorcón') || player.equipo.toLowerCase().includes('alcorcon'))) {
+    return {
+      ...player,
+      equipo: 'AD Alcorcón',
+      categoria: 'Primera RFEF',
+      escudoUrl: 'https://cdn.resfu.com/img_data/equipos/64.png?size=120x&lossy=1'
     };
   }
   return player;

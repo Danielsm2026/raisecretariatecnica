@@ -27,6 +27,8 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Unionistas de Salamanca': 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1',
   'Unionistas de Salamanca CF': 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1',
   'Unionistas': 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1',
+  'AD Alcorcón': 'https://cdn.resfu.com/img_data/equipos/64.png?size=120x&lossy=1',
+  'Alcorcón': 'https://cdn.resfu.com/img_data/equipos/64.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -34,6 +36,11 @@ export const ESCUDO_FALLBACK = '/escudos/default.svg'; // a blurred sports turf 
 
 export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   const teamNormal = player.equipo?.trim();
+
+  // If team is AD Alcorcón, override logo
+  if (teamNormal && (teamNormal.toLowerCase().includes('alcorcón') || teamNormal.toLowerCase().includes('alcorcon'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/64.png?size=120x&lossy=1';
+  }
 
   // If team is Unionistas CF, override the logo explicitly
   if (teamNormal && (teamNormal.toLowerCase().includes('unionistas'))) {
