@@ -405,26 +405,6 @@ export default function VideoLibrary({ players, showNotification, onBack }: Vide
 
         <div className="flex items-center flex-wrap gap-2 shrink-0">
           <button
-            type="button"
-            onClick={() => setIsSqlModalOpen(true)}
-            className="px-3 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-300 font-mono text-xs font-bold rounded-lg transition flex items-center space-x-1.5"
-            title="Ver script de creación de tabla 'scouting_videos' en Supabase"
-          >
-            <Code2 className="w-3.5 h-3.5 text-blue-400" />
-            <span>SQL Supabase</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSyncSupabase}
-            disabled={isSyncing}
-            className="px-3 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-300 font-mono text-xs font-bold rounded-lg transition flex items-center space-x-1.5"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>Sincronizar</span>
-          </button>
-
-          <button
             onClick={handleOpenAddForm}
             className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-xs font-mono uppercase tracking-wider rounded-lg shadow-md hover:shadow-red-900/20 active:scale-95 transition-all flex items-center justify-center space-x-2 shrink-0"
           >
