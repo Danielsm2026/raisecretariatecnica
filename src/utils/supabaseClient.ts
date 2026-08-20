@@ -1237,11 +1237,11 @@ NOTIFY pgrst, 'reload schema';
 }
 
 /**
- * Returns the exact SQL script to create and initialize the "CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I" in Supabase.
+ * Returns the exact SQL script to create and initialize the table and all campogramas for Septiembre in Supabase.
  */
 export function getCampogramaSeptiembreSQL(): string {
   return `-- ==============================================================================
--- SQL PARA VINCULAR EL CAMPOGRAMA DE SEPTIEMBRE (PRIMERA RFEF GRUPO I) EN SUPABASE
+-- SQL PARA CREAR LA TABLA Y VINCULAR LA CARPETA SEPTIEMBRE (Y TODOS SUS CAMPOGRAMAS) EN SUPABASE
 -- ==============================================================================
 
 -- 1. Crear la tabla de campogramas tácticos si no existe
@@ -1268,55 +1268,337 @@ CREATE TABLE IF NOT EXISTS scouting_campogramas (
   notes TEXT
 );
 
--- 2. Habilitar seguridad RLS y permisos de acceso
+-- 2. Habilitar seguridad RLS y políticas de acceso
 ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas 
   FOR ALL USING (true) WITH CHECK (true);
 
--- 3. Insertar o actualizar el Campograma de Septiembre Primera RFEF Grupo I (11 jugadores, Sistema 4-4-2, Fecha 01/09/2026)
+-- 3. Insertar o actualizar los Campogramas de la Carpeta SEPTIEMBRE (1ª RFEF y 2ª RFEF)
 INSERT INTO scouting_campogramas (
   id,
   folder_id,
+  "folderId",
   sub_folder_id,
+  "subFolderId",
   month_folder_id,
+  "monthFolderId",
   nombre,
   descripcion,
   fecha_modificacion,
+  "fechaModificacion",
   updated_at,
+  "updatedAt",
   formation,
   monthly_view,
+  "monthlyView",
   assignments,
   monthly_assignments,
+  "monthlyAssignments",
   notes
-) VALUES (
+) VALUES 
+(
   'c_septiembre_2026_1rfef_g1',
   'mensuales',
+  'mensuales',
+  '1rfef',
   '1rfef',
   'septiembre',
-  'CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I',
+  'septiembre',
+  'PRIMERA RFEF GRUPO I - SEPTIEMBRE',
   'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
-  '01/09/2026',
+  '20/8/2026',
+  '20/8/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
   EXTRACT(EPOCH FROM NOW()) * 1000,
   '4-4-2',
   false,
+  false,
   '{"por":"p11","ltd":"p14","dfc_d":"p17","dfc_i":"p18","lti":"p16","md":"p_inigo_munoz","mc_d":"p_samu_mayo","mc_i":"p_isi_gomez","mi":"p_brais_abelenda","dc_d":"p_julian_mahicas","dc_i":"p_mangel_prendes"}'::jsonb,
   '{}'::jsonb,
+  '{}'::jsonb,
   'Campograma oficial de 1ª RFEF Grupo I para Septiembre 2026 sincronizado en Supabase y desplegado en Vercel.'
+),
+(
+  'c_septiembre_2026_1rfef_g2',
+  'mensuales',
+  'mensuales',
+  '1rfef',
+  '1rfef',
+  'septiembre',
+  'septiembre',
+  'PRIMERA RFEF GRUPO II - SEPTIEMBRE',
+  'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo II',
+  '20/8/2026',
+  '20/8/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2',
+  false,
+  false,
+  '{"por":"p3","dc_d":"p_julian_mahicas","dc_i":"p_brais_abelenda"}'::jsonb,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  'Campograma de seguimiento para 1ª RFEF Grupo II en Septiembre 2026.'
+),
+(
+  'c_septiembre_2026_2rfef_g1',
+  'mensuales',
+  'mensuales',
+  '2rfef',
+  '2rfef',
+  'septiembre',
+  'septiembre',
+  'SEGUNDA RFEF GRUPO I - SEPTIEMBRE 2026',
+  'Campograma mensual y alineación para Segunda RFEF Grupo I',
+  '20/8/2026',
+  '20/8/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2',
+  false,
+  false,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo I en Septiembre 2026.'
+),
+(
+  'c_septiembre_2026_2rfef_g2',
+  'mensuales',
+  'mensuales',
+  '2rfef',
+  '2rfef',
+  'septiembre',
+  'septiembre',
+  'SEGUNDA RFEF GRUPO II - SEPTIEMBRE 2026',
+  'Campograma mensual y alineación para Segunda RFEF Grupo II',
+  '20/8/2026',
+  '20/8/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2',
+  false,
+  false,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo II en Septiembre 2026.'
+),
+(
+  'c_septiembre_2026_2rfef_g3',
+  'mensuales',
+  'mensuales',
+  '2rfef',
+  '2rfef',
+  'septiembre',
+  'septiembre',
+  'SEGUNDA RFEF GRUPO III - SEPTIEMBRE 2026',
+  'Campograma mensual y alineación para Segunda RFEF Grupo III',
+  '20/8/2026',
+  '20/8/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2',
+  false,
+  false,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo III en Septiembre 2026.'
+),
+(
+  'c_septiembre_2026_2rfef_g4',
+  'mensuales',
+  'mensuales',
+  '2rfef',
+  '2rfef',
+  'septiembre',
+  'septiembre',
+  'SEGUNDA RFEF GRUPO IV - SEPTIEMBRE 2026',
+  'Campograma mensual y alineación para Segunda RFEF Grupo IV',
+  '20/8/2026',
+  '20/8/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2',
+  false,
+  false,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo IV en Septiembre 2026.'
+),
+(
+  'c_septiembre_2026_2rfef_g5',
+  'mensuales',
+  'mensuales',
+  '2rfef',
+  '2rfef',
+  'septiembre',
+  'septiembre',
+  'SEGUNDA RFEF GRUPO V - SEPTIEMBRE 2026',
+  'Campograma mensual y alineación para Segunda RFEF Grupo V',
+  '20/8/2026',
+  '20/8/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2',
+  false,
+  false,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo V en Septiembre 2026.'
 )
 ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
   nombre = EXCLUDED.nombre,
   descripcion = EXCLUDED.descripcion,
   fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
   updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
   formation = EXCLUDED.formation,
   monthly_view = EXCLUDED.monthly_view,
+  "monthlyView" = EXCLUDED."monthlyView",
   assignments = EXCLUDED.assignments,
   monthly_assignments = EXCLUDED.monthly_assignments,
+  "monthlyAssignments" = EXCLUDED."monthlyAssignments",
   notes = EXCLUDED.notes;
 
 -- 4. Notificar a PostgREST para recargar el esquema de tablas en tiempo real
+NOTIFY pgrst, 'reload schema';
+`;
+}
+
+/**
+ * Generates SQL to insert/update the exact current list of campogramas in Supabase.
+ */
+export function generateLiveCampogramasSQL(campogramas: any[]): string {
+  if (!campogramas || campogramas.length === 0) {
+    return getCampogramaSeptiembreSQL();
+  }
+
+  const valueRows = campogramas.map(c => {
+    const assignmentsJson = JSON.stringify(c.assignments || {}).replace(/'/g, "''");
+    const monthlyAssignmentsJson = JSON.stringify(c.monthlyAssignments || {}).replace(/'/g, "''");
+    const safeName = (c.nombre || 'Campograma').replace(/'/g, "''");
+    const safeDesc = (c.descripcion || '').replace(/'/g, "''");
+    const safeNotes = (c.notes || '').replace(/'/g, "''");
+    const safeFecha = (c.fechaModificacion || new Date().toLocaleDateString('es-ES')).replace(/'/g, "''");
+    const subFolder = c.subFolderId ? `'${c.subFolderId}'` : 'NULL';
+    const monthFolder = c.monthFolderId ? `'${c.monthFolderId}'` : 'NULL';
+    const updatedAt = c.updatedAt || Date.now();
+
+    return `(
+  '${c.id}',
+  '${c.folderId || 'mensuales'}',
+  '${c.folderId || 'mensuales'}',
+  ${subFolder},
+  ${subFolder},
+  ${monthFolder},
+  ${monthFolder},
+  '${safeName}',
+  '${safeDesc}',
+  '${safeFecha}',
+  '${safeFecha}',
+  ${updatedAt},
+  ${updatedAt},
+  '${c.formation || '4-4-2'}',
+  ${c.monthlyView ? 'true' : 'false'},
+  ${c.monthlyView ? 'true' : 'false'},
+  '${assignmentsJson}'::jsonb,
+  '${monthlyAssignmentsJson}'::jsonb,
+  '${monthlyAssignmentsJson}'::jsonb,
+  '${safeNotes}'
+)`;
+  }).join(',\n');
+
+  return `-- ==============================================================================
+-- SQL DINÁMICO: VINCULACIÓN COMPLETA DE CAMPOGRAMAS EN SUPABASE (${campogramas.length} REGISTROS)
+-- ==============================================================================
+
+-- 1. Asegurar la tabla de campogramas tácticos
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL,
+  "folderId" TEXT,
+  sub_folder_id TEXT,
+  "subFolderId" TEXT,
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+-- 2. Habilitar seguridad RLS
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. Upsert de todos los campogramas actuales
+INSERT INTO scouting_campogramas (
+  id,
+  folder_id,
+  "folderId",
+  sub_folder_id,
+  "subFolderId",
+  month_folder_id,
+  "monthFolderId",
+  nombre,
+  descripcion,
+  fecha_modificacion,
+  "fechaModificacion",
+  updated_at,
+  "updatedAt",
+  formation,
+  monthly_view,
+  "monthlyView",
+  assignments,
+  monthly_assignments,
+  "monthlyAssignments",
+  notes
+) VALUES 
+${valueRows}
+ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
+  formation = EXCLUDED.formation,
+  monthly_view = EXCLUDED.monthly_view,
+  "monthlyView" = EXCLUDED."monthlyView",
+  assignments = EXCLUDED.assignments,
+  monthly_assignments = EXCLUDED.monthly_assignments,
+  "monthlyAssignments" = EXCLUDED."monthlyAssignments",
+  notes = EXCLUDED.notes;
+
 NOTIFY pgrst, 'reload schema';
 `;
 }
