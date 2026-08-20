@@ -203,51 +203,6 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     notes: 'Planificación estival para afianzar el bloque competitivo.'
   },
   {
-    id: 'c_septiembre_2026_1rfef_g1',
-    folderId: 'mensuales',
-    subFolderId: '1rfef',
-    monthFolderId: 'septiembre',
-    nombre: 'CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I',
-    descripcion: 'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
-    fechaModificacion: '01/09/2026',
-    formation: '4-4-2',
-    monthlyView: false,
-    assignments: {
-      'por': 'p11',
-      'ltd': 'p14',
-      'dfc_d': 'p17',
-      'dfc_i': 'p18',
-      'lti': 'p16',
-      'md': 'p_inigo_munoz',
-      'mc_d': 'p_samu_mayo',
-      'mc_i': 'p_isi_gomez',
-      'mi': 'p_brais_abelenda',
-      'dc_d': 'p_julian_mahicas',
-      'dc_i': 'p_mangel_prendes'
-    },
-    monthlyAssignments: {},
-    notes: 'Campograma de seguimiento y alineación estándar para 1ª RFEF Grupo I en Septiembre 2026.'
-  },
-  {
-    id: 'c_septiembre_2026_1rfef_g2',
-    folderId: 'mensuales',
-    subFolderId: '1rfef',
-    monthFolderId: 'septiembre',
-    nombre: 'SEPTIEMBRE 2026 - PRIMERA RFEF GRUPO II',
-    descripcion: 'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo II',
-    fechaModificacion: '01/09/2026',
-    formation: '4-4-2',
-    monthlyView: false,
-    assignments: {
-      'mc_d': 'p_mangel_prendes',
-      'mc_i': 'p_isi_gomez',
-      'dc_d': 'p_julian_mahicas',
-      'dc_i': 'p_brais_abelenda'
-    },
-    monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para la ventana de Septiembre 2026.'
-  },
-  {
     id: 'c_septiembre_2026_2rfef_g1',
     folderId: 'mensuales',
     subFolderId: '2rfef',
@@ -342,7 +297,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentSubFolder, setCurrentSubFolder] = useState<CampogramaSubFolderId | null>(null);
   // Helpers for persistent deleted campogramas tracking & sanitization across AI Studio and Vercel
   const getLocalDeletedCampogramaIds = (): string[] => {
-    const DEFAULT_DELETED = ['c_mensual_principal', 'c_mensual_enero', 'c_mensual_2rfef_principal', 'c_enero_2026_2rfef_g1'];
+    const DEFAULT_DELETED = [
+      'c_mensual_principal',
+      'c_mensual_enero',
+      'c_mensual_2rfef_principal',
+      'c_enero_2026_2rfef_g1',
+      'c_septiembre_2026_1rfef_g1',
+      'c_septiembre_2026_1rfef_g2',
+      'c_agosto_2026_1rfef_g1',
+      'c_agosto_2026_1rfef_g2'
+    ];
     try {
       const saved = localStorage.getItem('scouting_deleted_campogramas_v2');
       if (saved) {
@@ -489,30 +453,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Check if c_septiembre_2026_1rfef_g1 / c_agosto_2026_1rfef_g1 needs full 11-player lineup upgrade
-          const septIdx = parsed.findIndex((c: any) => c.id === 'c_septiembre_2026_1rfef_g1' || c.id === 'c_agosto_2026_1rfef_g1');
-          if (septIdx >= 0) {
-            const currentItem = parsed[septIdx];
-            const currentAssignmentsCount = Object.keys(currentItem.assignments || {}).length;
-            if (currentAssignmentsCount < 11 || currentItem.formation !== '4-4-2' || !currentItem.nombre?.includes('SEPTIEMBRE')) {
-              const defSept = DEFAULT_CAMPOGRAMAS.find(d => d.id === 'c_septiembre_2026_1rfef_g1');
-              if (defSept) {
-                parsed[septIdx] = {
-                  ...currentItem,
-                  id: 'c_septiembre_2026_1rfef_g1',
-                  monthFolderId: 'septiembre',
-                  nombre: 'CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I',
-                  fechaModificacion: '01/09/2026',
-                  formation: '4-4-2',
-                  monthlyView: false,
-                  assignments: {
-                    ...defSept.assignments,
-                    ...(currentItem.assignments || {})
-                  }
-                };
-              }
-            }
-          }
           const clean = sanitizeCampogramas(parsed, players, deletedSet);
           localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(clean));
           return clean;
@@ -538,6 +478,12 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
   // Load campogramas from cloud (Supabase) on mount if available
   useEffect(() => {
+    // Purge target deleted campogramas from Supabase immediately
+    if (isSupabaseConfigured()) {
+      const toPurge = ['c_septiembre_2026_1rfef_g1', 'c_septiembre_2026_1rfef_g2', 'c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2'];
+      toPurge.forEach(id => dbDeleteCampograma(id).catch(() => {}));
+    }
+
     if (!isSupabaseConfigured()) return;
 
     Promise.all([

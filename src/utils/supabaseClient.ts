@@ -1383,43 +1383,8 @@ DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas
   FOR ALL USING (true) WITH CHECK (true);
 
--- REGISTRO INICIAL DEL CAMPOGRAMA DE SEPTIEMBRE DE PRIMERA RFEF GRUPO I:
-INSERT INTO scouting_campogramas (
-  id,
-  folder_id,
-  sub_folder_id,
-  month_folder_id,
-  nombre,
-  descripcion,
-  fecha_modificacion,
-  updated_at,
-  formation,
-  monthly_view,
-  assignments,
-  monthly_assignments,
-  notes
-) VALUES (
-  'c_septiembre_2026_1rfef_g1',
-  'mensuales',
-  '1rfef',
-  'septiembre',
-  'CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I',
-  'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
-  '01/09/2026',
-  1788264000000,
-  '4-4-2',
-  false,
-  '{"por":"p11","ltd":"p14","dfc_d":"p17","dfc_i":"p18","lti":"p16","md":"p_inigo_munoz","mc_d":"p_samu_mayo","mc_i":"p_isi_gomez","mi":"p_brais_abelenda","dc_d":"p_julian_mahicas","dc_i":"p_mangel_prendes"}'::jsonb,
-  '{}'::jsonb,
-  'Campograma oficial de 1ª RFEF Grupo I para Septiembre 2026 sincronizado en Supabase y Vercel.'
-)
-ON CONFLICT (id) DO UPDATE SET
-  nombre = EXCLUDED.nombre,
-  fecha_modificacion = EXCLUDED.fecha_modificacion,
-  formation = EXCLUDED.formation,
-  monthly_view = EXCLUDED.monthly_view,
-  assignments = EXCLUDED.assignments,
-  notes = EXCLUDED.notes;
+-- 2. Asegurar purga de campogramas eliminados
+DELETE FROM scouting_campogramas WHERE id IN ('c_septiembre_2026_1rfef_g1', 'c_septiembre_2026_1rfef_g2', 'c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2');
 
 -- Forzar recarga de cache del esquema en Supabase (PostgREST)
 NOTIFY pgrst, 'reload schema';
@@ -1465,7 +1430,10 @@ DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas 
   FOR ALL USING (true) WITH CHECK (true);
 
--- 3. Insertar o actualizar los Campogramas de la Carpeta SEPTIEMBRE (1ª RFEF y 2ª RFEF)
+-- 3. Eliminar campogramas descartados
+DELETE FROM scouting_campogramas WHERE id IN ('c_septiembre_2026_1rfef_g1', 'c_septiembre_2026_1rfef_g2', 'c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2');
+
+-- 4. Insertar o actualizar los Campogramas de la Carpeta SEPTIEMBRE (2ª RFEF)
 INSERT INTO scouting_campogramas (
   id,
   folder_id,
@@ -1488,50 +1456,6 @@ INSERT INTO scouting_campogramas (
   "monthlyAssignments",
   notes
 ) VALUES 
-(
-  'c_septiembre_2026_1rfef_g1',
-  'mensuales',
-  'mensuales',
-  '1rfef',
-  '1rfef',
-  'septiembre',
-  'septiembre',
-  'PRIMERA RFEF GRUPO I - SEPTIEMBRE',
-  'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
-  '20/8/2026',
-  '20/8/2026',
-  EXTRACT(EPOCH FROM NOW()) * 1000,
-  EXTRACT(EPOCH FROM NOW()) * 1000,
-  '4-4-2',
-  false,
-  false,
-  '{"por":"p11","ltd":"p14","dfc_d":"p17","dfc_i":"p18","lti":"p16","md":"p_inigo_munoz","mc_d":"p_samu_mayo","mc_i":"p_isi_gomez","mi":"p_brais_abelenda","dc_d":"p_julian_mahicas","dc_i":"p_mangel_prendes"}'::jsonb,
-  '{}'::jsonb,
-  '{}'::jsonb,
-  'Campograma oficial de 1ª RFEF Grupo I para Septiembre 2026 sincronizado en Supabase y desplegado en Vercel.'
-),
-(
-  'c_septiembre_2026_1rfef_g2',
-  'mensuales',
-  'mensuales',
-  '1rfef',
-  '1rfef',
-  'septiembre',
-  'septiembre',
-  'PRIMERA RFEF GRUPO II - SEPTIEMBRE',
-  'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo II',
-  '20/8/2026',
-  '20/8/2026',
-  EXTRACT(EPOCH FROM NOW()) * 1000,
-  EXTRACT(EPOCH FROM NOW()) * 1000,
-  '4-4-2',
-  false,
-  false,
-  '{"por":"p3","dc_d":"p_julian_mahicas","dc_i":"p_brais_abelenda"}'::jsonb,
-  '{}'::jsonb,
-  '{}'::jsonb,
-  'Campograma de seguimiento para 1ª RFEF Grupo II en Septiembre 2026.'
-),
 (
   'c_septiembre_2026_2rfef_g1',
   'mensuales',
