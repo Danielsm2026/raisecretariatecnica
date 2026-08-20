@@ -414,32 +414,6 @@ export default function VideoLibrary({ players, showNotification, onBack }: Vide
         </div>
       </div>
 
-      {/* QUICK STATUS STATS GRID */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-slate-950 p-3 rounded-lg border border-slate-850 flex flex-col justify-between">
-          <p className="text-slate-500 font-bold uppercase text-[9px] font-mono tracking-wider">Total de Clips</p>
-          <p className="text-white font-extrabold text-lg mt-1 font-mono">{videos.length}</p>
-        </div>
-        <div className="bg-slate-950 p-3 rounded-lg border border-slate-850 flex flex-col justify-between">
-          <p className="text-slate-500 font-bold uppercase text-[9px] font-mono tracking-wider">Metraje Táctico</p>
-          <p className="text-rose-400 font-extrabold text-lg mt-1 font-mono">
-            {videos.filter(v => v.categoria === 'Táctica').length} Tácticos
-          </p>
-        </div>
-        <div className="bg-slate-950 p-3 rounded-lg border border-slate-850 flex flex-col justify-between">
-          <p className="text-slate-500 font-bold uppercase text-[9px] font-mono tracking-wider">Asociados a Jugador</p>
-          <p className="text-emerald-400 font-extrabold text-lg mt-1 font-mono">
-            {videos.filter(v => v.jugadorId).length} Clips
-          </p>
-        </div>
-        <div className="bg-slate-950 p-3 rounded-lg border border-slate-850 flex flex-col justify-between">
-          <p className="text-slate-500 font-bold uppercase text-[9px] font-mono tracking-wider">Origen Datos</p>
-          <p className="text-blue-400 font-extrabold text-xs mt-1.5 font-mono truncate">
-            {isSupabaseConfigured() ? 'Supabase DB' : 'LocalStorage'}
-          </p>
-        </div>
-      </div>
-
       {/* SEARCH AND FILTERS TOOLBAR */}
       <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-850 flex flex-col md:flex-row gap-3">
         {/* Search bar */}
