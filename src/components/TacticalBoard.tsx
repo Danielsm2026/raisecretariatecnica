@@ -372,7 +372,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     const activeItems = items.filter(c => c && c.id && !deletedCampogramaIds.has(c.id));
 
     // 2. Clean invalid/deleted player IDs from assignments & monthlyAssignments + migrate month folder to Septiembre
-    return activeItems.map(item => {
+    const processed = activeItems.map(item => {
       let assignmentsChanged = false;
       let monthlyChanged = false;
       let folderChanged = false;
@@ -446,6 +446,30 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
       return item;
     });
+
+    // 3. Deduplicate by ID to guarantee unique React keys and consistent state
+    const deduplicatedMap = new Map<string, CampogramaItem>();
+    processed.forEach(item => {
+      if (!item || !item.id) return;
+      const existing = deduplicatedMap.get(item.id);
+      if (!existing) {
+        deduplicatedMap.set(item.id, item);
+      } else {
+        const existingAssignmentsCount = Object.keys(existing.assignments || {}).length;
+        const currentAssignmentsCount = Object.keys(item.assignments || {}).length;
+        const existingTime = existing.updatedAt || 0;
+        const currentTime = item.updatedAt || 0;
+
+        if (
+          currentAssignmentsCount > existingAssignmentsCount ||
+          (currentAssignmentsCount === existingAssignmentsCount && currentTime >= existingTime)
+        ) {
+          deduplicatedMap.set(item.id, item);
+        }
+      }
+    });
+
+    return Array.from(deduplicatedMap.values());
   };
 
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
