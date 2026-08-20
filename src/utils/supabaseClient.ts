@@ -1604,6 +1604,235 @@ NOTIFY pgrst, 'reload schema';
 }
 
 /**
+ * Returns the exact SQL script to create table and insert/update ONLY the "SEGUNDA RFEF GRUPO I - SEPTIEMBRE" campograma in Supabase.
+ */
+export function getCampogramaSegundaRFEFGrupo1SeptiembreSQL(): string {
+  return `-- ==============================================================================
+-- SQL PARA VINCULAR EXCLUSIVAMENTE "SEGUNDA RFEF GRUPO I - SEPTIEMBRE" EN SUPABASE
+-- ==============================================================================
+
+-- 1. Crear la tabla de campogramas tácticos si no existe
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL,
+  "folderId" TEXT,
+  sub_folder_id TEXT,
+  "subFolderId" TEXT,
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+-- 2. Habilitar seguridad RLS y permisos de acceso
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas 
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. Insertar o actualizar el Campograma de Segunda RFEF Grupo I (Septiembre)
+INSERT INTO scouting_campogramas (
+  id,
+  folder_id,
+  "folderId",
+  sub_folder_id,
+  "subFolderId",
+  month_folder_id,
+  "monthFolderId",
+  nombre,
+  descripcion,
+  fecha_modificacion,
+  "fechaModificacion",
+  updated_at,
+  "updatedAt",
+  formation,
+  monthly_view,
+  "monthlyView",
+  assignments,
+  monthly_assignments,
+  "monthlyAssignments",
+  notes
+) VALUES (
+  'c_septiembre_2026_2rfef_g1',
+  'mensuales',
+  'mensuales',
+  '2rfef',
+  '2rfef',
+  'septiembre',
+  'septiembre',
+  'SEGUNDA RFEF GRUPO I - SEPTIEMBRE 2026',
+  'Campograma mensual y alineación para Segunda RFEF Grupo I',
+  '24/07/2026',
+  '24/07/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2',
+  false,
+  false,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo I en Septiembre 2026 sincronizado en Supabase.'
+)
+ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
+  formation = EXCLUDED.formation,
+  monthly_view = EXCLUDED.monthly_view,
+  "monthlyView" = EXCLUDED."monthlyView",
+  assignments = EXCLUDED.assignments,
+  monthly_assignments = EXCLUDED.monthly_assignments,
+  "monthlyAssignments" = EXCLUDED."monthlyAssignments",
+  notes = EXCLUDED.notes;
+
+-- 4. Forzar recarga de cache del esquema en Supabase (PostgREST)
+NOTIFY pgrst, 'reload schema';
+`;
+}
+
+/**
+ * Generates SQL to create the table and insert/update a single specified campograma item in Supabase.
+ */
+export function getCampogramaSingleSQL(c: any): string {
+  if (!c || !c.id) {
+    return getCampogramaSegundaRFEFGrupo1SeptiembreSQL();
+  }
+
+  const assignmentsJson = JSON.stringify(c.assignments || {}).replace(/'/g, "''");
+  const monthlyAssignmentsJson = JSON.stringify(c.monthlyAssignments || {}).replace(/'/g, "''");
+  const safeName = (c.nombre || 'Campograma').replace(/'/g, "''");
+  const safeDesc = (c.descripcion || '').replace(/'/g, "''");
+  const safeNotes = (c.notes || '').replace(/'/g, "''");
+  const safeFecha = (c.fechaModificacion || new Date().toLocaleDateString('es-ES')).replace(/'/g, "''");
+  const subFolder = c.subFolderId ? `'${c.subFolderId}'` : 'NULL';
+  const monthFolder = c.monthFolderId ? `'${c.monthFolderId}'` : 'NULL';
+  const updatedAt = c.updatedAt || Date.now();
+
+  return `-- ==============================================================================
+-- SQL PARA VINCULAR EL CAMPOGRAMA "${safeName.toUpperCase()}" EN SUPABASE
+-- ==============================================================================
+
+-- 1. Crear la tabla de campogramas si no existe
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL,
+  "folderId" TEXT,
+  sub_folder_id TEXT,
+  "subFolderId" TEXT,
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+-- 2. Habilitar seguridad RLS
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. Upsert del campograma seleccionado
+INSERT INTO scouting_campogramas (
+  id,
+  folder_id,
+  "folderId",
+  sub_folder_id,
+  "subFolderId",
+  month_folder_id,
+  "monthFolderId",
+  nombre,
+  descripcion,
+  fecha_modificacion,
+  "fechaModificacion",
+  updated_at,
+  "updatedAt",
+  formation,
+  monthly_view,
+  "monthlyView",
+  assignments,
+  monthly_assignments,
+  "monthlyAssignments",
+  notes
+) VALUES (
+  '${c.id}',
+  '${c.folderId || 'mensuales'}',
+  '${c.folderId || 'mensuales'}',
+  ${subFolder},
+  ${subFolder},
+  ${monthFolder},
+  ${monthFolder},
+  '${safeName}',
+  '${safeDesc}',
+  '${safeFecha}',
+  '${safeFecha}',
+  ${updatedAt},
+  ${updatedAt},
+  '${c.formation || '4-4-2'}',
+  ${c.monthlyView ? 'true' : 'false'},
+  ${c.monthlyView ? 'true' : 'false'},
+  '${assignmentsJson}'::jsonb,
+  '${monthlyAssignmentsJson}'::jsonb,
+  '${monthlyAssignmentsJson}'::jsonb,
+  '${safeNotes}'
+)
+ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
+  formation = EXCLUDED.formation,
+  monthly_view = EXCLUDED.monthly_view,
+  "monthlyView" = EXCLUDED."monthlyView",
+  assignments = EXCLUDED.assignments,
+  monthly_assignments = EXCLUDED.monthly_assignments,
+  "monthlyAssignments" = EXCLUDED."monthlyAssignments",
+  notes = EXCLUDED.notes;
+
+NOTIFY pgrst, 'reload schema';
+`;
+}
+
+/**
  * Backward compatibility alias for getCampogramaSeptiembreSQL
  */
 export function getCampogramaAgostoSQL(): string {

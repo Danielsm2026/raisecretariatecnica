@@ -15,6 +15,8 @@ import {
   getSQLInstructions,
   getCampogramaSeptiembreSQL,
   getCampogramaAgostoSQL,
+  getCampogramaSegundaRFEFGrupo1SeptiembreSQL,
+  getCampogramaSingleSQL,
   generateLiveCampogramasSQL,
   dbFetchCampogramas,
   dbSaveCampograma,
@@ -476,7 +478,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [showSqlModal, setShowSqlModal] = useState(false);
-  const [activeSqlTab, setActiveSqlTab] = useState<'septiembre' | 'live' | 'full' | 'vercel'>('septiembre');
+  const [activeSqlTab, setActiveSqlTab] = useState<'2rfef_g1' | 'septiembre' | 'live' | 'full' | 'vercel'>('2rfef_g1');
+  const [selectedItemForSql, setSelectedItemForSql] = useState<CampogramaItem | null>(null);
   const [copiedSql, setCopiedSql] = useState(false);
 
   const [campogramas, setCampogramas] = useState<CampogramaItem[]>(() => {
@@ -1805,6 +1808,22 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
                   <div className="flex items-center space-x-1.5">
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedItemForSql(item);
+                        if (item.id === 'c_septiembre_2026_2rfef_g1') {
+                          setActiveSqlTab('2rfef_g1');
+                        } else {
+                          setActiveSqlTab('live');
+                        }
+                        setShowSqlModal(true);
+                      }}
+                      className="p-1.5 hover:bg-emerald-950/80 text-emerald-400 hover:text-emerald-300 rounded transition-colors"
+                      title={`Vincular / Ver SQL en Supabase para "${item.nombre}"`}
+                    >
+                      <Database className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={(e) => handleDuplicateCampograma(e, item)}
                       className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors"
                       title="Duplicar campograma"
@@ -2699,6 +2718,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             {/* Modal Tabs */}
             <div className="flex border-b border-slate-800 space-x-2 overflow-x-auto">
               <button
+                onClick={() => setActiveSqlTab('2rfef_g1')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === '2rfef_g1'
+                    ? 'bg-slate-800 text-cyan-400 border-b-2 border-cyan-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {selectedItemForSql ? selectedItemForSql.nombre : 'Segunda RFEF G1 (Septiembre)'}
+              </button>
+              <button
                 onClick={() => setActiveSqlTab('septiembre')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'septiembre'
@@ -2706,13 +2735,13 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                Carpeta Septiembre (SQL)
+                Carpeta Septiembre (Completa)
               </button>
               <button
                 onClick={() => setActiveSqlTab('live')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'live'
-                    ? 'bg-slate-800 text-cyan-400 border-b-2 border-cyan-500'
+                    ? 'bg-slate-800 text-emerald-400 border-b-2 border-emerald-500'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -2722,7 +2751,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 onClick={() => setActiveSqlTab('full')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'full'
-                    ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-500'
+                    ? 'bg-slate-800 text-purple-400 border-b-2 border-purple-500'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -2732,7 +2761,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 onClick={() => setActiveSqlTab('vercel')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'vercel'
-                    ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-500'
+                    ? 'bg-slate-800 text-amber-400 border-b-2 border-amber-500'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -2742,11 +2771,24 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto space-y-3 font-mono text-xs">
+              {activeSqlTab === '2rfef_g1' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL específico para crear la tabla <code className="text-amber-300">scouting_campogramas</code> en Supabase y vincular únicamente este campograma (<strong className="text-cyan-300">{selectedItemForSql?.nombre || 'SEGUNDA RFEF GRUPO I - SEPTIEMBRE 2026'}</strong>):
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
+                      {selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
               {activeSqlTab === 'septiembre' && (
                 <div className="space-y-2">
                   <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
                     <p className="text-slate-400 font-sans text-xs mb-2">
-                      Copia y pega este código SQL directamente en el <strong>SQL Editor</strong> de tu panel de Supabase para crear la tabla <code className="text-amber-300">scouting_campogramas</code> e insertar los campogramas de Septiembre (1ª RFEF y 2ª RFEF) con todas sus alineaciones y configuraciones:
+                      Copia y pega este código SQL directamente en el <strong>SQL Editor</strong> de tu panel de Supabase para crear la tabla <code className="text-amber-300">scouting_campogramas</code> e insertar todos los campogramas de Septiembre (1ª RFEF y 2ª RFEF) con todas sus alineaciones y configuraciones:
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-emerald-300 overflow-x-auto select-all max-h-[300px]">
                       {getCampogramaSeptiembreSQL()}
@@ -2761,7 +2803,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     <p className="text-slate-400 font-sans text-xs mb-2">
                       Este script SQL inserta o actualiza en Supabase <strong>todos tus {campogramas.length} campogramas actuales</strong> exactamente como los tienes configurados en este instante:
                     </p>
-                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-emerald-300 overflow-x-auto select-all max-h-[300px]">
                       {generateLiveCampogramasSQL(campogramas)}
                     </pre>
                   </div>
@@ -2829,13 +2871,15 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 <button
                   type="button"
                   onClick={() => {
-                    const textToCopy = activeSqlTab === 'septiembre' 
-                      ? getCampogramaSeptiembreSQL() 
-                      : activeSqlTab === 'live'
-                        ? generateLiveCampogramasSQL(campogramas)
-                        : activeSqlTab === 'full' 
-                          ? getSQLInstructions() 
-                          : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                    const textToCopy = activeSqlTab === '2rfef_g1'
+                      ? (selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL())
+                      : activeSqlTab === 'septiembre' 
+                        ? getCampogramaSeptiembreSQL() 
+                        : activeSqlTab === 'live'
+                          ? generateLiveCampogramasSQL(campogramas)
+                          : activeSqlTab === 'full' 
+                            ? getSQLInstructions() 
+                            : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
                     navigator.clipboard.writeText(textToCopy);
                     setCopiedSql(true);
                     setTimeout(() => setCopiedSql(false), 2500);
