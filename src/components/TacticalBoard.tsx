@@ -1313,25 +1313,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <button
-                onClick={() => setShowSqlModal(true)}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
-                title="Ver SQL y configuración de Supabase & Vercel"
-              >
-                <Code className="w-3.5 h-3.5 text-amber-400" />
-                <span>SQL Supabase & Vercel</span>
-              </button>
-
-              <button
-                onClick={handleSyncCampogramasWithCloud}
-                disabled={isSyncingCloud}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer disabled:opacity-50"
-                title="Sincronizar campogramas directamente con Supabase"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
-                <span>{isSyncingCloud ? 'Sincronizando...' : 'Sincronizar Supabase'}</span>
-              </button>
-
               <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg text-center min-w-[90px]">
                 <span className="text-[9px] font-mono text-slate-500 uppercase block font-bold">Total Campogramas</span>
                 <span className="text-base font-bold font-mono text-blue-400">{campogramas.length}</span>
@@ -1647,25 +1628,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleSyncCampogramasWithCloud}
-              disabled={isSyncingCloud}
-              className="px-3 py-2 bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-800/80 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer disabled:opacity-50"
-              title="Sincronizar campogramas directamente con la tabla scouting_campogramas en Supabase"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin text-emerald-400' : 'text-emerald-400'}`} />
-              <span className="hidden sm:inline">{isSyncingCloud ? 'Sincronizando...' : 'Sincronizar Supabase'}</span>
-            </button>
-
-            <button
-              onClick={() => setShowSqlModal(true)}
-              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
-              title="Ver SQL y configuración de Supabase & Vercel"
-            >
-              <Code className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">SQL Supabase</span>
-            </button>
-
             <button
               onClick={() => {
                 const defaultPrefix = currentSubFolderObj ? currentSubFolderObj.shortTitle : folderInfo.shortTitle;
