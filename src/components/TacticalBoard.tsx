@@ -13,6 +13,7 @@ import {
   dbSaveSetting, 
   isSupabaseConfigured, 
   getSQLInstructions,
+  getCampogramaSeptiembreSQL,
   getCampogramaAgostoSQL,
   dbFetchCampogramas,
   dbSaveCampograma,
@@ -132,10 +133,10 @@ const SUBFOLDERS_MENSUALES = [
 
 const MONTH_FOLDERS = [
   {
-    id: 'agosto',
-    title: 'AGOSTO',
-    shortTitle: 'Agosto',
-    description: 'Campogramas posicionales y alineaciones del mes de Agosto 2026',
+    id: 'septiembre',
+    title: 'SEPTIEMBRE',
+    shortTitle: 'Septiembre',
+    description: 'Campogramas posicionales y alineaciones del mes de Septiembre 2026',
     gradient: 'from-amber-600/20 via-orange-600/10 to-slate-900',
     borderColor: 'border-amber-500/30 hover:border-amber-500/60',
     accentColor: 'text-amber-400',
@@ -199,13 +200,13 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     notes: 'Planificación estival para afianzar el bloque competitivo.'
   },
   {
-    id: 'c_agosto_2026_1rfef_g1',
+    id: 'c_septiembre_2026_1rfef_g1',
     folderId: 'mensuales',
     subFolderId: '1rfef',
-    monthFolderId: 'agosto',
-    nombre: 'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I',
+    monthFolderId: 'septiembre',
+    nombre: 'CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I',
     descripcion: 'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
-    fechaModificacion: '17/8/2026',
+    fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {
@@ -222,16 +223,16 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
       'dc_i': 'p_mangel_prendes'
     },
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento y alineación estándar para 1ª RFEF Grupo I en Agosto 2026.'
+    notes: 'Campograma de seguimiento y alineación estándar para 1ª RFEF Grupo I en Septiembre 2026.'
   },
   {
-    id: 'c_agosto_2026_1rfef_g2',
+    id: 'c_septiembre_2026_1rfef_g2',
     folderId: 'mensuales',
     subFolderId: '1rfef',
-    monthFolderId: 'agosto',
-    nombre: 'AGOSTO 2026 - PRIMERA RFEF GRUPO II',
+    monthFolderId: 'septiembre',
+    nombre: 'SEPTIEMBRE 2026 - PRIMERA RFEF GRUPO II',
     descripcion: 'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo II',
-    fechaModificacion: '24/07/2026',
+    fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {
@@ -241,77 +242,77 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
       'dc_i': 'p_brais_abelenda'
     },
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para la ventana de Agosto 2026.'
+    notes: 'Campograma de seguimiento para la ventana de Septiembre 2026.'
   },
   {
-    id: 'c_agosto_2026_2rfef_g1',
+    id: 'c_septiembre_2026_2rfef_g1',
     folderId: 'mensuales',
     subFolderId: '2rfef',
-    monthFolderId: 'agosto',
-    nombre: 'SEGUNDA RFEF GRUPO I - AGOSTO 2026',
+    monthFolderId: 'septiembre',
+    nombre: 'SEGUNDA RFEF GRUPO I - SEPTIEMBRE 2026',
     descripcion: 'Campograma mensual y alineación para Segunda RFEF Grupo I',
-    fechaModificacion: '24/07/2026',
+    fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {},
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I.'
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I en Septiembre 2026.'
   },
   {
-    id: 'c_agosto_2026_2rfef_g2',
+    id: 'c_septiembre_2026_2rfef_g2',
     folderId: 'mensuales',
     subFolderId: '2rfef',
-    monthFolderId: 'agosto',
-    nombre: 'SEGUNDA RFEF GRUPO II - AGOSTO 2026',
+    monthFolderId: 'septiembre',
+    nombre: 'SEGUNDA RFEF GRUPO II - SEPTIEMBRE 2026',
     descripcion: 'Campograma mensual y alineación para Segunda RFEF Grupo II',
-    fechaModificacion: '24/07/2026',
+    fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {},
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Segunda RFEF Grupo II.'
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo II en Septiembre 2026.'
   },
   {
-    id: 'c_agosto_2026_2rfef_g3',
+    id: 'c_septiembre_2026_2rfef_g3',
     folderId: 'mensuales',
     subFolderId: '2rfef',
-    monthFolderId: 'agosto',
-    nombre: 'SEGUNDA RFEF GRUPO III - AGOSTO 2026',
+    monthFolderId: 'septiembre',
+    nombre: 'SEGUNDA RFEF GRUPO III - SEPTIEMBRE 2026',
     descripcion: 'Campograma mensual y alineación para Segunda RFEF Grupo III',
-    fechaModificacion: '24/07/2026',
+    fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {},
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Segunda RFEF Grupo III.'
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo III en Septiembre 2026.'
   },
   {
-    id: 'c_agosto_2026_2rfef_g4',
+    id: 'c_septiembre_2026_2rfef_g4',
     folderId: 'mensuales',
     subFolderId: '2rfef',
-    monthFolderId: 'agosto',
-    nombre: 'SEGUNDA RFEF GRUPO IV - AGOSTO 2026',
+    monthFolderId: 'septiembre',
+    nombre: 'SEGUNDA RFEF GRUPO IV - SEPTIEMBRE 2026',
     descripcion: 'Campograma mensual y alineación para Segunda RFEF Grupo IV',
-    fechaModificacion: '24/07/2026',
+    fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {},
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Segunda RFEF Grupo IV.'
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo IV en Septiembre 2026.'
   },
   {
-    id: 'c_agosto_2026_2rfef_g5',
+    id: 'c_septiembre_2026_2rfef_g5',
     folderId: 'mensuales',
     subFolderId: '2rfef',
-    monthFolderId: 'agosto',
-    nombre: 'SEGUNDA RFEF GRUPO V - AGOSTO 2026',
+    monthFolderId: 'septiembre',
+    nombre: 'SEGUNDA RFEF GRUPO V - SEPTIEMBRE 2026',
     descripcion: 'Campograma mensual y alineación para Segunda RFEF Grupo V',
-    fechaModificacion: '24/07/2026',
+    fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {},
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Segunda RFEF Grupo V.'
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo V en Septiembre 2026.'
   },
   {
     id: 'c_verano_plantilla',
@@ -370,10 +371,38 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     // 1. Omit deleted campogramas
     const activeItems = items.filter(c => c && c.id && !deletedCampogramaIds.has(c.id));
 
-    // 2. Clean invalid/deleted player IDs from assignments & monthlyAssignments
+    // 2. Clean invalid/deleted player IDs from assignments & monthlyAssignments + migrate month folder to Septiembre
     return activeItems.map(item => {
       let assignmentsChanged = false;
       let monthlyChanged = false;
+      let folderChanged = false;
+
+      let monthFolderId = item.monthFolderId;
+      let nombre = item.nombre;
+      let id = item.id;
+      let notes = item.notes;
+
+      if (item.folderId === 'mensuales') {
+        if (!monthFolderId || monthFolderId === 'agosto') {
+          monthFolderId = 'septiembre';
+          folderChanged = true;
+        }
+        if (id && id.includes('c_agosto_2026_')) {
+          id = id.replace('c_agosto_2026_', 'c_septiembre_2026_');
+          folderChanged = true;
+        }
+        if (nombre && nombre.includes('AGOSTO')) {
+          nombre = nombre.replace(/AGOSTO/g, 'SEPTIEMBRE');
+          folderChanged = true;
+        } else if (nombre && nombre.includes('Agosto')) {
+          nombre = nombre.replace(/Agosto/g, 'Septiembre');
+          folderChanged = true;
+        }
+        if (notes && notes.includes('Agosto')) {
+          notes = notes.replace(/Agosto/g, 'Septiembre');
+          folderChanged = true;
+        }
+      }
 
       const newAssignments: AssignedPositions = {};
       if (item.assignments) {
@@ -401,12 +430,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         });
       }
 
-      if (assignmentsChanged || monthlyChanged) {
+      if (assignmentsChanged || monthlyChanged || folderChanged) {
         return {
           ...item,
+          id,
+          monthFolderId,
+          nombre,
+          notes,
           assignments: newAssignments,
           monthlyAssignments: newMonthly,
-          fechaModificacion: new Date().toLocaleDateString('es-ES'),
+          fechaModificacion: item.fechaModificacion || new Date().toLocaleDateString('es-ES'),
           updatedAt: Date.now()
         };
       }
@@ -418,7 +451,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [showSqlModal, setShowSqlModal] = useState(false);
-  const [activeSqlTab, setActiveSqlTab] = useState<'agosto' | 'full' | 'vercel'>('agosto');
+  const [activeSqlTab, setActiveSqlTab] = useState<'septiembre' | 'full' | 'vercel'>('septiembre');
   const [copiedSql, setCopiedSql] = useState(false);
 
   const [campogramas, setCampogramas] = useState<CampogramaItem[]>(() => {
@@ -428,22 +461,24 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Check if c_agosto_2026_1rfef_g1 needs full 11-player lineup upgrade
-          const augustIdx = parsed.findIndex((c: any) => c.id === 'c_agosto_2026_1rfef_g1');
-          if (augustIdx >= 0) {
-            const currentItem = parsed[augustIdx];
+          // Check if c_septiembre_2026_1rfef_g1 / c_agosto_2026_1rfef_g1 needs full 11-player lineup upgrade
+          const septIdx = parsed.findIndex((c: any) => c.id === 'c_septiembre_2026_1rfef_g1' || c.id === 'c_agosto_2026_1rfef_g1');
+          if (septIdx >= 0) {
+            const currentItem = parsed[septIdx];
             const currentAssignmentsCount = Object.keys(currentItem.assignments || {}).length;
-            if (currentAssignmentsCount < 11 || currentItem.formation !== '4-4-2' || currentItem.nombre !== 'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I') {
-              const defAugust = DEFAULT_CAMPOGRAMAS.find(d => d.id === 'c_agosto_2026_1rfef_g1');
-              if (defAugust) {
-                parsed[augustIdx] = {
+            if (currentAssignmentsCount < 11 || currentItem.formation !== '4-4-2' || !currentItem.nombre?.includes('SEPTIEMBRE')) {
+              const defSept = DEFAULT_CAMPOGRAMAS.find(d => d.id === 'c_septiembre_2026_1rfef_g1');
+              if (defSept) {
+                parsed[septIdx] = {
                   ...currentItem,
-                  nombre: 'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I',
-                  fechaModificacion: '17/8/2026',
+                  id: 'c_septiembre_2026_1rfef_g1',
+                  monthFolderId: 'septiembre',
+                  nombre: 'CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I',
+                  fechaModificacion: '01/09/2026',
                   formation: '4-4-2',
                   monthlyView: false,
                   assignments: {
-                    ...defAugust.assignments,
+                    ...defSept.assignments,
                     ...(currentItem.assignments || {})
                   }
                 };
@@ -1185,7 +1220,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       id: `c_${Date.now()}`,
       folderId: currentFolder,
       subFolderId: assignedSubFolder,
-      monthFolderId: currentFolder === 'mensuales' ? (currentMonthFolder || 'agosto') : undefined,
+      monthFolderId: currentFolder === 'mensuales' ? (currentMonthFolder || 'septiembre') : undefined,
       nombre: title,
       fechaModificacion: new Date().toLocaleDateString('es-ES'),
       updatedAt: Date.now(),
@@ -1524,7 +1559,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             const itemsInMonthFolder = campogramas.filter(c => 
               c.folderId === 'mensuales' && 
               (c.subFolderId || '1rfef') === currentSubFolder && 
-              (c.monthFolderId || 'agosto') === mf.id
+              (c.monthFolderId || 'septiembre') === mf.id
             );
             return (
               <div
@@ -1581,7 +1616,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     if (c.folderId !== currentFolder) return false;
     if (currentFolder === 'mensuales') {
       if ((c.subFolderId || '1rfef') !== (currentSubFolder || '1rfef')) return false;
-      return (c.monthFolderId || 'agosto') === (currentMonthFolder || 'agosto');
+      return (c.monthFolderId || 'septiembre') === (currentMonthFolder || 'septiembre');
     }
     return true;
   });
@@ -2614,7 +2649,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     Vinculación Supabase & Vercel
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Campograma Agosto 1ª RFEF Grupo I • Esquema SQL y Variables
+                    Campograma Septiembre 1ª RFEF Grupo I • Esquema SQL y Variables
                   </p>
                 </div>
               </div>
@@ -2629,14 +2664,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
             {/* Modal Tabs */}
             <div className="flex border-b border-slate-800 space-x-2">
               <button
-                onClick={() => setActiveSqlTab('agosto')}
+                onClick={() => setActiveSqlTab('septiembre')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors ${
-                  activeSqlTab === 'agosto'
+                  activeSqlTab === 'septiembre'
                     ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-500'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                Campograma Agosto (1ª RFEF)
+                Campograma Septiembre (1ª RFEF)
               </button>
               <button
                 onClick={() => setActiveSqlTab('full')}
@@ -2662,14 +2697,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto space-y-3 font-mono text-xs">
-              {activeSqlTab === 'agosto' && (
+              {activeSqlTab === 'septiembre' && (
                 <div className="space-y-2">
                   <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
                     <p className="text-slate-400 font-sans text-xs mb-2">
-                      Copia y pega este código SQL directamente en el <strong>SQL Editor</strong> de tu panel de Supabase para crear la tabla <code className="text-amber-300">scouting_campogramas</code> e insertar el Campograma de Agosto de Primera RFEF Grupo I con sus 11 jugadores:
+                      Copia y pega este código SQL directamente en el <strong>SQL Editor</strong> de tu panel de Supabase para crear la tabla <code className="text-amber-300">scouting_campogramas</code> e insertar el Campograma de Septiembre de Primera RFEF Grupo I con sus 11 jugadores:
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-emerald-300 overflow-x-auto select-all max-h-[300px]">
-                      {getCampogramaAgostoSQL()}
+                      {getCampogramaSeptiembreSQL()}
                     </pre>
                   </div>
                 </div>
@@ -2725,8 +2760,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 <button
                   type="button"
                   onClick={() => {
-                    const textToCopy = activeSqlTab === 'agosto' 
-                      ? getCampogramaAgostoSQL() 
+                    const textToCopy = activeSqlTab === 'septiembre' 
+                      ? getCampogramaSeptiembreSQL() 
                       : activeSqlTab === 'full' 
                         ? getSQLInstructions() 
                         : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;

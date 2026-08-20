@@ -1193,7 +1193,7 @@ DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas
   FOR ALL USING (true) WITH CHECK (true);
 
--- REGISTRO INICIAL DEL CAMPOGRAMA DE AGOSTO DE PRIMERA RFEF GRUPO I:
+-- REGISTRO INICIAL DEL CAMPOGRAMA DE SEPTIEMBRE DE PRIMERA RFEF GRUPO I:
 INSERT INTO scouting_campogramas (
   id,
   folder_id,
@@ -1209,19 +1209,19 @@ INSERT INTO scouting_campogramas (
   monthly_assignments,
   notes
 ) VALUES (
-  'c_agosto_2026_1rfef_g1',
+  'c_septiembre_2026_1rfef_g1',
   'mensuales',
   '1rfef',
-  'agosto',
-  'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I',
+  'septiembre',
+  'CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I',
   'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
-  '17/8/2026',
-  1786968060000,
+  '01/09/2026',
+  1788264000000,
   '4-4-2',
   false,
   '{"por":"p11","ltd":"p14","dfc_d":"p17","dfc_i":"p18","lti":"p16","md":"p_inigo_munoz","mc_d":"p_samu_mayo","mc_i":"p_isi_gomez","mi":"p_brais_abelenda","dc_d":"p_julian_mahicas","dc_i":"p_mangel_prendes"}'::jsonb,
   '{}'::jsonb,
-  'Campograma oficial de 1ª RFEF Grupo I para Agosto 2026 sincronizado en Supabase y Vercel.'
+  'Campograma oficial de 1ª RFEF Grupo I para Septiembre 2026 sincronizado en Supabase y Vercel.'
 )
 ON CONFLICT (id) DO UPDATE SET
   nombre = EXCLUDED.nombre,
@@ -1237,11 +1237,11 @@ NOTIFY pgrst, 'reload schema';
 }
 
 /**
- * Returns the exact SQL script to create and initialize the "CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I" in Supabase.
+ * Returns the exact SQL script to create and initialize the "CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I" in Supabase.
  */
-export function getCampogramaAgostoSQL(): string {
+export function getCampogramaSeptiembreSQL(): string {
   return `-- ==============================================================================
--- SQL PARA VINCULAR EL CAMPOGRAMA DE AGOSTO (PRIMERA RFEF GRUPO I) EN SUPABASE
+-- SQL PARA VINCULAR EL CAMPOGRAMA DE SEPTIEMBRE (PRIMERA RFEF GRUPO I) EN SUPABASE
 -- ==============================================================================
 
 -- 1. Crear la tabla de campogramas tácticos si no existe
@@ -1275,7 +1275,7 @@ DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas 
   FOR ALL USING (true) WITH CHECK (true);
 
--- 3. Insertar o actualizar el Campograma de Agosto Primera RFEF Grupo I (11 jugadores, Sistema 4-4-2, Fecha 17/8/2026)
+-- 3. Insertar o actualizar el Campograma de Septiembre Primera RFEF Grupo I (11 jugadores, Sistema 4-4-2, Fecha 01/09/2026)
 INSERT INTO scouting_campogramas (
   id,
   folder_id,
@@ -1291,19 +1291,19 @@ INSERT INTO scouting_campogramas (
   monthly_assignments,
   notes
 ) VALUES (
-  'c_agosto_2026_1rfef_g1',
+  'c_septiembre_2026_1rfef_g1',
   'mensuales',
   '1rfef',
-  'agosto',
-  'CAMPOGRAMA AGOSTO - PRIMERA RFEF GRUPO I',
+  'septiembre',
+  'CAMPOGRAMA SEPTIEMBRE - PRIMERA RFEF GRUPO I',
   'Campograma mensual posicional y alineación de referencia para 1ª RFEF Grupo I',
-  '17/8/2026',
+  '01/09/2026',
   EXTRACT(EPOCH FROM NOW()) * 1000,
   '4-4-2',
   false,
   '{"por":"p11","ltd":"p14","dfc_d":"p17","dfc_i":"p18","lti":"p16","md":"p_inigo_munoz","mc_d":"p_samu_mayo","mc_i":"p_isi_gomez","mi":"p_brais_abelenda","dc_d":"p_julian_mahicas","dc_i":"p_mangel_prendes"}'::jsonb,
   '{}'::jsonb,
-  'Campograma oficial de 1ª RFEF Grupo I para Agosto 2026 sincronizado en Supabase y desplegado en Vercel.'
+  'Campograma oficial de 1ª RFEF Grupo I para Septiembre 2026 sincronizado en Supabase y desplegado en Vercel.'
 )
 ON CONFLICT (id) DO UPDATE SET
   nombre = EXCLUDED.nombre,
@@ -1319,6 +1319,13 @@ ON CONFLICT (id) DO UPDATE SET
 -- 4. Notificar a PostgREST para recargar el esquema de tablas en tiempo real
 NOTIFY pgrst, 'reload schema';
 `;
+}
+
+/**
+ * Backward compatibility alias for getCampogramaSeptiembreSQL
+ */
+export function getCampogramaAgostoSQL(): string {
+  return getCampogramaSeptiembreSQL();
 }
 
 /**
