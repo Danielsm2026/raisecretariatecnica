@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, Fragment } from 'react';
 import { ScoutedPlayer, MatchReport } from './types';
 import { INITIAL_PLAYERS } from './initialPlayers';
 import { INITIAL_MATCH_REPORTS } from './utils/initialMatchReports';
-import StatsGrid from './components/StatsGrid';
 import PlayerTable from './components/PlayerTable';
 import PlayerFormModal from './components/PlayerFormModal';
 import PlayerReportModal from './components/PlayerReportModal';
@@ -1598,9 +1597,6 @@ export default function App() {
 
         {activeTab === 'players' && (
           <>
-            {/* Stats metrics layout */}
-            <StatsGrid players={players} />
-
             {/* Dynamic split panes workspace */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
               {/* Main player table view (Full width) */}

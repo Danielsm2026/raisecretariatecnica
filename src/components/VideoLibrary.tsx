@@ -384,18 +384,6 @@ export default function VideoLibrary({ players, showNotification, onBack }: Vide
                 </span>
                 <span>Videoteca & Análisis Multimedia</span>
               </h2>
-
-              {isSupabaseConfigured() ? (
-                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-800 text-emerald-400">
-                  <Database className="w-3 h-3" />
-                  <span>Supabase Conectado</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-950/80 border border-amber-800 text-amber-400">
-                  <Database className="w-3 h-3" />
-                  <span>Modo Local</span>
-                </span>
-              )}
             </div>
             <p className="text-xs text-slate-400 mt-1">
               Sube o enlaza vídeos analíticos a Supabase, organizados por categoría y vinculados a futbolistas.

@@ -23,7 +23,8 @@ import {
   FileDown,
   Activity,
   ExternalLink,
-  ArrowLeft
+  ArrowLeft,
+  Users
 } from 'lucide-react';
 import { getPlayerEscudoUrl } from '../utils/escudoHelper';
 import PlayerSeguimientoModal from './PlayerSeguimientoModal';
@@ -395,7 +396,20 @@ export default function PlayerTable({
             </div>
           </div>
 
-          <div id="actions-scouting-group" className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <div id="actions-scouting-group" className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div 
+              id="stat-total-jugadores-badge"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-slate-400 select-none shadow-xs"
+              title="Total de jugadores registrados en la base de datos activa"
+            >
+              <Users className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+              <span className="text-[11px] font-mono text-slate-300">
+                <span className="text-slate-500 uppercase text-[9px] font-bold tracking-wider mr-1">Total:</span>
+                <strong className="text-white font-bold">{players.length}</strong>
+                <span className="text-slate-400 text-[10px] ml-1">jugadores</span>
+              </span>
+            </div>
+
             <button
               type="button"
               id="btn-export-pdf-list"
