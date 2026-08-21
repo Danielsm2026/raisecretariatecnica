@@ -826,17 +826,6 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
         </div>
       )}
 
-      {syncSuccessMsg && supabaseConnected && !syncError && (
-        <div className="bg-emerald-950/40 border border-emerald-800/50 rounded-xl p-3 text-xs text-emerald-300 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{syncSuccessMsg}</span>
-          </div>
-          <button onClick={() => setSyncSuccessMsg(null)} className="text-emerald-400/60 hover:text-emerald-200 text-xs font-mono">
-            Cerrar
-          </button>
-        </div>
-      )}
 
       {/* VIEW 1: LIST OF WEEKS (Format requested from screenshot) */}
       {!selectedWeek ? (
