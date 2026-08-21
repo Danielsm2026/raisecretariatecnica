@@ -750,18 +750,6 @@ export default function PlanSemanal({ onBack }: PlanSemanalProps = {}) {
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5 w-full md:w-auto justify-end">
-          {supabaseConnected && (
-            <button
-              onClick={handlePushToCloud}
-              disabled={isSyncing}
-              className="px-3 py-2 text-xs font-mono font-bold text-emerald-300 hover:text-white bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-800/60 rounded-xl flex items-center space-x-1.5 transition disabled:opacity-50"
-              title="Guardar Plan Semanal actual en Supabase Nube"
-            >
-              <UploadCloud className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Guardar en Nube</span>
-            </button>
-          )}
-
           {selectedWeek && (
             <button
               onClick={() => setSelectedWeekId(null)}
