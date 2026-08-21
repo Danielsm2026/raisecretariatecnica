@@ -6,7 +6,6 @@ import PlayerTable from './components/PlayerTable';
 import PlayerFormModal from './components/PlayerFormModal';
 import PlayerReportModal from './components/PlayerReportModal';
 import MatchReportModal from './components/MatchReportModal';
-import SupabaseSyncBanner from './components/SupabaseSyncBanner';
 import TeamsView from './components/TeamsView';
 import TacticalBoard from './components/TacticalBoard';
 import VideoLibrary from './components/VideoLibrary';
@@ -1472,15 +1471,6 @@ export default function App() {
             <span className="uppercase tracking-wider">[{notification.type}] {notification.message}</span>
           </div>
         )}
-
-        {/* Supabase connection status banner */}
-        <SupabaseSyncBanner
-          status={supabaseStatus}
-          errorMessage={supabaseErrorMsg}
-          onRefresh={loadAllPlayers}
-          playerCount={players.length}
-          matchReportCount={matchReports.length}
-        />
 
         {/* Workspace Segmented Navigation Tabs */}
         <div className="flex border-b border-slate-850/80 pb-px gap-1 print:hidden overflow-x-auto scrollbar-none">
