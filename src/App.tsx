@@ -343,6 +343,14 @@ export default function App() {
               updated = true;
             }
           }
+          if (teamName.toLowerCase().includes('sporting atlético') || teamName.toLowerCase().includes('sporting atletico') || teamName.toLowerCase().includes('sporting b') || teamName.toLowerCase().includes('sporting de gijón b')) {
+            if (current.categoria !== 'Tercera RFEF') { current.categoria = 'Tercera RFEF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(err => {

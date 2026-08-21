@@ -29,6 +29,9 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Unionistas': 'https://cdn.resfu.com/img_data/equipos/54657.png?size=120x&lossy=1',
   'AD Alcorcón': 'https://cdn.resfu.com/img_data/equipos/64.png?size=120x&lossy=1',
   'Alcorcón': 'https://cdn.resfu.com/img_data/equipos/64.png?size=120x&lossy=1',
+  'Sporting Atlético': 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1',
+  'Sporting de Gijón B': 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1',
+  'Real Sporting': 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -70,6 +73,11 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is Pontevedra CF, override the logo explicitly with 1997.png
   if (teamNormal && (teamNormal === 'Pontevedra CF' || teamNormal === 'Pontevedra' || teamNormal.toLowerCase().includes('pontevedra'))) {
     return 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
+  }
+
+  // If team is Sporting Atlético, override the logo explicitly with 2124.png
+  if (teamNormal && (teamNormal.toLowerCase().includes('sporting atlético') || teamNormal.toLowerCase().includes('sporting atletico') || teamNormal.toLowerCase().includes('sporting b') || teamNormal.toLowerCase().includes('sporting de gijón b'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {

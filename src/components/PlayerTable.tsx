@@ -468,6 +468,7 @@ export default function PlayerTable({
               <option value="All">Todas las categorías</option>
               <option value="Primera RFEF">Primera RFEF</option>
               <option value="Segunda RFEF">Segunda RFEF</option>
+              <option value="Tercera RFEF">Tercera RFEF</option>
               <option value="Segunda División">Segunda División</option>
             </select>
           </div>
