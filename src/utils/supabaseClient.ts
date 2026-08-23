@@ -228,7 +228,9 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
       posicion: row.posicion || 'Portero',
       anoNacimiento: row.ano_nacimiento || row.anoNacimiento || 2000,
       lateralidad: row.lateralidad || 'Diestro',
-      dorsal: row.dorsal !== undefined ? row.dorsal : (rawAtributos.dorsal !== undefined ? rawAtributos.dorsal : undefined),
+      dorsal: row.dorsal !== undefined && row.dorsal !== null 
+        ? Number(row.dorsal) 
+        : (rawAtributos.dorsal !== undefined && rawAtributos.dorsal !== null ? Number(rawAtributos.dorsal) : undefined),
       valorMercado: row.valor_mercado !== undefined ? row.valor_mercado : (row.valorMercado || 0),
       calificacion: row.calificacion || 3,
       notas: row.notas || '',

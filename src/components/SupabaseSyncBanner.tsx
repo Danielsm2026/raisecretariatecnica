@@ -45,6 +45,7 @@ export default function SupabaseSyncBanner({
 
   const handleCopyPatch = () => {
     const patchSql = `ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS categoria TEXT;
+ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS dorsal INTEGER;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS valoracion_fisica JSONB;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "valoracionFisica" JSONB;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS fichaje_fecha TEXT;
