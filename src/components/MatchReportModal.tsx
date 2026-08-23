@@ -363,7 +363,7 @@ export default function MatchReportModal({
 
         const newMatchPlayer: MatchPlayer = {
           id: `p-scout-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          dorsal: getFreeDorsal(),
+          dorsal: p.dorsal ? String(p.dorsal) : getFreeDorsal(),
           nombre: p.nombre,
           anoNacimiento: p.anoNacimiento || 2004,
           posicion: shortPos,
@@ -1878,6 +1878,9 @@ export default function MatchReportModal({
                             setCatalogSelectedPlayerId(id);
                             const p = players.find((x) => x.id === id);
                             if (p) {
+                              if (p.dorsal !== undefined && p.dorsal !== null) {
+                                setEditDorsal(String(p.dorsal));
+                              }
                               setEditNombre(p.nombre);
                               setEditAno(p.anoNacimiento);
                               setEditFotoUrl(p.fotoUrl || "");
@@ -1937,7 +1940,7 @@ export default function MatchReportModal({
                             .sort((a, b) => a.nombre.localeCompare(b.nombre))
                             .map((p) => (
                               <option key={p.id} value={p.id}>
-                                {p.nombre} ({p.posicion}){" "}
+                                {p.dorsal ? `#${p.dorsal} - ` : ""}{p.nombre} ({p.posicion}){" "}
                                 {p.equipo ? `[${p.equipo}]` : ""}
                               </option>
                             ))}

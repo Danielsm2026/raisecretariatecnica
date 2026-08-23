@@ -188,7 +188,7 @@ export default function PlayerSeguimientoModal({
 
     const newMatchPlayer: MatchPlayer = {
       id: newId,
-      dorsal: '10', // Default dorsal
+      dorsal: player.dorsal ? String(player.dorsal) : '10',
       nombre: player.nombre,
       anoNacimiento: player.anoNacimiento,
       posicion: shortPos,

@@ -228,6 +228,7 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
       posicion: row.posicion || 'Portero',
       anoNacimiento: row.ano_nacimiento || row.anoNacimiento || 2000,
       lateralidad: row.lateralidad || 'Diestro',
+      dorsal: row.dorsal !== undefined ? row.dorsal : (rawAtributos.dorsal !== undefined ? rawAtributos.dorsal : undefined),
       valorMercado: row.valor_mercado !== undefined ? row.valor_mercado : (row.valorMercado || 0),
       calificacion: row.calificacion || 3,
       notas: row.notas || '',
@@ -266,6 +267,7 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
  */
 async function safeUpsert(table: string, payload: any, onConflict: string): Promise<any> {
   let currentPayload = { ...payload };
+  let retryCount = 0;
   while (true) {
     let error: any = null;
     try {
@@ -275,7 +277,12 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
       error = res.error;
     } catch (fetchErr: any) {
       const msg = fetchErr?.message || String(fetchErr);
-      console.warn(`[Supabase Network] Error al conectar con ${table}:`, msg);
+      if ((msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) && retryCount < 2) {
+        retryCount++;
+        await new Promise((r) => setTimeout(r, 400 * retryCount));
+        continue;
+      }
+      console.warn(`[Supabase Network Offline] No se pudo sincronizar en ${table}:`, msg);
       throw fetchErr;
     }
     
@@ -283,7 +290,12 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
 
     const errorMsg = error.message || '';
     if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Load failed')) {
-      console.warn(`[Supabase Network] Error de red en ${table}:`, errorMsg);
+      if (retryCount < 2) {
+        retryCount++;
+        await new Promise((r) => setTimeout(r, 400 * retryCount));
+        continue;
+      }
+      console.warn(`[Supabase Network Offline] Error de red en ${table}:`, errorMsg);
       throw error;
     }
 
@@ -320,6 +332,7 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
  */
 async function safeBulkUpsert(table: string, payloads: any[], onConflict: string): Promise<any> {
   let currentPayloads = payloads.map(p => ({ ...p }));
+  let retryCount = 0;
   while (true) {
     let error: any = null;
     try {
@@ -329,7 +342,12 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
       error = res.error;
     } catch (fetchErr: any) {
       const msg = fetchErr?.message || String(fetchErr);
-      console.warn(`[Supabase Network] Error de red en bulk upsert ${table}:`, msg);
+      if ((msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) && retryCount < 2) {
+        retryCount++;
+        await new Promise((r) => setTimeout(r, 400 * retryCount));
+        continue;
+      }
+      console.warn(`[Supabase Network Offline] No se pudo realizar bulk upsert en ${table}:`, msg);
       throw fetchErr;
     }
     
@@ -337,7 +355,12 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
 
     const errorMsg = error.message || '';
     if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Load failed')) {
-      console.warn(`[Supabase Network] Error de red en bulk upsert ${table}:`, errorMsg);
+      if (retryCount < 2) {
+        retryCount++;
+        await new Promise((r) => setTimeout(r, 400 * retryCount));
+        continue;
+      }
+      console.warn(`[Supabase Network Offline] Error de red en bulk upsert ${table}:`, errorMsg);
       throw error;
     }
 
@@ -390,12 +413,14 @@ export async function dbSavePlayer(player: ScoutedPlayer): Promise<void> {
     ano_nacimiento: player.anoNacimiento,
     anoNacimiento: player.anoNacimiento,
     lateralidad: player.lateralidad,
+    dorsal: player.dorsal,
     valor_mercado: player.valorMercado,
     valorMercado: player.valorMercado,
     calificacion: Math.round(player.calificacion),
     notas: player.notas,
     atributos: {
       ...player.atributos,
+      dorsal: player.dorsal,
       valoracionFisica: player.valoracionFisica,
       fichajeFecha: player.fichajeFecha,
       fichajeDetalles: player.fichajeDetalles,
@@ -507,12 +532,14 @@ export async function dbBulkUpsert(players: ScoutedPlayer[]): Promise<void> {
     ano_nacimiento: player.anoNacimiento,
     anoNacimiento: player.anoNacimiento,
     lateralidad: player.lateralidad,
+    dorsal: player.dorsal,
     valor_mercado: player.valorMercado,
     valorMercado: player.valorMercado,
     calificacion: Math.round(player.calificacion),
     notas: player.notas,
     atributos: {
       ...player.atributos,
+      dorsal: player.dorsal,
       valoracionFisica: player.valoracionFisica,
       fichajeFecha: player.fichajeFecha,
       fichajeDetalles: player.fichajeDetalles,
@@ -1159,6 +1186,7 @@ export async function dbSavePlanSemanalWeeksWithStatus(weeks: any[]): Promise<{ 
 export function getSQLInstructions(): string {
   return `-- Opción A: Si ya tienes las tablas creadas y quieres habilitar las valoraciones físicas, fichajes 2026, campogramas y plan semanal, ejecuta esto en el SQL Editor de Supabase:
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS categoria TEXT;
+ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS dorsal INTEGER;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS valoracion_fisica JSONB;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS "valoracionFisica" JSONB;
 ALTER TABLE scouting_players ADD COLUMN IF NOT EXISTS fichaje_fecha TEXT;
@@ -1242,6 +1270,7 @@ CREATE TABLE IF NOT EXISTS scouting_players (
   ano_nacimiento INTEGER,
   "anoNacimiento" INTEGER,
   lateralidad TEXT NOT NULL,
+  dorsal INTEGER,
   valor_mercado BIGINT,
   "valorMercado" BIGINT,
   calificacion INTEGER,
