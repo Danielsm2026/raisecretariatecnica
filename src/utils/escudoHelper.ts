@@ -39,6 +39,10 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Villarreal CF B': 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1',
   'Villarreal "B"': 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1',
   'Villarreal CF "B"': 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1',
+  'Juventud Torremolinos CF': 'https://cdn.resfu.com/img_data/equipos/4770.png?size=120x&lossy=1',
+  'Juventud Torremolinos': 'https://cdn.resfu.com/img_data/equipos/4770.png?size=120x&lossy=1',
+  'Juventud de Torremolinos CF': 'https://cdn.resfu.com/img_data/equipos/4770.png?size=120x&lossy=1',
+  'Torremolinos': 'https://cdn.resfu.com/img_data/equipos/4770.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -95,6 +99,11 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is Villarreal B, override the logo explicitly with 2716.png
   if (teamNormal && (teamNormal.toLowerCase().includes('villarreal b') || teamNormal.toLowerCase().includes('villarreal cf b') || teamNormal.toLowerCase().includes('villarreal "b"'))) {
     return 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1';
+  }
+
+  // If team is Juventud Torremolinos CF, override the logo explicitly
+  if (teamNormal && (teamNormal.toLowerCase().includes('torremolinos') || teamNormal.toLowerCase().includes('juventud torremolinos'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/4770.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {
