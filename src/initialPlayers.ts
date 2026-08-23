@@ -3,6 +3,8 @@ import { INITIAL_FICHAJES } from './utils/initialFichajes';
 import { UNIONISTAS_PLAYERS } from './data/unionistasPlayers';
 import { ALCORCON_PLAYERS } from './data/alcorconPlayers';
 import { SPORTING_ATLETICO_PLAYERS, SPORTING_ATLETICO_ESCUDO } from './data/sportingAtleticoPlayers';
+import { RAYO_MAJADAHONDA_PLAYERS, RAYO_MAJADAHONDA_ESCUDO } from './data/rayoMajadahondaPlayers';
+import { VILLARREAL_B_PLAYERS, VILLARREAL_B_ESCUDO } from './data/villarrealBPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -4261,6 +4263,8 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...UNIONISTAS_PLAYERS,
   ...ALCORCON_PLAYERS,
   ...SPORTING_ATLETICO_PLAYERS,
+  ...RAYO_MAJADAHONDA_PLAYERS,
+  ...VILLARREAL_B_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4305,6 +4309,22 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'Sporting Atlético',
       categoria: 'Tercera RFEF',
       escudoUrl: SPORTING_ATLETICO_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('majadahonda') || player.equipo.toLowerCase().includes('rayo majadahonda'))) {
+    return {
+      ...player,
+      equipo: 'Rayo Majadahonda',
+      categoria: 'Primera RFEF',
+      escudoUrl: RAYO_MAJADAHONDA_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('villarreal b') || player.equipo.toLowerCase().includes('villarreal cf b') || player.equipo.toLowerCase().includes('villarreal "b"') || player.equipo === 'Villarreal CF B' || player.equipo === 'Villarreal B')) {
+    return {
+      ...player,
+      equipo: 'Villarreal B',
+      categoria: 'Primera RFEF',
+      escudoUrl: VILLARREAL_B_ESCUDO
     };
   }
   return player;

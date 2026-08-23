@@ -351,6 +351,24 @@ export default function App() {
               updated = true;
             }
           }
+          if (teamName.toLowerCase().includes('majadahonda') || teamName.toLowerCase().includes('rayo majadahonda')) {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Rayo Majadahonda') { current.equipo = 'Rayo Majadahonda'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2078.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('villarreal b') || teamName.toLowerCase().includes('villarreal cf b') || teamName.toLowerCase().includes('villarreal "b"')) {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Villarreal B') { current.equipo = 'Villarreal B'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(err => {

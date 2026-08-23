@@ -32,6 +32,13 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Sporting Atlético': 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1',
   'Sporting de Gijón B': 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1',
   'Real Sporting': 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1',
+  'Rayo Majadahonda': 'https://cdn.resfu.com/img_data/equipos/2078.png?size=120x&lossy=1',
+  'CF Rayo Majadahonda': 'https://cdn.resfu.com/img_data/equipos/2078.png?size=120x&lossy=1',
+  'Rayo Majadahonda CF': 'https://cdn.resfu.com/img_data/equipos/2078.png?size=120x&lossy=1',
+  'Villarreal B': 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1',
+  'Villarreal CF B': 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1',
+  'Villarreal "B"': 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1',
+  'Villarreal CF "B"': 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -78,6 +85,16 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is Sporting Atlético, override the logo explicitly with 2124.png
   if (teamNormal && (teamNormal.toLowerCase().includes('sporting atlético') || teamNormal.toLowerCase().includes('sporting atletico') || teamNormal.toLowerCase().includes('sporting b') || teamNormal.toLowerCase().includes('sporting de gijón b'))) {
     return 'https://cdn.resfu.com/img_data/equipos/2124.png?size=120x&lossy=1';
+  }
+
+  // If team is Rayo Majadahonda, override the logo explicitly
+  if (teamNormal && (teamNormal.toLowerCase().includes('majadahonda') || teamNormal.toLowerCase().includes('rayo majadahonda'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/2078.png?size=120x&lossy=1';
+  }
+
+  // If team is Villarreal B, override the logo explicitly with 2716.png
+  if (teamNormal && (teamNormal.toLowerCase().includes('villarreal b') || teamNormal.toLowerCase().includes('villarreal cf b') || teamNormal.toLowerCase().includes('villarreal "b"'))) {
+    return 'https://cdn.resfu.com/img_data/equipos/2716.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {
