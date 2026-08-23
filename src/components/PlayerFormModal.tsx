@@ -37,7 +37,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
   const [posicion, setPosicion] = useState<Position>('Mediocentro');
   const [anoNacimiento, setAnoNacimiento] = useState<number>(2003);
   const [lateralidad, setLateralidad] = useState<Footedness>('Diestro');
-  const [valorMercado, setValorMercado] = useState<number>(10000000); // 10M Default
+  const [dorsal, setDorsal] = useState<number | undefined>(undefined);
   const [calificacion, setCalificacion] = useState<number>(4);
   const [notas, setNotas] = useState('');
   const [elo, setElo] = useState<number | undefined>(undefined);
@@ -67,7 +67,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       setPosicion(playerToEdit.posicion);
       setAnoNacimiento(playerToEdit.anoNacimiento);
       setLateralidad(playerToEdit.lateralidad);
-      setValorMercado(playerToEdit.valorMercado || 0);
+      setDorsal(playerToEdit.dorsal);
       setCalificacion(playerToEdit.calificacion);
       setNotas(playerToEdit.notas);
       setFisico(playerToEdit.atributos.fisico);
@@ -88,7 +88,7 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       setPosicion('Mediocentro');
       setAnoNacimiento(2004);
       setLateralidad('Diestro');
-      setValorMercado(5000000); // 5M Base
+      setDorsal(undefined);
       setCalificacion(3);
       setNotas('');
       setFisico(7);
@@ -116,7 +116,9 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
     if (anoNacimiento < 1980 || anoNacimiento > 2018) {
       newErrors.anoNacimiento = 'El año de nacimiento debe estar entre 1980 y 2018.';
     }
-    if (valorMercado < 0) newErrors.valorMercado = 'El valor no puede ser negativo.';
+    if (dorsal !== undefined && (dorsal < 1 || dorsal > 99)) {
+      newErrors.dorsal = 'El dorsal debe ser un número entre 1 y 99.';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -137,7 +139,8 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
       posicion,
       anoNacimiento,
       lateralidad,
-      valorMercado: valorMercado || undefined,
+      dorsal: dorsal ? Number(dorsal) : undefined,
+      valorMercado: playerToEdit?.valorMercado,
       calificacion,
       notas: (notas || '').trim(),
       atributos: {
@@ -310,21 +313,30 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                 </div>
               </div>
 
-              {/* Valor de mercado */}
+              {/* Dorsal */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider italic">Valor de Mercado (€)</label>
+                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider italic">
+                  Dorsal (Número de Camiseta)
+                </label>
                 <div className="relative">
                   <input
-                    id="input-player-valorMercado"
+                    id="input-player-dorsal"
                     type="number"
-                    step="500000"
-                    placeholder="5000000"
-                    value={valorMercado || ''}
-                    onChange={(e) => setValorMercado(parseInt(e.target.value) || 0)}
-                    className="w-full text-xs pl-3 pr-12 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    min="1"
+                    max="99"
+                    placeholder="Ej: 10"
+                    value={dorsal !== undefined && dorsal !== null ? dorsal : ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDorsal(val === '' ? undefined : parseInt(val, 10));
+                    }}
+                    className="w-full text-xs pl-7 pr-3 py-2 bg-slate-900 text-white border border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
                   />
-                  <div className="absolute right-3 top-2.5 text-[10px] text-slate-500 font-mono font-bold">EUR</div>
+                  <span className="absolute left-2.5 top-2 text-xs text-slate-500 font-mono font-bold">#</span>
                 </div>
+                {errors.dorsal && (
+                  <p className="text-red-400 text-2xs mt-1 font-mono">{errors.dorsal}</p>
+                )}
               </div>
 
               {/* Altura */}
