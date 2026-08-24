@@ -2339,7 +2339,9 @@ export function getCampogramaSegundaRFEFGrupo1SeptiembreSQL(): string {
   return `-- ==============================================================================
 -- SQL: VINCULACIÓN DE CAMPOGRAMA "SEGUNDA RFEF GRUPO I - SEPTIEMBRE 2026"
 -- CON SISTEMAS DE JUEGO Y TABLA DE POSICIONES EN SUPABASE
-// 1. TABLA DE CAMPOGRAMAS
+-- ==============================================================================
+
+-- 1. TABLA DE CAMPOGRAMAS
 CREATE TABLE IF NOT EXISTS scouting_campogramas (
   id TEXT PRIMARY KEY,
   folder_id TEXT NOT NULL DEFAULT 'mensuales',
@@ -2578,6 +2580,254 @@ NOTIFY pgrst, 'reload schema';
 }
 
 /**
+ * Returns the exact SQL script to create tables for campogramas, sistemas de juego y posiciones vinculadas,
+ * and link "SEGUNDA RFEF GRUPO II - SEPTIEMBRE 2026" with full tactical systems in Supabase.
+ */
+export function getCampogramaSegundaRFEFGrupo2SeptiembreSQL(): string {
+  return `-- ==============================================================================
+-- SQL: VINCULACIÓN DE CAMPOGRAMA "SEGUNDA RFEF GRUPO II - SEPTIEMBRE 2026"
+-- CON SISTEMAS DE JUEGO Y TABLA DE POSICIONES EN SUPABASE
+-- ==============================================================================
+
+-- 1. TABLA DE CAMPOGRAMAS
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL DEFAULT 'mensuales',
+  "folderId" TEXT DEFAULT 'mensuales',
+  sub_folder_id TEXT DEFAULT '2rfef',
+  "subFolderId" TEXT DEFAULT '2rfef',
+  month_folder_id TEXT DEFAULT 'septiembre',
+  "monthFolderId" TEXT DEFAULT 'septiembre',
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT DEFAULT '2rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT DEFAULT '2rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
+
+-- 2. TABLA DE SISTEMAS DE JUEGO (FORMACIONES TÁCTICAS)
+CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
+  id TEXT PRIMARY KEY,
+  codigo TEXT,
+  nombre TEXT,
+  descripcion TEXT,
+  defensas INTEGER DEFAULT 4,
+  centrocampistas INTEGER DEFAULT 4,
+  delanteros INTEGER DEFAULT 2,
+  posiciones_defecto JSONB DEFAULT '[]'::jsonb,
+  "posicionesDefecto" JSONB DEFAULT '[]'::jsonb,
+  activo BOOLEAN DEFAULT true,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS codigo TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS formacion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS defensas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS centrocampistas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS delanteros INTEGER DEFAULT 2;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS posiciones_defecto JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "posicionesDefecto" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
+CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. TABLA DE POSICIONES VINCULADAS AL SISTEMA Y CAMPOGRAMA
+CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
+  id TEXT PRIMARY KEY,
+  sistema_id TEXT,
+  "sistemaId" TEXT,
+  campograma_id TEXT,
+  "campogramaId" TEXT,
+  posicion_id TEXT,
+  "posicionId" TEXT,
+  posicion_label TEXT,
+  "posicionLabel" TEXT,
+  categoria_posicion TEXT,
+  "categoriaPosicion" TEXT,
+  coord_x NUMERIC DEFAULT 50,
+  "coordX" NUMERIC DEFAULT 50,
+  coord_y NUMERIC DEFAULT 50,
+  "coordY" NUMERIC DEFAULT 50,
+  allowed_roles JSONB DEFAULT '[]'::jsonb,
+  "allowedRoles" JSONB DEFAULT '[]'::jsonb,
+  jugador_id TEXT,
+  "jugadorId" TEXT,
+  jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb,
+  "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb,
+  orden INTEGER DEFAULT 0,
+  notas TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS sistema_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "sistemaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS campograma_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "campogramaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_label TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionLabel" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS categoria_posicion TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "categoriaPosicion" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_x NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordX" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_y NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordY" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS allowed_roles JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "allowedRoles" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugador_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadorId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS notas TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
+CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. POBLAR SISTEMAS DE JUEGO BASE
+INSERT INTO scouting_sistemas_juego (id, codigo, nombre, descripcion, defensas, centrocampistas, delanteros, activo, updated_at)
+VALUES 
+  ('sys_4_4_2', '4-4-2', '4-4-2 Standard', 'Sistema clásico con 4 defensas, 4 centrocampistas y 2 delanteros.', 4, 4, 2, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_4_3_3', '4-3-3', '4-3-3 Ofensivo', 'Sistema posicional con pivote defensivo, 2 interiores y extremos abiertos.', 4, 3, 3, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_4_2_3_1', '4-2-3-1', '4-2-3-1 Doble Pivote', 'Equilibrio defensivo con doble pivote y libertad creativa para mediapunta.', 4, 5, 1, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_3_5_2', '3-5-2', '3-5-2 Carrileros', 'Línea de 3 centrales con dos carrileros y doble delantero centro.', 3, 5, 2, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_5_4_1', '5-4-1', '5-4-1 Bloque Bajo', 'Estructura defensiva con 5 defensas, 4 centrocampistas y 1 punta.', 5, 4, 1, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_4_1_4_1', '4-1-4-1', '4-1-4-1 Presión Media', 'Pivote por delante de la defensa, línea de 4 centrocampistas y 1 punta.', 4, 5, 1, true, EXTRACT(EPOCH FROM NOW()) * 1000)
+ON CONFLICT (id) DO UPDATE SET
+  codigo = EXCLUDED.codigo,
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  defensas = EXCLUDED.defensas,
+  centrocampistas = EXCLUDED.centrocampistas,
+  delanteros = EXCLUDED.delanteros,
+  activo = EXCLUDED.activo,
+  updated_at = EXCLUDED.updated_at;
+
+-- 5. INSERTAR O ACTUALIZAR EL CAMPOGRAMA DE SEGUNDA RFEF GRUPO II (SEPTIEMBRE 2026)
+INSERT INTO scouting_campogramas (
+  id, folder_id, "folderId", sub_folder_id, "subFolderId", month_folder_id, "monthFolderId",
+  nombre, descripcion, fecha_modificacion, "fechaModificacion", updated_at, "updatedAt",
+  formation, monthly_view, "monthlyView", assignments, monthly_assignments, "monthlyAssignments", notes
+) VALUES (
+  'c_septiembre_2026_2rfef_g2',
+  'mensuales', 'mensuales',
+  '2rfef', '2rfef',
+  'septiembre', 'septiembre',
+  'SEGUNDA RFEF GRUPO II - SEPTIEMBRE 2026',
+  'Campograma mensual y alineación táctica para Segunda RFEF Grupo II',
+  '01/09/2026', '01/09/2026',
+  EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2', false, false,
+  '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo II en Septiembre 2026 vinculado a Supabase.'
+)
+ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
+  formation = EXCLUDED.formation,
+  monthly_view = EXCLUDED.monthly_view,
+  "monthlyView" = EXCLUDED."monthlyView",
+  assignments = EXCLUDED.assignments,
+  monthly_assignments = EXCLUDED.monthly_assignments,
+  "monthlyAssignments" = EXCLUDED."monthlyAssignments",
+  notes = EXCLUDED.notes;
+
+-- 6. INSERTAR LAS 11 POSICIONES DEL SISTEMA 4-4-2 PARA EL CAMPOGRAMA DE SEGUNDA RFEF GRUPO II
+INSERT INTO scouting_posiciones_sistema (
+  id, sistema_id, "sistemaId", campograma_id, "campogramaId",
+  posicion_id, "posicionId", posicion_label, "posicionLabel",
+  categoria_posicion, "categoriaPosicion", coord_x, "coordX", coord_y, "coordY",
+  allowed_roles, "allowedRoles", orden, updated_at, "updatedAt"
+) VALUES
+  ('pos_c_septiembre_2026_2rfef_g2_por', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'por', 'por', 'POR', 'POR', 'Portero', 'Portero', 50, 50, 88, 88, '["Portero"]'::jsonb, '["Portero"]'::jsonb, 0, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_ltd', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'ltd', 'ltd', 'LTD', 'LTD', 'Defensa', 'Defensa', 15, 15, 70, 70, '["Lateral Derecho", "Defensa Central"]'::jsonb, '["Lateral Derecho", "Defensa Central"]'::jsonb, 1, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_dfc_d', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'dfc_d', 'dfc_d', 'DFC', 'DFC', 'Defensa', 'Defensa', 38, 38, 72, 72, '["Defensa Central"]'::jsonb, '["Defensa Central"]'::jsonb, 2, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_dfc_i', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'dfc_i', 'dfc_i', 'DFC', 'DFC', 'Defensa', 'Defensa', 62, 62, 72, 72, '["Defensa Central"]'::jsonb, '["Defensa Central"]'::jsonb, 3, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_lti', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'lti', 'lti', 'LTI', 'LTI', 'Defensa', 'Defensa', 85, 85, 70, 70, '["Lateral Izquierdo", "Defensa Central"]'::jsonb, '["Lateral Izquierdo", "Defensa Central"]'::jsonb, 4, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_md', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'md', 'md', 'MD', 'MD', 'Centrocampista', 'Centrocampista', 15, 15, 44, 44, '["Extremo Derecho", "Mediocentro"]'::jsonb, '["Extremo Derecho", "Mediocentro"]'::jsonb, 5, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_mc_d', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'mc_d', 'mc_d', 'MC', 'MC', 'Centrocampista', 'Centrocampista', 38, 38, 46, 46, '["Mediocentro", "Mediocentro Defensivo", "Mediapunta"]'::jsonb, '["Mediocentro", "Mediocentro Defensivo", "Mediapunta"]'::jsonb, 6, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_mc_i', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'mc_i', 'mc_i', 'MC', 'MC', 'Centrocampista', 'Centrocampista', 62, 62, 46, 46, '["Mediocentro", "Mediocentro Defensivo", "Mediapunta"]'::jsonb, '["Mediocentro", "Mediocentro Defensivo", "Mediapunta"]'::jsonb, 7, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_mi', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'mi', 'mi', 'MI', 'MI', 'Centrocampista', 'Centrocampista', 85, 85, 44, 44, '["Extremo Izquierdo", "Mediocentro"]'::jsonb, '["Extremo Izquierdo", "Mediocentro"]'::jsonb, 8, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_dc_d', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'dc_d', 'dc_d', 'DC', 'DC', 'Delantero', 'Delantero', 38, 38, 18, 18, '["Delantero Centro", "Mediapunta"]'::jsonb, '["Delantero Centro", "Mediapunta"]'::jsonb, 9, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('pos_c_septiembre_2026_2rfef_g2_dc_i', '4-4-2', '4-4-2', 'c_septiembre_2026_2rfef_g2', 'c_septiembre_2026_2rfef_g2', 'dc_i', 'dc_i', 'DC', 'DC', 'Delantero', 'Delantero', 62, 62, 18, 18, '["Delantero Centro", "Mediapunta"]'::jsonb, '["Delantero Centro", "Mediapunta"]'::jsonb, 10, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000)
+ON CONFLICT (id) DO UPDATE SET
+  sistema_id = EXCLUDED.sistema_id,
+  "sistemaId" = EXCLUDED."sistemaId",
+  campograma_id = EXCLUDED.campograma_id,
+  "campogramaId" = EXCLUDED."campogramaId",
+  posicion_id = EXCLUDED.posicion_id,
+  "posicionId" = EXCLUDED."posicionId",
+  posicion_label = EXCLUDED.posicion_label,
+  "posicionLabel" = EXCLUDED."posicionLabel",
+  categoria_posicion = EXCLUDED.categoria_posicion,
+  "categoriaPosicion" = EXCLUDED."categoriaPosicion",
+  coord_x = EXCLUDED.coord_x,
+  "coordX" = EXCLUDED."coordX",
+  coord_y = EXCLUDED.coord_y,
+  "coordY" = EXCLUDED."coordY",
+  allowed_roles = EXCLUDED.allowed_roles,
+  "allowedRoles" = EXCLUDED."allowedRoles",
+  orden = EXCLUDED.orden,
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt";
+
+-- 7. Notificar a PostgREST para recargar el esquema de tablas
+NOTIFY pgrst, 'reload schema';
+`;
+}
+
+/**
  * Returns comprehensive SQL to create and populate tables for Sistemas de Juego and Posiciones de Jugadores vinculadas.
  */
 export function getSistemasYPosicionesSQL(campogramas?: any[]): string {
@@ -2763,36 +3013,53 @@ NOTIFY pgrst, 'reload schema';
 
 
 /**
- * Generates SQL to create the table and insert/update a single specified campograma item in Supabase.
+ * Generates SQL to create the table and insert/update a single specified campograma item in Supabase,
+ * including its linked tactical systems and 11 pitch positions.
  */
 export function getCampogramaSingleSQL(c: any): string {
   if (!c || !c.id) {
-    return getCampogramaSegundaRFEFGrupo1SeptiembreSQL();
+    return getCampogramaSegundaRFEFGrupo2SeptiembreSQL();
   }
 
   const assignmentsJson = JSON.stringify(c.assignments || {}).replace(/'/g, "''");
-  const monthlyAssignmentsJson = JSON.stringify(c.monthlyAssignments || {}).replace(/'/g, "''");
+  const monthlyAssignmentsJson = JSON.stringify(c.monthlyAssignments || c.monthly_assignments || {}).replace(/'/g, "''");
   const safeName = (c.nombre || 'Campograma').replace(/'/g, "''");
   const safeDesc = (c.descripcion || '').replace(/'/g, "''");
   const safeNotes = (c.notes || '').replace(/'/g, "''");
-  const safeFecha = (c.fechaModificacion || new Date().toLocaleDateString('es-ES')).replace(/'/g, "''");
-  const subFolder = c.subFolderId ? `'${c.subFolderId}'` : 'NULL';
-  const monthFolder = c.monthFolderId ? `'${c.monthFolderId}'` : 'NULL';
-  const updatedAt = c.updatedAt || Date.now();
+  const safeFecha = (c.fechaModificacion || c.fecha_modificacion || new Date().toLocaleDateString('es-ES')).replace(/'/g, "''");
+  const subFolder = (c.subFolderId || c.sub_folder_id) ? `'${c.subFolderId || c.sub_folder_id}'` : 'NULL';
+  const monthFolder = (c.monthFolderId || c.month_folder_id) ? `'${c.monthFolderId || c.month_folder_id}'` : 'NULL';
+  const folderId = c.folderId || c.folder_id || 'mensuales';
+  const updatedAt = c.updatedAt || c.updated_at || Date.now();
+  const formation = c.formation || '4-4-2';
+
+  const defPositions = getPosicionesDefectoPorSistema(formation);
+  const assignments = c.assignments || {};
+  const monthly = c.monthlyAssignments || c.monthly_assignments || {};
+
+  const posRows = defPositions.map((pos: any, idx: number) => {
+    const recId = `pos_${c.id}_${pos.id}`;
+    const titular = assignments[pos.id] ? `'${assignments[pos.id]}'` : 'NULL';
+    const monthlyArray = Array.isArray(monthly[pos.id]) ? JSON.stringify(monthly[pos.id]) : '[]';
+    const rolesJson = JSON.stringify(pos.allowedRoles || []).replace(/'/g, "''");
+
+    return `  ('${recId}', '${formation}', '${formation}', '${c.id}', '${c.id}', '${pos.id}', '${pos.id}', '${pos.label}', '${pos.label}', '${pos.category}', '${pos.category}', ${pos.x}, ${pos.x}, ${pos.y}, ${pos.y}, '${rolesJson}'::jsonb, '${rolesJson}'::jsonb, ${titular}, ${titular}, '${monthlyArray}'::jsonb, '${monthlyArray}'::jsonb, ${idx}, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000)`;
+  });
 
   return `-- ==============================================================================
--- SQL PARA VINCULAR EL CAMPOGRAMA "${safeName.toUpperCase()}" EN SUPABASE
+-- SQL: VINCULACIÓN DE CAMPOGRAMA "${safeName.toUpperCase()}"
+-- CON SISTEMAS DE JUEGO Y TABLA DE POSICIONES EN SUPABASE
 -- ==============================================================================
 
--- 1. Crear la tabla de campogramas si no existe
+-- 1. TABLA DE CAMPOGRAMAS
 CREATE TABLE IF NOT EXISTS scouting_campogramas (
   id TEXT PRIMARY KEY,
-  folder_id TEXT NOT NULL,
-  "folderId" TEXT,
-  sub_folder_id TEXT,
-  "subFolderId" TEXT,
-  month_folder_id TEXT,
-  "monthFolderId" TEXT,
+  folder_id TEXT NOT NULL DEFAULT 'mensuales',
+  "folderId" TEXT DEFAULT 'mensuales',
+  sub_folder_id TEXT DEFAULT '2rfef',
+  "subFolderId" TEXT DEFAULT '2rfef',
+  month_folder_id TEXT DEFAULT 'septiembre',
+  "monthFolderId" TEXT DEFAULT 'septiembre',
   nombre TEXT NOT NULL,
   descripcion TEXT,
   fecha_modificacion TEXT,
@@ -2808,12 +3075,138 @@ CREATE TABLE IF NOT EXISTS scouting_campogramas (
   notes TEXT
 );
 
--- 2. Habilitar seguridad RLS
 ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT DEFAULT '2rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT DEFAULT '2rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
 DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
 
--- 3. Upsert del campograma seleccionado
+-- 2. TABLA DE SISTEMAS DE JUEGO (FORMACIONES TÁCTICAS)
+CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
+  id TEXT PRIMARY KEY,
+  codigo TEXT,
+  nombre TEXT,
+  descripcion TEXT,
+  defensas INTEGER DEFAULT 4,
+  centrocampistas INTEGER DEFAULT 4,
+  delanteros INTEGER DEFAULT 2,
+  posiciones_defecto JSONB DEFAULT '[]'::jsonb,
+  "posicionesDefecto" JSONB DEFAULT '[]'::jsonb,
+  activo BOOLEAN DEFAULT true,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS codigo TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS formacion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS defensas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS centrocampistas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS delanteros INTEGER DEFAULT 2;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS posiciones_defecto JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "posicionesDefecto" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
+CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. TABLA DE POSICIONES VINCULADAS AL SISTEMA Y CAMPOGRAMA
+CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
+  id TEXT PRIMARY KEY,
+  sistema_id TEXT,
+  "sistemaId" TEXT,
+  campograma_id TEXT,
+  "campogramaId" TEXT,
+  posicion_id TEXT,
+  "posicionId" TEXT,
+  posicion_label TEXT,
+  "posicionLabel" TEXT,
+  categoria_posicion TEXT,
+  "categoriaPosicion" TEXT,
+  coord_x NUMERIC DEFAULT 50,
+  "coordX" NUMERIC DEFAULT 50,
+  coord_y NUMERIC DEFAULT 50,
+  "coordY" NUMERIC DEFAULT 50,
+  allowed_roles JSONB DEFAULT '[]'::jsonb,
+  "allowedRoles" JSONB DEFAULT '[]'::jsonb,
+  jugador_id TEXT,
+  "jugadorId" TEXT,
+  jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb,
+  "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb,
+  orden INTEGER DEFAULT 0,
+  notas TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS sistema_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "sistemaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS campograma_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "campogramaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_label TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionLabel" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS categoria_posicion TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "categoriaPosicion" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_x NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordX" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_y NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordY" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS allowed_roles JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "allowedRoles" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugador_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadorId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS notas TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
+CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. POBLAR SISTEMAS DE JUEGO BASE
+INSERT INTO scouting_sistemas_juego (id, codigo, nombre, descripcion, defensas, centrocampistas, delanteros, activo, updated_at)
+VALUES 
+  ('sys_4_4_2', '4-4-2', '4-4-2 Standard', 'Sistema clásico con 4 defensas, 4 centrocampistas y 2 delanteros.', 4, 4, 2, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_4_3_3', '4-3-3', '4-3-3 Ofensivo', 'Sistema posicional con pivote defensivo, 2 interiores y extremos abiertos.', 4, 3, 3, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_4_2_3_1', '4-2-3-1', '4-2-3-1 Doble Pivote', 'Equilibrio defensivo con doble pivote y libertad creativa para mediapunta.', 4, 5, 1, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_3_5_2', '3-5-2', '3-5-2 Carrileros', 'Línea de 3 centrales con dos carrileros y doble delantero centro.', 3, 5, 2, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_5_4_1', '5-4-1', '5-4-1 Bloque Bajo', 'Estructura defensiva con 5 defensas, 4 centrocampistas y 1 punta.', 5, 4, 1, true, EXTRACT(EPOCH FROM NOW()) * 1000),
+  ('sys_4_1_4_1', '4-1-4-1', '4-1-4-1 Presión Media', 'Pivote por delante de la defensa, línea de 4 centrocampistas y 1 punta.', 4, 5, 1, true, EXTRACT(EPOCH FROM NOW()) * 1000)
+ON CONFLICT (id) DO UPDATE SET
+  codigo = EXCLUDED.codigo,
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  defensas = EXCLUDED.defensas,
+  centrocampistas = EXCLUDED.centrocampistas,
+  delanteros = EXCLUDED.delanteros,
+  activo = EXCLUDED.activo,
+  updated_at = EXCLUDED.updated_at;
+
+-- 5. INSERTAR O ACTUALIZAR EL CAMPOGRAMA
 INSERT INTO scouting_campogramas (
   id,
   folder_id,
@@ -2837,8 +3230,8 @@ INSERT INTO scouting_campogramas (
   notes
 ) VALUES (
   '${c.id}',
-  '${c.folderId || 'mensuales'}',
-  '${c.folderId || 'mensuales'}',
+  '${folderId}',
+  '${folderId}',
   ${subFolder},
   ${subFolder},
   ${monthFolder},
@@ -2849,7 +3242,7 @@ INSERT INTO scouting_campogramas (
   '${safeFecha}',
   ${updatedAt},
   ${updatedAt},
-  '${c.formation || '4-4-2'}',
+  '${formation}',
   ${c.monthlyView ? 'true' : 'false'},
   ${c.monthlyView ? 'true' : 'false'},
   '${assignmentsJson}'::jsonb,
@@ -2878,6 +3271,41 @@ ON CONFLICT (id) DO UPDATE SET
   "monthlyAssignments" = EXCLUDED."monthlyAssignments",
   notes = EXCLUDED.notes;
 
+-- 6. INSERTAR LAS POSICIONES DEL SISTEMA (${formation}) PARA ESTE CAMPOGRAMA
+${posRows.length > 0 ? `INSERT INTO scouting_posiciones_sistema (
+  id, sistema_id, "sistemaId", campograma_id, "campogramaId",
+  posicion_id, "posicionId", posicion_label, "posicionLabel",
+  categoria_posicion, "categoriaPosicion", coord_x, "coordX", coord_y, "coordY",
+  allowed_roles, "allowedRoles", jugador_id, "jugadorId",
+  jugadores_mensuales_ids, "jugadoresMensualesIds", orden, updated_at, "updatedAt"
+) VALUES
+${posRows.join(',\n')}
+ON CONFLICT (id) DO UPDATE SET
+  sistema_id = EXCLUDED.sistema_id,
+  "sistemaId" = EXCLUDED."sistemaId",
+  campograma_id = EXCLUDED.campograma_id,
+  "campogramaId" = EXCLUDED."campogramaId",
+  posicion_id = EXCLUDED.posicion_id,
+  "posicionId" = EXCLUDED."posicionId",
+  posicion_label = EXCLUDED.posicion_label,
+  "posicionLabel" = EXCLUDED."posicionLabel",
+  categoria_posicion = EXCLUDED.categoria_posicion,
+  "categoriaPosicion" = EXCLUDED."categoriaPosicion",
+  coord_x = EXCLUDED.coord_x,
+  "coordX" = EXCLUDED."coordX",
+  coord_y = EXCLUDED.coord_y,
+  "coordY" = EXCLUDED."coordY",
+  allowed_roles = EXCLUDED.allowed_roles,
+  "allowedRoles" = EXCLUDED."allowedRoles",
+  jugador_id = EXCLUDED.jugador_id,
+  "jugadorId" = EXCLUDED."jugadorId",
+  jugadores_mensuales_ids = EXCLUDED.jugadores_mensuales_ids,
+  "jugadoresMensualesIds" = EXCLUDED."jugadoresMensualesIds",
+  orden = EXCLUDED.orden,
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt";` : '-- (No hay posiciones)'}
+
+-- 7. Notificar a PostgREST para recargar el esquema de tablas
 NOTIFY pgrst, 'reload schema';
 `;
 }

@@ -16,6 +16,7 @@ import {
   getCampogramaSeptiembreSQL,
   getCampogramaAgostoSQL,
   getCampogramaSegundaRFEFGrupo1SeptiembreSQL,
+  getCampogramaSegundaRFEFGrupo2SeptiembreSQL,
   getCampogramaSingleSQL,
   getSistemasYPosicionesSQL,
   generateLiveCampogramasSQL,
