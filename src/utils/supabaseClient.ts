@@ -321,6 +321,22 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
 /**
  * Saves a single player to Supabase (upsert pattern).
  */
+function extractMissingColumnFromError(error: any): string | null {
+  if (!error) return null;
+  const errorMsg = [error.message, error.details, error.hint].filter(Boolean).join(' ');
+  if (!errorMsg) return null;
+
+  const match = errorMsg.match(/Could not find the ['"]([^'"]+)['"] column/i) ||
+                errorMsg.match(/column ['"]([^'"]+)['"] of/i) ||
+                errorMsg.match(/column ([a-zA-Z0-9__]+) of/i) ||
+                errorMsg.match(/find the column ['"]([^'"]+)['"]/i) ||
+                errorMsg.match(/has no column named ['"]([^'"]+)['"]/i) ||
+                errorMsg.match(/column ['"]([^'"]+)['"] does not exist/i) ||
+                errorMsg.match(/column ([a-zA-Z0-9__]+) does not exist/i);
+
+  return match && match[1] ? match[1] : null;
+}
+
 /**
  * Helper to perform an upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
@@ -358,14 +374,9 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
       throw error;
     }
 
-    const match = errorMsg.match(/column "([^"]+)"/i) || 
-                  errorMsg.match(/column ([a-zA-Z0-9__]+) of/i) ||
-                  errorMsg.match(/find the column "([^"]+)"/i) ||
-                  errorMsg.match(/has no column named "([^"]+)"/i) ||
-                  errorMsg.match(/column "([^"]+)" does not exist/i);
+    const colName = extractMissingColumnFromError(error);
 
-    if (match && match[1]) {
-      const colName = match[1];
+    if (colName) {
       console.warn(`Column '${colName}' does not exist on table '${table}'. Retrying without it.`);
       
       delete currentPayload[colName];
@@ -423,14 +434,9 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
       throw error;
     }
 
-    const match = errorMsg.match(/column "([^"]+)"/i) || 
-                  errorMsg.match(/column ([a-zA-Z0-9__]+) of/i) ||
-                  errorMsg.match(/find the column "([^"]+)"/i) ||
-                  errorMsg.match(/has no column named "([^"]+)"/i) ||
-                  errorMsg.match(/column "([^"]+)" does not exist/i);
+    const colName = extractMissingColumnFromError(error);
 
-    if (match && match[1]) {
-      const colName = match[1];
+    if (colName) {
       console.warn(`Column '${colName}' does not exist on table '${table}'. Retrying bulk upsert without it.`);
       
       currentPayloads = currentPayloads.map(payload => {
@@ -1715,14 +1721,33 @@ CREATE TABLE IF NOT EXISTS scouting_campogramas (
 );
 
 ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT DEFAULT '2rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT DEFAULT '2rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
 DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
 
 -- TABLA DEDICADA PARA SISTEMAS DE JUEGO / FORMACIONES TÁCTICAS
 CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
   id TEXT PRIMARY KEY,
-  codigo TEXT NOT NULL,
-  nombre TEXT NOT NULL,
+  codigo TEXT,
+  nombre TEXT,
   descripcion TEXT,
   defensas INTEGER DEFAULT 4,
   centrocampistas INTEGER DEFAULT 4,
@@ -1735,21 +1760,33 @@ CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
 );
 
 ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS codigo TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS formacion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS defensas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS centrocampistas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS delanteros INTEGER DEFAULT 2;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS posiciones_defecto JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "posicionesDefecto" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
 DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
 CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
 
 -- TABLA DEDICADA PARA POSICIONES DE JUGADORES VINCULADAS A SISTEMAS Y CAMPOGRAMAS
 CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
   id TEXT PRIMARY KEY,
-  sistema_id TEXT NOT NULL,
+  sistema_id TEXT,
   "sistemaId" TEXT,
-  campograma_id TEXT NOT NULL,
+  campograma_id TEXT,
   "campogramaId" TEXT,
-  posicion_id TEXT NOT NULL,
+  posicion_id TEXT,
   "posicionId" TEXT,
-  posicion_label TEXT NOT NULL,
+  posicion_label TEXT,
   "posicionLabel" TEXT,
-  categoria_posicion TEXT NOT NULL,
+  categoria_posicion TEXT,
   "categoriaPosicion" TEXT,
   coord_x NUMERIC DEFAULT 50,
   "coordX" NUMERIC DEFAULT 50,
@@ -1768,6 +1805,30 @@ CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
 );
 
 ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS sistema_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "sistemaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS campograma_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "campogramaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_label TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionLabel" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS categoria_posicion TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "categoriaPosicion" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_x NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordX" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_y NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordY" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS allowed_roles JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "allowedRoles" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugador_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadorId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS notas TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
 DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
 CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
 
@@ -2278,17 +2339,15 @@ export function getCampogramaSegundaRFEFGrupo1SeptiembreSQL(): string {
   return `-- ==============================================================================
 -- SQL: VINCULACIÓN DE CAMPOGRAMA "SEGUNDA RFEF GRUPO I - SEPTIEMBRE 2026"
 -- CON SISTEMAS DE JUEGO Y TABLA DE POSICIONES EN SUPABASE
--- ==============================================================================
-
--- 1. TABLA DE CAMPOGRAMAS
+// 1. TABLA DE CAMPOGRAMAS
 CREATE TABLE IF NOT EXISTS scouting_campogramas (
   id TEXT PRIMARY KEY,
-  folder_id TEXT NOT NULL,
-  "folderId" TEXT,
-  sub_folder_id TEXT,
-  "subFolderId" TEXT,
-  month_folder_id TEXT,
-  "monthFolderId" TEXT,
+  folder_id TEXT NOT NULL DEFAULT 'mensuales',
+  "folderId" TEXT DEFAULT 'mensuales',
+  sub_folder_id TEXT DEFAULT '2rfef',
+  "subFolderId" TEXT DEFAULT '2rfef',
+  month_folder_id TEXT DEFAULT 'septiembre',
+  "monthFolderId" TEXT DEFAULT 'septiembre',
   nombre TEXT NOT NULL,
   descripcion TEXT,
   fecha_modificacion TEXT,
@@ -2305,14 +2364,33 @@ CREATE TABLE IF NOT EXISTS scouting_campogramas (
 );
 
 ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT DEFAULT '2rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT DEFAULT '2rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
 DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
 CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
 
 -- 2. TABLA DE SISTEMAS DE JUEGO (FORMACIONES TÁCTICAS)
 CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
   id TEXT PRIMARY KEY,
-  codigo TEXT NOT NULL,
-  nombre TEXT NOT NULL,
+  codigo TEXT,
+  nombre TEXT,
   descripcion TEXT,
   defensas INTEGER DEFAULT 4,
   centrocampistas INTEGER DEFAULT 4,
@@ -2325,21 +2403,33 @@ CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
 );
 
 ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS codigo TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS formacion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS defensas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS centrocampistas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS delanteros INTEGER DEFAULT 2;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS posiciones_defecto JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "posicionesDefecto" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
 DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
 CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
 
 -- 3. TABLA DE POSICIONES DE LOS JUGADORES VINCULADAS AL SISTEMA Y CAMPOGRAMA
 CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
   id TEXT PRIMARY KEY,
-  sistema_id TEXT NOT NULL,
+  sistema_id TEXT,
   "sistemaId" TEXT,
-  campograma_id TEXT NOT NULL,
+  campograma_id TEXT,
   "campogramaId" TEXT,
-  posicion_id TEXT NOT NULL,
+  posicion_id TEXT,
   "posicionId" TEXT,
-  posicion_label TEXT NOT NULL,
+  posicion_label TEXT,
   "posicionLabel" TEXT,
-  categoria_posicion TEXT NOT NULL,
+  categoria_posicion TEXT,
   "categoriaPosicion" TEXT,
   coord_x NUMERIC DEFAULT 50,
   "coordX" NUMERIC DEFAULT 50,
@@ -2358,6 +2448,30 @@ CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
 );
 
 ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS sistema_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "sistemaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS campograma_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "campogramaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_label TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionLabel" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS categoria_posicion TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "categoriaPosicion" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_x NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordX" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_y NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordY" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS allowed_roles JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "allowedRoles" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugador_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadorId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS notas TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
 DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
 CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
 
@@ -2502,8 +2616,8 @@ export function getSistemasYPosicionesSQL(campogramas?: any[]): string {
 -- 1. TABLA: SISTEMAS DE JUEGO / FORMACIONES TÁCTICAS
 CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
   id TEXT PRIMARY KEY,
-  codigo TEXT NOT NULL,
-  nombre TEXT NOT NULL,
+  codigo TEXT,
+  nombre TEXT,
   descripcion TEXT,
   defensas INTEGER DEFAULT 4,
   centrocampistas INTEGER DEFAULT 4,
@@ -2516,21 +2630,33 @@ CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
 );
 
 ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS codigo TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS formacion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS defensas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS centrocampistas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS delanteros INTEGER DEFAULT 2;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS posiciones_defecto JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "posicionesDefecto" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
 DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
 CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
 
 -- 2. TABLA: POSICIONES DE JUGADORES VINCULADAS AL SISTEMA Y CAMPOGRAMA
 CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
   id TEXT PRIMARY KEY,
-  sistema_id TEXT NOT NULL,
+  sistema_id TEXT,
   "sistemaId" TEXT,
-  campograma_id TEXT NOT NULL,
+  campograma_id TEXT,
   "campogramaId" TEXT,
-  posicion_id TEXT NOT NULL,
+  posicion_id TEXT,
   "posicionId" TEXT,
-  posicion_label TEXT NOT NULL,
+  posicion_label TEXT,
   "posicionLabel" TEXT,
-  categoria_posicion TEXT NOT NULL,
+  categoria_posicion TEXT,
   "categoriaPosicion" TEXT,
   coord_x NUMERIC DEFAULT 50,
   "coordX" NUMERIC DEFAULT 50,
@@ -2549,6 +2675,30 @@ CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
 );
 
 ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS sistema_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "sistemaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS campograma_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "campogramaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_label TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionLabel" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS categoria_posicion TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "categoriaPosicion" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_x NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordX" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_y NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordY" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS allowed_roles JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "allowedRoles" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugador_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadorId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS notas TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
 DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
 CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
 
