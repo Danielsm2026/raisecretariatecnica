@@ -17,6 +17,7 @@ import {
   getCampogramaAgostoSQL,
   getCampogramaSegundaRFEFGrupo1SeptiembreSQL,
   getCampogramaSingleSQL,
+  getSistemasYPosicionesSQL,
   generateLiveCampogramasSQL,
   dbFetchCampogramas,
   dbSaveCampograma,
@@ -2625,6 +2626,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 {selectedItemForSql ? selectedItemForSql.nombre : 'Segunda RFEF G1 (Septiembre)'}
               </button>
               <button
+                onClick={() => setActiveSqlTab('sistemas_pos')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'sistemas_pos'
+                    ? 'bg-slate-800 text-teal-400 border-b-2 border-teal-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Sistemas & Posiciones SQL
+              </button>
+              <button
                 onClick={() => setActiveSqlTab('septiembre')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'septiembre'
@@ -2672,10 +2683,23 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 <div className="space-y-2">
                   <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
                     <p className="text-slate-400 font-sans text-xs mb-2">
-                      Script SQL específico para crear la tabla <code className="text-amber-300">scouting_campogramas</code> en Supabase y vincular únicamente este campograma (<strong className="text-cyan-300">{selectedItemForSql?.nombre || 'SEGUNDA RFEF GRUPO I - SEPTIEMBRE 2026'}</strong>):
+                      Script SQL completo para crear las tablas <code className="text-amber-300">scouting_campogramas</code>, <code className="text-amber-300">scouting_sistemas_juego</code> y <code className="text-amber-300">scouting_posiciones_sistema</code> en Supabase y vincular el campograma (<strong className="text-cyan-300">{selectedItemForSql?.nombre || 'SEGUNDA RFEF GRUPO I - SEPTIEMBRE 2026'}</strong>) con sus 11 posiciones tácticas:
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
                       {selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'sistemas_pos' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL para crear y poblar la tabla de <code className="text-teal-300">scouting_sistemas_juego</code> (4-4-2, 4-3-3, 4-2-3-1, 3-5-2, 5-4-1, 4-1-4-1) y la tabla de <code className="text-teal-300">scouting_posiciones_sistema</code> vinculando las posiciones y jugadores a cada sistema táctico:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-teal-300 overflow-x-auto select-all max-h-[300px]">
+                      {getSistemasYPosicionesSQL(campogramas)}
                     </pre>
                   </div>
                 </div>
@@ -2770,13 +2794,15 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   onClick={() => {
                     const textToCopy = activeSqlTab === '2rfef_g1'
                       ? (selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL())
-                      : activeSqlTab === 'septiembre' 
-                        ? getCampogramaSeptiembreSQL() 
-                        : activeSqlTab === 'live'
-                          ? generateLiveCampogramasSQL(campogramas)
-                          : activeSqlTab === 'full' 
-                            ? getSQLInstructions() 
-                            : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                      : activeSqlTab === 'sistemas_pos'
+                        ? getSistemasYPosicionesSQL(campogramas)
+                        : activeSqlTab === 'septiembre' 
+                          ? getCampogramaSeptiembreSQL() 
+                          : activeSqlTab === 'live'
+                            ? generateLiveCampogramasSQL(campogramas)
+                            : activeSqlTab === 'full' 
+                              ? getSQLInstructions() 
+                              : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
                     navigator.clipboard.writeText(textToCopy);
                     setCopiedSql(true);
                     setTimeout(() => setCopiedSql(false), 2500);

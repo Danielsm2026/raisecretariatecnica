@@ -163,4 +163,41 @@ export function getPhysicalCapacitiesByPosition(pos: string): { category: string
   return null;
 }
 
+export interface SistemaJuego {
+  id: string; // e.g. 'sys_4_4_2', 'sys_4_3_3'
+  codigo: '4-4-2' | '4-3-3' | '4-2-3-1' | '3-5-2' | '5-4-1' | '4-1-4-1' | string;
+  nombre: string;
+  descripcion?: string;
+  defensas: number;
+  centrocampistas: number;
+  delanteros: number;
+  activo?: boolean;
+  posicionesDefecto?: Array<{
+    id: string;
+    label: string;
+    category: string;
+    x: number;
+    y: number;
+    allowedRoles: string[];
+  }>;
+  updatedAt?: number;
+}
+
+export interface PosicionSistema {
+  id: string; // Primary key, e.g. 'pos_c_septiembre_2026_2rfef_g1_dfc_d'
+  sistemaId: string; // '4-4-2', 'sys_4_4_2', etc.
+  campogramaId: string; // 'c_septiembre_2026_2rfef_g1', etc.
+  posicionId: string; // 'por', 'dfc_d', 'ltd', 'mc_d', 'dc_d', etc.
+  posicionLabel: string; // 'POR', 'DFC', 'MC', 'DC'
+  categoriaPosicion: 'Portero' | 'Defensa' | 'Centrocampista' | 'Delantero' | string;
+  coordX: number; // 0-100
+  coordY: number; // 0-100
+  allowedRoles: string[];
+  jugadorId?: string | null; // Titular asignado
+  jugadoresMensualesIds?: string[]; // Candidatos en cartera (hasta 5)
+  orden?: number;
+  notas?: string;
+  updatedAt?: number;
+}
+
 
