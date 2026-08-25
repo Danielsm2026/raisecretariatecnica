@@ -13,6 +13,7 @@ import {
   dbSaveSetting, 
   isSupabaseConfigured, 
   getSQLInstructions,
+  getRepararColumnasSupabaseSQL,
   getCampogramaSeptiembreSQL,
   getCampogramaAgostoSQL,
   getCampogramaSegundaRFEFGrupo1SeptiembreSQL,
@@ -2670,6 +2671,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 Sistemas & Posiciones SQL
               </button>
               <button
+                onClick={() => setActiveSqlTab('reparar')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'reparar'
+                    ? 'bg-slate-800 text-amber-400 border-b-2 border-amber-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Reparar / Actualizar Columnas SQL
+              </button>
+              <button
                 onClick={() => setActiveSqlTab('septiembre')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'septiembre'
@@ -2734,6 +2745,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-teal-300 overflow-x-auto select-all max-h-[300px]">
                       {getSistemasYPosicionesSQL(campogramas)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'reparar' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script de <strong className="text-amber-400">Reparación y Actualización de Columnas</strong> para Supabase. Añade todas las columnas necesarias (<code className="text-amber-300">categoria_posicion</code>, <code className="text-amber-300">coord_x</code>, <code className="text-amber-300">coord_y</code>, <code className="text-amber-300">allowed_roles</code>, etc.) en <code className="text-amber-300">scouting_posiciones_sistema</code>, <code className="text-amber-300">scouting_sistemas_juego</code> y <code className="text-amber-300">scouting_campogramas</code>:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-amber-300 overflow-x-auto select-all max-h-[300px]">
+                      {getRepararColumnasSupabaseSQL()}
                     </pre>
                   </div>
                 </div>
@@ -2830,13 +2854,15 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       ? (selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL())
                       : activeSqlTab === 'sistemas_pos'
                         ? getSistemasYPosicionesSQL(campogramas)
-                        : activeSqlTab === 'septiembre' 
-                          ? getCampogramaSeptiembreSQL() 
-                          : activeSqlTab === 'live'
-                            ? generateLiveCampogramasSQL(campogramas)
-                            : activeSqlTab === 'full' 
-                              ? getSQLInstructions() 
-                              : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                        : activeSqlTab === 'reparar'
+                          ? getRepararColumnasSupabaseSQL()
+                          : activeSqlTab === 'septiembre' 
+                            ? getCampogramaSeptiembreSQL() 
+                            : activeSqlTab === 'live'
+                              ? generateLiveCampogramasSQL(campogramas)
+                              : activeSqlTab === 'full' 
+                                ? getSQLInstructions() 
+                                : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
                     navigator.clipboard.writeText(textToCopy);
                     setCopiedSql(true);
                     setTimeout(() => setCopiedSql(false), 2500);

@@ -318,6 +318,35 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
   });
 }
 
+const knownMissingColumnsPerTable = new Map<string, Set<string>>();
+
+function registerMissingColumn(table: string, colName: string) {
+  if (!knownMissingColumnsPerTable.has(table)) {
+    knownMissingColumnsPerTable.set(table, new Set());
+  }
+  const set = knownMissingColumnsPerTable.get(table)!;
+  set.add(colName);
+  if (colName.includes('_')) {
+    const camel = colName.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    set.add(camel);
+  } else {
+    const snake = colName.replace(/([A-Z])/g, "_$1").toLowerCase();
+    set.add(snake);
+  }
+}
+
+function stripKnownMissingColumns(table: string, payload: any): any {
+  const missing = knownMissingColumnsPerTable.get(table);
+  if (!missing || missing.size === 0) return { ...payload };
+  const result: any = {};
+  for (const key of Object.keys(payload)) {
+    if (!missing.has(key)) {
+      result[key] = payload[key];
+    }
+  }
+  return result;
+}
+
 /**
  * Saves a single player to Supabase (upsert pattern).
  */
@@ -341,7 +370,7 @@ function extractMissingColumnFromError(error: any): string | null {
  * Helper to perform an upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
 async function safeUpsert(table: string, payload: any, onConflict: string): Promise<any> {
-  let currentPayload = { ...payload };
+  let currentPayload = stripKnownMissingColumns(table, payload);
   let retryCount = 0;
   while (true) {
     let error: any = null;
@@ -357,7 +386,7 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
         await new Promise((r) => setTimeout(r, 400 * retryCount));
         continue;
       }
-      console.warn(`[Supabase Network Offline] No se pudo sincronizar en ${table}:`, msg);
+      console.debug(`[Supabase Network Offline] No se pudo sincronizar en ${table}:`, msg);
       throw fetchErr;
     }
     
@@ -370,23 +399,15 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
         await new Promise((r) => setTimeout(r, 400 * retryCount));
         continue;
       }
-      console.warn(`[Supabase Network Offline] Error de red en ${table}:`, errorMsg);
+      console.debug(`[Supabase Network Offline] Error de red en ${table}:`, errorMsg);
       throw error;
     }
 
     const colName = extractMissingColumnFromError(error);
 
     if (colName) {
-      console.warn(`Column '${colName}' does not exist on table '${table}'. Retrying without it.`);
-      
-      delete currentPayload[colName];
-      if (colName.includes('_')) {
-        const camel = colName.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-        delete currentPayload[camel];
-      } else {
-        const snake = colName.replace(/([A-Z])/g, "_$1").toLowerCase();
-        delete currentPayload[snake];
-      }
+      registerMissingColumn(table, colName);
+      currentPayload = stripKnownMissingColumns(table, currentPayload);
       
       if (Object.keys(currentPayload).length <= 1) {
         throw error;
@@ -401,7 +422,7 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
  * Helper to perform a bulk upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
 async function safeBulkUpsert(table: string, payloads: any[], onConflict: string): Promise<any> {
-  let currentPayloads = payloads.map(p => ({ ...p }));
+  let currentPayloads = payloads.map(p => stripKnownMissingColumns(table, p));
   let retryCount = 0;
   while (true) {
     let error: any = null;
@@ -417,7 +438,7 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
         await new Promise((r) => setTimeout(r, 400 * retryCount));
         continue;
       }
-      console.warn(`[Supabase Network Offline] No se pudo realizar bulk upsert en ${table}:`, msg);
+      console.debug(`[Supabase Network Offline] No se pudo realizar bulk upsert en ${table}:`, msg);
       throw fetchErr;
     }
     
@@ -430,27 +451,15 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
         await new Promise((r) => setTimeout(r, 400 * retryCount));
         continue;
       }
-      console.warn(`[Supabase Network Offline] Error de red en bulk upsert ${table}:`, errorMsg);
+      console.debug(`[Supabase Network Offline] Error de red en bulk upsert ${table}:`, errorMsg);
       throw error;
     }
 
     const colName = extractMissingColumnFromError(error);
 
     if (colName) {
-      console.warn(`Column '${colName}' does not exist on table '${table}'. Retrying bulk upsert without it.`);
-      
-      currentPayloads = currentPayloads.map(payload => {
-        const nextPayload = { ...payload };
-        delete nextPayload[colName];
-        if (colName.includes('_')) {
-          const camel = colName.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-          delete nextPayload[camel];
-        } else {
-          const snake = colName.replace(/([A-Z])/g, "_$1").toLowerCase();
-          delete nextPayload[snake];
-        }
-        return nextPayload;
-      });
+      registerMissingColumn(table, colName);
+      currentPayloads = currentPayloads.map(payload => stripKnownMissingColumns(table, payload));
 
       if (currentPayloads.length === 0 || Object.keys(currentPayloads[0]).length <= 1) {
         throw error;
@@ -1448,24 +1457,35 @@ export async function dbSavePosicionSistema(pos: PosicionSistema): Promise<void>
   const payload = {
     id: pos.id,
     sistema_id: pos.sistemaId,
+    sistemaId: pos.sistemaId,
     campograma_id: pos.campogramaId,
+    campogramaId: pos.campogramaId,
     posicion_id: pos.posicionId,
+    posicionId: pos.posicionId,
     posicion_label: pos.posicionLabel,
+    posicionLabel: pos.posicionLabel,
     categoria_posicion: pos.categoriaPosicion,
+    categoriaPosicion: pos.categoriaPosicion,
     coord_x: pos.coordX,
+    coordX: pos.coordX,
     coord_y: pos.coordY,
+    coordY: pos.coordY,
     allowed_roles: pos.allowedRoles || [],
+    allowedRoles: pos.allowedRoles || [],
     jugador_id: pos.jugadorId || null,
+    jugadorId: pos.jugadorId || null,
     jugadores_mensuales_ids: pos.jugadoresMensualesIds || [],
+    jugadoresMensualesIds: pos.jugadoresMensualesIds || [],
     orden: pos.orden ?? 0,
     notas: pos.notas || '',
-    updated_at: pos.updatedAt || Date.now()
+    updated_at: pos.updatedAt || Date.now(),
+    updatedAt: pos.updatedAt || Date.now()
   };
 
   try {
     await safeUpsert('scouting_posiciones_sistema', payload, 'id');
   } catch (err) {
-    console.warn('Error saving to scouting_posiciones_sistema:', err);
+    console.debug('Fallback saving to scouting_posiciones_sistema:', err);
   }
 }
 
@@ -1477,24 +1497,35 @@ export async function dbBulkUpsertPosicionesSistema(posiciones: PosicionSistema[
   const payloads = posiciones.map(pos => ({
     id: pos.id,
     sistema_id: pos.sistemaId,
+    sistemaId: pos.sistemaId,
     campograma_id: pos.campogramaId,
+    campogramaId: pos.campogramaId,
     posicion_id: pos.posicionId,
+    posicionId: pos.posicionId,
     posicion_label: pos.posicionLabel,
+    posicionLabel: pos.posicionLabel,
     categoria_posicion: pos.categoriaPosicion,
+    categoriaPosicion: pos.categoriaPosicion,
     coord_x: pos.coordX,
+    coordX: pos.coordX,
     coord_y: pos.coordY,
+    coordY: pos.coordY,
     allowed_roles: pos.allowedRoles || [],
+    allowedRoles: pos.allowedRoles || [],
     jugador_id: pos.jugadorId || null,
+    jugadorId: pos.jugadorId || null,
     jugadores_mensuales_ids: pos.jugadoresMensualesIds || [],
+    jugadoresMensualesIds: pos.jugadoresMensualesIds || [],
     orden: pos.orden ?? 0,
     notas: pos.notas || '',
-    updated_at: pos.updatedAt || Date.now()
+    updated_at: pos.updatedAt || Date.now(),
+    updatedAt: pos.updatedAt || Date.now()
   }));
 
   try {
     await safeBulkUpsert('scouting_posiciones_sistema', payloads, 'id');
   } catch (err) {
-    console.warn('Error bulk upserting to scouting_posiciones_sistema:', err);
+    console.debug('Fallback bulk upserting to scouting_posiciones_sistema:', err);
   }
 }
 
@@ -1970,12 +2001,12 @@ CREATE POLICY "Permitir todo en plan semanal" ON scouting_plan_semanal
 -- TABLA DEDICADA PARA CAMPOGRAMAS Y PIZARRAS TÁCTICAS
 CREATE TABLE IF NOT EXISTS scouting_campogramas (
   id TEXT PRIMARY KEY,
-  folder_id TEXT NOT NULL,
-  "folderId" TEXT,
-  sub_folder_id TEXT,
-  "subFolderId" TEXT,
-  month_folder_id TEXT,
-  "monthFolderId" TEXT,
+  folder_id TEXT NOT NULL DEFAULT 'mensuales',
+  "folderId" TEXT DEFAULT 'mensuales',
+  sub_folder_id TEXT DEFAULT '1rfef',
+  "subFolderId" TEXT DEFAULT '1rfef',
+  month_folder_id TEXT DEFAULT 'septiembre',
+  "monthFolderId" TEXT DEFAULT 'septiembre',
   nombre TEXT NOT NULL,
   descripcion TEXT,
   fecha_modificacion TEXT,
@@ -1983,8 +2014,8 @@ CREATE TABLE IF NOT EXISTS scouting_campogramas (
   updated_at BIGINT,
   "updatedAt" BIGINT,
   formation TEXT NOT NULL DEFAULT '4-4-2',
-  monthly_view BOOLEAN DEFAULT true,
-  "monthlyView" BOOLEAN DEFAULT true,
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
   assignments JSONB DEFAULT '{}'::jsonb,
   monthly_assignments JSONB DEFAULT '{}'::jsonb,
   "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
@@ -1992,15 +2023,211 @@ CREATE TABLE IF NOT EXISTS scouting_campogramas (
 );
 
 ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
-
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT DEFAULT '1rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT DEFAULT '1rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
 DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
-CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas
-  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
 
--- 2. Asegurar purga de campogramas eliminados
-DELETE FROM scouting_campogramas WHERE id IN ('c_septiembre_2026_1rfef_g1', 'c_septiembre_2026_1rfef_g2', 'c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2');
+-- TABLA DE SISTEMAS DE JUEGO
+CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
+  id TEXT PRIMARY KEY,
+  codigo TEXT,
+  nombre TEXT,
+  descripcion TEXT,
+  defensas INTEGER DEFAULT 4,
+  centrocampistas INTEGER DEFAULT 4,
+  delanteros INTEGER DEFAULT 2,
+  posiciones_defecto JSONB DEFAULT '[]'::jsonb,
+  "posicionesDefecto" JSONB DEFAULT '[]'::jsonb,
+  activo BOOLEAN DEFAULT true,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS codigo TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS formacion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS defensas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS centrocampistas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS delanteros INTEGER DEFAULT 2;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS posiciones_defecto JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "posicionesDefecto" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
+CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
+
+-- TABLA DE POSICIONES DE LOS JUGADORES VINCULADAS AL SISTEMA Y CAMPOGRAMA
+CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
+  id TEXT PRIMARY KEY,
+  sistema_id TEXT,
+  "sistemaId" TEXT,
+  campograma_id TEXT,
+  "campogramaId" TEXT,
+  posicion_id TEXT,
+  "posicionId" TEXT,
+  posicion_label TEXT,
+  "posicionLabel" TEXT,
+  categoria_posicion TEXT,
+  "categoriaPosicion" TEXT,
+  coord_x NUMERIC DEFAULT 50,
+  "coordX" NUMERIC DEFAULT 50,
+  coord_y NUMERIC DEFAULT 50,
+  "coordY" NUMERIC DEFAULT 50,
+  allowed_roles JSONB DEFAULT '[]'::jsonb,
+  "allowedRoles" JSONB DEFAULT '[]'::jsonb,
+  jugador_id TEXT,
+  "jugadorId" TEXT,
+  jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb,
+  "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb,
+  orden INTEGER DEFAULT 0,
+  notas TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS sistema_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "sistemaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS campograma_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "campogramaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_label TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionLabel" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS categoria_posicion TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "categoriaPosicion" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_x NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordX" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_y NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordY" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS allowed_roles JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "allowedRoles" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugador_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadorId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS notas TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
+CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
 
 -- Forzar recarga de cache del esquema en Supabase (PostgREST)
+NOTIFY pgrst, 'reload schema';
+`;
+}
+
+/**
+ * Script de reparación rápida de columnas para Supabase
+ */
+export function getRepararColumnasSupabaseSQL(): string {
+  return `-- ==============================================================================
+-- SQL: REPARACIÓN Y ACTUALIZACIÓN RÁPIDA DE COLUMNAS EN SUPABASE
+-- Añade todas las columnas faltantes (categoria_posicion, coord_x, coord_y, etc.)
+-- ==============================================================================
+
+-- 1. scouting_posiciones_sistema
+CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
+  id TEXT PRIMARY KEY
+);
+ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS sistema_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "sistemaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS campograma_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "campogramaId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS posicion_label TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "posicionLabel" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS categoria_posicion TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "categoriaPosicion" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_x NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordX" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS coord_y NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "coordY" NUMERIC DEFAULT 50;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS allowed_roles JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "allowedRoles" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugador_id TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadorId" TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS notas TEXT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_posiciones_sistema ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
+CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
+
+-- 2. scouting_sistemas_juego
+CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
+  id TEXT PRIMARY KEY
+);
+ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS codigo TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS formacion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS defensas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS centrocampistas INTEGER DEFAULT 4;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS delanteros INTEGER DEFAULT 2;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS posiciones_defecto JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "posicionesDefecto" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_sistemas_juego ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
+CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. scouting_campogramas
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY
+);
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT DEFAULT '1rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT DEFAULT '1rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT DEFAULT 'septiembre';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. Notificar a PostgREST para recargar el esquema
 NOTIFY pgrst, 'reload schema';
 `;
 }
