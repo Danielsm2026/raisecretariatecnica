@@ -17,6 +17,8 @@ import {
   getCampogramaAgostoSQL,
   getCampogramaSegundaRFEFGrupo1SeptiembreSQL,
   getCampogramaSegundaRFEFGrupo2SeptiembreSQL,
+  getCampogramaPrimeraRFEFGrupo1SeptiembreSQL,
+  getCampogramaPrimeraRFEFGrupo2SeptiembreSQL,
   getCampogramaSingleSQL,
   getSistemasYPosicionesSQL,
   generateLiveCampogramasSQL,
@@ -205,6 +207,34 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     notes: 'Planificación estival para afianzar el bloque competitivo.'
   },
   {
+    id: 'c_septiembre_2026_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'septiembre',
+    nombre: 'PRIMERA RFEF GRUPO I - SEPTIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I',
+    fechaModificacion: '01/09/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Septiembre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_septiembre_2026_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'septiembre',
+    nombre: 'PRIMERA RFEF GRUPO II - SEPTIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II',
+    fechaModificacion: '01/09/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Septiembre 2026 vinculado a Supabase.'
+  },
+  {
     id: 'c_septiembre_2026_2rfef_g1',
     folderId: 'mensuales',
     subFolderId: '2rfef',
@@ -304,8 +334,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       'c_mensual_enero',
       'c_mensual_2rfef_principal',
       'c_enero_2026_2rfef_g1',
-      'c_septiembre_2026_1rfef_g1',
-      'c_septiembre_2026_1rfef_g2',
       'c_agosto_2026_1rfef_g1',
       'c_agosto_2026_1rfef_g2'
     ];
@@ -314,7 +342,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          return Array.from(new Set([...DEFAULT_DELETED, ...parsed]));
+          const filtered = parsed.filter(id => id !== 'c_septiembre_2026_1rfef_g1' && id !== 'c_septiembre_2026_1rfef_g2');
+          return Array.from(new Set([...DEFAULT_DELETED, ...filtered]));
         }
       }
     } catch (e) {}
@@ -455,7 +484,11 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const clean = sanitizeCampogramas(parsed, players, deletedSet);
+          // Merge defaults with saved items so new default items (like Primera RFEF) are readily available
+          const savedIds = new Set(parsed.map((p: any) => p && p.id));
+          const missingDefaults = DEFAULT_CAMPOGRAMAS.filter(d => !savedIds.has(d.id) && !deletedSet.has(d.id));
+          const combined = [...parsed, ...missingDefaults];
+          const clean = sanitizeCampogramas(combined, players, deletedSet);
           localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(clean));
           return clean;
         }
@@ -482,7 +515,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   useEffect(() => {
     // Purge target deleted campogramas from Supabase immediately
     if (isSupabaseConfigured()) {
-      const toPurge = ['c_septiembre_2026_1rfef_g1', 'c_septiembre_2026_1rfef_g2', 'c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2'];
+      const toPurge = ['c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2'];
       toPurge.forEach(id => dbDeleteCampograma(id).catch(() => {}));
     }
 
