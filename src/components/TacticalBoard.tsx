@@ -13,13 +13,10 @@ import {
   dbSaveSetting, 
   isSupabaseConfigured, 
   getSQLInstructions,
-  getRepararColumnasSupabaseSQL,
   getCampogramaSeptiembreSQL,
   getCampogramaAgostoSQL,
   getCampogramaSegundaRFEFGrupo1SeptiembreSQL,
   getCampogramaSegundaRFEFGrupo2SeptiembreSQL,
-  getCampogramaPrimeraRFEFGrupo1SeptiembreSQL,
-  getCampogramaPrimeraRFEFGrupo2SeptiembreSQL,
   getCampogramaSingleSQL,
   getSistemasYPosicionesSQL,
   generateLiveCampogramasSQL,
@@ -208,34 +205,6 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     notes: 'Planificación estival para afianzar el bloque competitivo.'
   },
   {
-    id: 'c_septiembre_2026_1rfef_g1',
-    folderId: 'mensuales',
-    subFolderId: '1rfef',
-    monthFolderId: 'septiembre',
-    nombre: 'PRIMERA RFEF GRUPO I - SEPTIEMBRE 2026',
-    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I',
-    fechaModificacion: '01/09/2026',
-    formation: '4-4-2',
-    monthlyView: false,
-    assignments: {},
-    monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Septiembre 2026 vinculado a Supabase.'
-  },
-  {
-    id: 'c_septiembre_2026_1rfef_g2',
-    folderId: 'mensuales',
-    subFolderId: '1rfef',
-    monthFolderId: 'septiembre',
-    nombre: 'PRIMERA RFEF GRUPO II - SEPTIEMBRE 2026',
-    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II',
-    fechaModificacion: '01/09/2026',
-    formation: '4-4-2',
-    monthlyView: false,
-    assignments: {},
-    monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Septiembre 2026 vinculado a Supabase.'
-  },
-  {
     id: 'c_septiembre_2026_2rfef_g1',
     folderId: 'mensuales',
     subFolderId: '2rfef',
@@ -335,6 +304,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       'c_mensual_enero',
       'c_mensual_2rfef_principal',
       'c_enero_2026_2rfef_g1',
+      'c_septiembre_2026_1rfef_g1',
+      'c_septiembre_2026_1rfef_g2',
       'c_agosto_2026_1rfef_g1',
       'c_agosto_2026_1rfef_g2'
     ];
@@ -343,8 +314,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const filtered = parsed.filter(id => id !== 'c_septiembre_2026_1rfef_g1' && id !== 'c_septiembre_2026_1rfef_g2');
-          return Array.from(new Set([...DEFAULT_DELETED, ...filtered]));
+          return Array.from(new Set([...DEFAULT_DELETED, ...parsed]));
         }
       }
     } catch (e) {}
@@ -485,11 +455,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge defaults with saved items so new default items (like Primera RFEF) are readily available
-          const savedIds = new Set(parsed.map((p: any) => p && p.id));
-          const missingDefaults = DEFAULT_CAMPOGRAMAS.filter(d => !savedIds.has(d.id) && !deletedSet.has(d.id));
-          const combined = [...parsed, ...missingDefaults];
-          const clean = sanitizeCampogramas(combined, players, deletedSet);
+          const clean = sanitizeCampogramas(parsed, players, deletedSet);
           localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(clean));
           return clean;
         }
@@ -516,7 +482,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   useEffect(() => {
     // Purge target deleted campogramas from Supabase immediately
     if (isSupabaseConfigured()) {
-      const toPurge = ['c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2'];
+      const toPurge = ['c_septiembre_2026_1rfef_g1', 'c_septiembre_2026_1rfef_g2', 'c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2'];
       toPurge.forEach(id => dbDeleteCampograma(id).catch(() => {}));
     }
 
@@ -2671,16 +2637,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 Sistemas & Posiciones SQL
               </button>
               <button
-                onClick={() => setActiveSqlTab('reparar')}
-                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
-                  activeSqlTab === 'reparar'
-                    ? 'bg-slate-800 text-amber-400 border-b-2 border-amber-500'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Reparar / Actualizar Columnas SQL
-              </button>
-              <button
                 onClick={() => setActiveSqlTab('septiembre')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'septiembre'
@@ -2745,19 +2701,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-teal-300 overflow-x-auto select-all max-h-[300px]">
                       {getSistemasYPosicionesSQL(campogramas)}
-                    </pre>
-                  </div>
-                </div>
-              )}
-
-              {activeSqlTab === 'reparar' && (
-                <div className="space-y-2">
-                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
-                    <p className="text-slate-400 font-sans text-xs mb-2">
-                      Script de <strong className="text-amber-400">Reparación y Actualización de Columnas</strong> para Supabase. Añade todas las columnas necesarias (<code className="text-amber-300">categoria_posicion</code>, <code className="text-amber-300">coord_x</code>, <code className="text-amber-300">coord_y</code>, <code className="text-amber-300">allowed_roles</code>, etc.) en <code className="text-amber-300">scouting_posiciones_sistema</code>, <code className="text-amber-300">scouting_sistemas_juego</code> y <code className="text-amber-300">scouting_campogramas</code>:
-                    </p>
-                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-amber-300 overflow-x-auto select-all max-h-[300px]">
-                      {getRepararColumnasSupabaseSQL()}
                     </pre>
                   </div>
                 </div>
@@ -2854,15 +2797,13 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       ? (selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL())
                       : activeSqlTab === 'sistemas_pos'
                         ? getSistemasYPosicionesSQL(campogramas)
-                        : activeSqlTab === 'reparar'
-                          ? getRepararColumnasSupabaseSQL()
-                          : activeSqlTab === 'septiembre' 
-                            ? getCampogramaSeptiembreSQL() 
-                            : activeSqlTab === 'live'
-                              ? generateLiveCampogramasSQL(campogramas)
-                              : activeSqlTab === 'full' 
-                                ? getSQLInstructions() 
-                                : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                        : activeSqlTab === 'septiembre' 
+                          ? getCampogramaSeptiembreSQL() 
+                          : activeSqlTab === 'live'
+                            ? generateLiveCampogramasSQL(campogramas)
+                            : activeSqlTab === 'full' 
+                              ? getSQLInstructions() 
+                              : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
                     navigator.clipboard.writeText(textToCopy);
                     setCopiedSql(true);
                     setTimeout(() => setCopiedSql(false), 2500);
