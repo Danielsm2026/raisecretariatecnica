@@ -6,6 +6,7 @@ import { SPORTING_ATLETICO_PLAYERS, SPORTING_ATLETICO_ESCUDO } from './data/spor
 import { RAYO_MAJADAHONDA_PLAYERS, RAYO_MAJADAHONDA_ESCUDO } from './data/rayoMajadahondaPlayers';
 import { VILLARREAL_B_PLAYERS, VILLARREAL_B_ESCUDO } from './data/villarrealBPlayers';
 import { JUVENTUD_TORREMOLINOS_PLAYERS, JUVENTUD_TORREMOLINOS_ESCUDO } from './data/juventudTorremolinosPlayers';
+import { CD_CORIA_PLAYERS, CD_CORIA_ESCUDO } from './data/cdCoriaPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -4267,6 +4268,7 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...RAYO_MAJADAHONDA_PLAYERS,
   ...VILLARREAL_B_PLAYERS,
   ...JUVENTUD_TORREMOLINOS_PLAYERS,
+  ...CD_CORIA_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4335,6 +4337,14 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'Juventud Torremolinos CF',
       categoria: 'Primera RFEF',
       escudoUrl: JUVENTUD_TORREMOLINOS_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('coria') || player.equipo === 'CD Coria')) {
+    return {
+      ...player,
+      equipo: 'CD Coria',
+      categoria: 'Primera RFEF',
+      escudoUrl: CD_CORIA_ESCUDO
     };
   }
   return player;

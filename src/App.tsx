@@ -172,7 +172,10 @@ export default function App() {
           'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina',
           'p_santi_franco',
           'p_mirandes_jesus_ruiz', 'p_mirandes_edgar_badia', 'p_mirandes_adrian_zango', 'p_mirandes_aritz_arambarri', 'p_mirandes_peru_rodriguez', 'p_mirandes_joaquin_fernandez', 'p_mirandes_hodei_arrillaga', 'p_mirandes_pablo_perez',
-          'p_unionistas_emilio_bernad', 'p_unionistas_alex_daza', 'p_unionistas_christian_mutilva', 'p_unionistas_mikel_serrano', 'p_unionistas_ramiro_mayor', 'p_unionistas_alberto_retuerta', 'p_unionistas_gorka_rivera', 'p_unionistas_dani_morer', 'p_unionistas_abderrezzek_saidi', 'p_unionistas_arnau_casas', 'p_unionistas_juanma_lendinez', 'p_unionistas_alex_gil', 'p_unionistas_alejandro_marcelo', 'p_unionistas_luis_alcalde', 'p_unionistas_carlos_de_la_nava', 'p_unionistas_hugo_de_bustos', 'p_unionistas_alvaro_gomez', 'p_unionistas_dani_gonzalez', 'p_unionistas_pau_ferrer'
+          'p_unionistas_emilio_bernad', 'p_unionistas_alex_daza', 'p_unionistas_christian_mutilva', 'p_unionistas_mikel_serrano', 'p_unionistas_ramiro_mayor', 'p_unionistas_alberto_retuerta', 'p_unionistas_gorka_rivera', 'p_unionistas_dani_morer', 'p_unionistas_abderrezzek_saidi', 'p_unionistas_arnau_casas', 'p_unionistas_juanma_lendinez', 'p_unionistas_alex_gil', 'p_unionistas_alejandro_marcelo', 'p_unionistas_luis_alcalde', 'p_unionistas_carlos_de_la_nava', 'p_unionistas_hugo_de_bustos', 'p_unionistas_alvaro_gomez', 'p_unionistas_dani_gonzalez', 'p_unionistas_pau_ferrer',
+          'p_torremolinos_javi_belman', 'p_torremolinos_javi_cuenca', 'p_torremolinos_emin_grozdanic', 'p_torremolinos_matias_barboza', 'p_torremolinos_javi_merida', 'p_torremolinos_mamadouba_diaby', 'p_torremolinos_max_petersson', 'p_torremolinos_manu_sanchez', 'p_torremolinos_rodrigo_ajegun', 'p_torremolinos_cristian_rodriguez', 'p_torremolinos_angel_climent', 'p_torremolinos_wilfrid_kaptoum', 'p_torremolinos_dominique_moubeke', 'p_torremolinos_jose_antonio_bozada',
+          'p_torremolinos_dani_gonzalez', 'p_torremolinos_oscar_buch', 'p_torremolinos_nico_njalla', 'p_torremolinos_pau_perez', 'p_torremolinos_ivan_laca', 'p_torremolinos_dioni_villalba',
+          'p_coria_aaron_alonso', 'p_coria_javi_garrido', 'p_coria_alberto_trapero', 'p_coria_inaki_leon', 'p_coria_jaime_calleja', 'p_coria_alvaro_dominguez', 'p_coria_jacobo_guzman', 'p_coria_marco_leiton', 'p_coria_jose_curras', 'p_coria_benji_nunez', 'p_coria_alex_blanco', 'p_coria_javi_tapia', 'p_coria_edu_llorente', 'p_coria_alberto_moreno', 'p_coria_sergio_gomez', 'p_coria_josu_gallastegui', 'p_coria_antonio_arcos', 'p_coria_alex_toper', 'p_coria_pau_palacin', 'p_coria_ivan_ramos'
         ];
         if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
           localDeletedIds = localDeletedIds.filter(id => !forceKeepIds.includes(id));
@@ -378,6 +381,15 @@ export default function App() {
               updated = true;
             }
           }
+          if (teamName.toLowerCase().includes('coria') || teamName === 'CD Coria') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'CD Coria') { current.equipo = 'CD Coria'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/677.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(err => {
@@ -562,7 +574,8 @@ export default function App() {
           'p_mirandes_jesus_ruiz', 'p_mirandes_edgar_badia', 'p_mirandes_adrian_zango', 'p_mirandes_aritz_arambarri', 'p_mirandes_peru_rodriguez', 'p_mirandes_joaquin_fernandez', 'p_mirandes_hodei_arrillaga', 'p_mirandes_pablo_perez',
           'p_unionistas_emilio_bernad', 'p_unionistas_alex_daza', 'p_unionistas_christian_mutilva', 'p_unionistas_mikel_serrano', 'p_unionistas_ramiro_mayor', 'p_unionistas_alberto_retuerta', 'p_unionistas_gorka_rivera', 'p_unionistas_dani_morer', 'p_unionistas_abderrezzek_saidi', 'p_unionistas_arnau_casas', 'p_unionistas_juanma_lendinez', 'p_unionistas_alex_gil', 'p_unionistas_alejandro_marcelo', 'p_unionistas_luis_alcalde', 'p_unionistas_carlos_de_la_nava', 'p_unionistas_hugo_de_bustos', 'p_unionistas_alvaro_gomez', 'p_unionistas_dani_gonzalez', 'p_unionistas_pau_ferrer',
           'p_torremolinos_javi_belman', 'p_torremolinos_javi_cuenca', 'p_torremolinos_emin_grozdanic', 'p_torremolinos_matias_barboza', 'p_torremolinos_javi_merida', 'p_torremolinos_mamadouba_diaby', 'p_torremolinos_max_petersson', 'p_torremolinos_manu_sanchez', 'p_torremolinos_rodrigo_ajegun', 'p_torremolinos_cristian_rodriguez', 'p_torremolinos_angel_climent', 'p_torremolinos_wilfrid_kaptoum', 'p_torremolinos_dominique_moubeke', 'p_torremolinos_jose_antonio_bozada',
-          'p_torremolinos_dani_gonzalez', 'p_torremolinos_oscar_buch', 'p_torremolinos_nico_njalla', 'p_torremolinos_pau_perez', 'p_torremolinos_ivan_laca', 'p_torremolinos_dioni_villalba'
+          'p_torremolinos_dani_gonzalez', 'p_torremolinos_oscar_buch', 'p_torremolinos_nico_njalla', 'p_torremolinos_pau_perez', 'p_torremolinos_ivan_laca', 'p_torremolinos_dioni_villalba',
+          'p_coria_aaron_alonso', 'p_coria_javi_garrido', 'p_coria_alberto_trapero', 'p_coria_inaki_leon', 'p_coria_jaime_calleja', 'p_coria_alvaro_dominguez', 'p_coria_jacobo_guzman', 'p_coria_marco_leiton', 'p_coria_jose_curras', 'p_coria_benji_nunez', 'p_coria_alex_blanco', 'p_coria_javi_tapia', 'p_coria_edu_llorente', 'p_coria_alberto_moreno', 'p_coria_sergio_gomez', 'p_coria_josu_gallastegui', 'p_coria_antonio_arcos', 'p_coria_alex_toper', 'p_coria_pau_palacin', 'p_coria_ivan_ramos'
         ];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
           deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
@@ -689,6 +702,15 @@ export default function App() {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             if (current.equipo !== 'Juventud Torremolinos CF') { current.equipo = 'Juventud Torremolinos CF'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/4770.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('coria') || teamName === 'CD Coria') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'CD Coria') { current.equipo = 'CD Coria'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/677.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
