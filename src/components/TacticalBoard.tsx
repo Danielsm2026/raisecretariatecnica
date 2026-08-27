@@ -1924,7 +1924,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     <h3 className="text-base md:text-lg font-black text-white group-hover:text-blue-300 transition-colors uppercase tracking-wide">
                       {item.nombre}
                     </h3>
-                    {item.descripcion && (
+                    {item.descripcion && item.folderId !== 'mensuales' && (
                       <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 leading-relaxed">
                         {item.descripcion}
                       </p>
