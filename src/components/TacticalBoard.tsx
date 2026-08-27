@@ -1731,8 +1731,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           </div>
         </div>
 
-        {/* Campogramas Grid inside this Folder */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Campogramas List inside this Folder */}
+        <div className="flex flex-col space-y-3">
           {folderItems.map(item => {
             const placedCount = item.monthlyView 
               ? Object.values(item.monthlyAssignments || {}).reduce<number>((acc, curr) => acc + ((curr as string[])?.length || 0), 0)
@@ -1746,52 +1746,51 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               <div
                 key={item.id}
                 onClick={() => setActiveCampogramaId(item.id)}
-                className="bg-slate-900 border border-slate-850 hover:border-blue-500/50 rounded-xl p-5 shadow-lg hover:shadow-2xl transition-all duration-200 cursor-pointer group flex flex-col justify-between"
+                className="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl p-4 md:p-5 shadow-lg hover:shadow-xl hover:translate-x-1 transition-all duration-200 cursor-pointer group flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden"
               >
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex items-center space-x-2">
-                      {itemSubFolder?.logoImg && (
-                        <img src={itemSubFolder.logoImg} alt={itemSubFolder.title} className="w-5 h-5 object-contain rounded border border-slate-700 bg-slate-950 p-0.5 shrink-0" referrerPolicy="no-referrer" />
-                      )}
-                      <span className="text-[10px] font-mono font-extrabold uppercase bg-blue-950/80 text-blue-400 border border-blue-900/40 px-2.5 py-1 rounded">
-                        SISTEMA {item.formation}
-                      </span>
+                <div className="flex items-start md:items-center space-x-3.5 min-w-0 flex-1">
+                  {itemSubFolder?.logoImg ? (
+                    <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-700/80 p-1 flex items-center justify-center shadow-inner shrink-0 group-hover:scale-105 transition-transform overflow-hidden">
+                      <img src={itemSubFolder.logoImg} alt={itemSubFolder.title} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400 font-medium">
-                      {item.fechaModificacion}
-                    </span>
-                  </div>
-
-                  <h3 className="text-base md:text-lg font-black text-white group-hover:text-blue-300 transition-colors line-clamp-1 uppercase tracking-wide">
-                    {item.nombre}
-                  </h3>
-                  {item.descripcion && (
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                      {item.descripcion}
-                    </p>
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-blue-400 shrink-0 group-hover:scale-105 transition-transform">
+                      <Shield className="w-6 h-6" />
+                    </div>
                   )}
 
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${
-                      item.monthlyView ? 'bg-indigo-950/40 text-indigo-300 border-indigo-900/40' : 'bg-emerald-950/50 text-emerald-300 border-emerald-900/40'
-                    }`}>
-                      <span>{item.monthlyView ? '📅' : '🌐'}</span>
-                      <span>{item.monthlyView ? 'Posicional (5xPuesto)' : 'Alineación Standard 11'}</span>
-                    </span>
-                    <span className="text-[10px] font-mono font-bold bg-slate-950 text-slate-300 border border-slate-800 px-2.5 py-1 rounded-md">
-                      {placedCount} {placedCount === 1 ? 'jugador' : 'jugadores'}
-                    </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center flex-wrap gap-2 mb-1">
+                      <span className="text-[10px] font-mono font-black uppercase bg-blue-950/80 text-blue-400 border border-blue-900/40 px-2 py-0.5 rounded">
+                        SISTEMA {item.formation}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400 font-medium">
+                        {item.fechaModificacion}
+                      </span>
+                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border flex items-center gap-1 ${
+                        item.monthlyView ? 'bg-indigo-950/40 text-indigo-300 border-indigo-900/40' : 'bg-emerald-950/50 text-emerald-300 border-emerald-900/40'
+                      }`}>
+                        <span>{item.monthlyView ? '📅' : '🌐'}</span>
+                        <span>{item.monthlyView ? 'Posicional (5xPuesto)' : 'Alineación Standard 11'}</span>
+                      </span>
+                      <span className="text-[10px] font-mono font-bold bg-slate-950 text-slate-300 border border-slate-800 px-2 py-0.5 rounded">
+                        {placedCount} {placedCount === 1 ? 'jugador' : 'jugadores'}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base md:text-lg font-black text-white group-hover:text-blue-300 transition-colors uppercase tracking-wide">
+                      {item.nombre}
+                    </h3>
+                    {item.descripcion && (
+                      <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 leading-relaxed">
+                        {item.descripcion}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Actions bottom */}
-                <div className="mt-6 pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-cyan-400 group-hover:text-cyan-300 flex items-center space-x-1">
-                    <span>Abrir / Editar</span>
-                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </span>
-
+                {/* Actions and Button */}
+                <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-800/80 shrink-0">
                   <div className="flex items-center space-x-1.5">
                     <button
                       onClick={(e) => {
@@ -1806,14 +1805,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                         }
                         setShowSqlModal(true);
                       }}
-                      className="p-1.5 hover:bg-emerald-950/80 text-emerald-400 hover:text-emerald-300 rounded transition-colors"
+                      className="p-2 hover:bg-emerald-950/80 text-emerald-400 hover:text-emerald-300 rounded-lg border border-slate-800 hover:border-emerald-700/50 bg-slate-950 transition-colors"
                       title={`Vincular / Ver SQL en Supabase para "${item.nombre}"`}
                     >
                       <Database className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => handleDuplicateCampograma(e, item)}
-                      className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors"
+                      className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 bg-slate-950 transition-colors"
                       title="Duplicar campograma"
                     >
                       <Copy className="w-4 h-4" />
@@ -1824,18 +1823,23 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                         setEditingCampograma(item);
                         setEditTitleInput(item.nombre);
                       }}
-                      className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors"
+                      className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 bg-slate-950 transition-colors"
                       title="Cambiar nombre"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteCampograma(e, item.id, item.nombre)}
-                      className="p-1.5 hover:bg-red-950 text-slate-400 hover:text-red-400 rounded transition-colors"
+                      className="p-2 hover:bg-red-950 text-slate-400 hover:text-red-400 rounded-lg border border-slate-800 bg-slate-950 transition-colors"
                       title="Eliminar campograma"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+                  </div>
+
+                  <div className="px-4 py-2 rounded-lg bg-blue-600/15 border border-blue-500/30 group-hover:bg-blue-600/25 group-hover:border-blue-500/60 text-cyan-400 group-hover:text-cyan-300 flex items-center space-x-1.5 transition-all text-xs font-mono font-bold">
+                    <span>Abrir / Editar</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
               </div>
