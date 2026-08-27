@@ -1454,9 +1454,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                         {itemsInFolder.length} {itemsInFolder.length === 1 ? 'Campograma' : 'Campogramas'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                      {f.description}
-                    </p>
                   </div>
                 </div>
 
@@ -1545,9 +1542,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                         {itemsInSubFolder.length} {itemsInSubFolder.length === 1 ? 'Campograma' : 'Campogramas'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                      {sf.description}
-                    </p>
                   </div>
                 </div>
 
@@ -1636,9 +1630,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                         {itemsInMonthFolder.length} {itemsInMonthFolder.length === 1 ? 'Campograma' : 'Campogramas'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                      {mf.description}
-                    </p>
                   </div>
                 </div>
 
