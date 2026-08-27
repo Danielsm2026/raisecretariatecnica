@@ -1430,8 +1430,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           </div>
         </div>
 
-        {/* Folders Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Folders List */}
+        <div className="flex flex-col space-y-3.5">
           {FOLDERS.map((f) => {
             const Icon = f.icon;
             const itemsInFolder = campogramas.filter(c => c.folderId === f.id);
@@ -1439,31 +1439,32 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               <div
                 key={f.id}
                 onClick={() => setCurrentFolder(f.id)}
-                className={`bg-gradient-to-b ${f.gradient} border ${f.borderColor} rounded-xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden`}
+                className={`bg-gradient-to-r ${f.gradient} border ${f.borderColor} rounded-xl p-4 md:p-5 shadow-lg hover:shadow-xl hover:translate-x-1 transition-all duration-200 cursor-pointer group flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden`}
               >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center ${f.accentColor} group-hover:scale-110 transition-transform`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full border ${f.badgeBg}`}>
-                      {itemsInFolder.length} {itemsInFolder.length === 1 ? 'Campograma' : 'Campogramas'}
-                    </span>
+                <div className="flex items-center space-x-4">
+                  <div className={`w-14 h-14 rounded-xl bg-slate-950 border border-slate-700/80 flex items-center justify-center ${f.accentColor} shadow-inner group-hover:scale-105 transition-transform shrink-0`}>
+                    <Icon className="w-7 h-7" />
                   </div>
-
-                  <h3 className="text-lg font-bold font-display text-white group-hover:text-blue-300 transition-colors uppercase tracking-wide">
-                    {f.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                    {f.description}
-                  </p>
+                  <div>
+                    <div className="flex items-center flex-wrap gap-2.5">
+                      <h3 className="text-lg md:text-xl font-bold font-display text-white group-hover:text-blue-300 transition-colors uppercase tracking-wide">
+                        {f.title}
+                      </h3>
+                      <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full border ${f.badgeBg}`}>
+                        {itemsInFolder.length} {itemsInFolder.length === 1 ? 'Campograma' : 'Campogramas'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                      {f.description}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono font-bold">
-                  <span className={`${f.accentColor} flex items-center space-x-1`}>
+                <div className="flex items-center justify-end pt-3 md:pt-0 border-t md:border-t-0 border-slate-800/60 md:shrink-0 text-xs font-mono font-bold">
+                  <div className={`px-4 py-2 rounded-lg bg-slate-950/60 border border-slate-800 group-hover:border-slate-700 ${f.accentColor} flex items-center space-x-2 transition-all`}>
                     <span>Entrar a carpeta</span>
-                  </span>
-                  <ChevronRight className={`w-4 h-4 ${f.accentColor} group-hover:translate-x-1 transition-transform`} />
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
               </div>
             );
