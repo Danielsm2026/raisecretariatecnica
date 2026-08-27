@@ -13,6 +13,7 @@ import {
   dbSaveSetting, 
   isSupabaseConfigured, 
   getSQLInstructions,
+  getCampogramaOctubreSQL,
   getCampogramaSeptiembreSQL,
   getCampogramaAgostoSQL,
   getCampogramaSegundaRFEFGrupo1SeptiembreSQL,
@@ -146,10 +147,48 @@ const MONTH_FOLDERS = [
     borderColor: 'border-amber-500/30 hover:border-amber-500/60',
     accentColor: 'text-amber-400',
     badgeBg: 'bg-amber-950/60 text-amber-300 border-amber-800/40',
+  },
+  {
+    id: 'octubre',
+    title: 'OCTUBRE',
+    shortTitle: 'Octubre',
+    description: 'Campogramas posicionales y alineaciones del mes de Octubre 2026',
+    gradient: 'from-orange-600/20 via-rose-600/10 to-slate-900',
+    borderColor: 'border-orange-500/30 hover:border-orange-500/60',
+    accentColor: 'text-orange-400',
+    badgeBg: 'bg-orange-950/60 text-orange-300 border-orange-800/40',
   }
 ];
 
 const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
+  {
+    id: 'c_octubre_2026_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'octubre',
+    nombre: 'PRIMERA RFEF GRUPO I - OCTUBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Octubre 2026)',
+    fechaModificacion: '01/10/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Octubre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_octubre_2026_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'octubre',
+    nombre: 'PRIMERA RFEF GRUPO II - OCTUBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Octubre 2026)',
+    fechaModificacion: '01/10/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Octubre 2026 vinculado a Supabase.'
+  },
   {
     id: 'c_invierno_principal',
     folderId: 'invierno',
@@ -304,8 +343,6 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       'c_mensual_enero',
       'c_mensual_2rfef_principal',
       'c_enero_2026_2rfef_g1',
-      'c_septiembre_2026_1rfef_g1',
-      'c_septiembre_2026_1rfef_g2',
       'c_agosto_2026_1rfef_g1',
       'c_agosto_2026_1rfef_g2'
     ];
@@ -444,7 +481,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [showSqlModal, setShowSqlModal] = useState(false);
-  const [activeSqlTab, setActiveSqlTab] = useState<'2rfef_g1' | 'septiembre' | 'live' | 'full' | 'vercel'>('2rfef_g1');
+  const [activeSqlTab, setActiveSqlTab] = useState<'2rfef_g1' | 'octubre' | 'septiembre' | 'sistemas_pos' | 'live' | 'full' | 'vercel'>('2rfef_g1');
   const [selectedItemForSql, setSelectedItemForSql] = useState<CampogramaItem | null>(null);
   const [copiedSql, setCopiedSql] = useState(false);
 
@@ -1711,10 +1748,12 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedItemForSql(item);
-                        if (item.id === 'c_septiembre_2026_2rfef_g1') {
+                        if (item.monthFolderId === 'octubre' || item.id.includes('octubre')) {
+                          setActiveSqlTab('octubre');
+                        } else if (item.monthFolderId === 'septiembre' || item.id.includes('septiembre')) {
                           setActiveSqlTab('2rfef_g1');
                         } else {
-                          setActiveSqlTab('live');
+                          setActiveSqlTab('2rfef_g1');
                         }
                         setShowSqlModal(true);
                       }}
@@ -2627,6 +2666,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 {selectedItemForSql ? selectedItemForSql.nombre : 'Segunda RFEF G1 (Septiembre)'}
               </button>
               <button
+                onClick={() => setActiveSqlTab('octubre')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'octubre'
+                    ? 'bg-slate-800 text-orange-400 border-b-2 border-orange-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Carpeta Octubre (1ª RFEF)
+              </button>
+              <button
                 onClick={() => setActiveSqlTab('sistemas_pos')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'sistemas_pos'
@@ -2688,6 +2737,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
                       {selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'octubre' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para crear la tabla <code className="text-amber-300">scouting_campogramas</code> y vincular la carpeta <strong>OCTUBRE</strong> con sus dos campogramas (<code className="text-orange-300">PRIMERA RFEF GRUPO I</code> y <code className="text-orange-300">PRIMERA RFEF GRUPO II</code>) y sus 11 posiciones y roles tácticos en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-orange-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaOctubreSQL()}
                     </pre>
                   </div>
                 </div>
@@ -2795,15 +2857,17 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   onClick={() => {
                     const textToCopy = activeSqlTab === '2rfef_g1'
                       ? (selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL())
-                      : activeSqlTab === 'sistemas_pos'
-                        ? getSistemasYPosicionesSQL(campogramas)
-                        : activeSqlTab === 'septiembre' 
-                          ? getCampogramaSeptiembreSQL() 
-                          : activeSqlTab === 'live'
-                            ? generateLiveCampogramasSQL(campogramas)
-                            : activeSqlTab === 'full' 
-                              ? getSQLInstructions() 
-                              : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                      : activeSqlTab === 'octubre'
+                        ? getCampogramaOctubreSQL()
+                        : activeSqlTab === 'sistemas_pos'
+                          ? getSistemasYPosicionesSQL(campogramas)
+                          : activeSqlTab === 'septiembre' 
+                            ? getCampogramaSeptiembreSQL() 
+                            : activeSqlTab === 'live'
+                              ? generateLiveCampogramasSQL(campogramas)
+                              : activeSqlTab === 'full' 
+                                ? getSQLInstructions() 
+                                : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
                     navigator.clipboard.writeText(textToCopy);
                     setCopiedSql(true);
                     setTimeout(() => setCopiedSql(false), 2500);
