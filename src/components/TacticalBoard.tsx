@@ -190,6 +190,34 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Octubre 2026 vinculado a Supabase.'
   },
   {
+    id: 'c_septiembre_2026_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'septiembre',
+    nombre: 'PRIMERA RFEF GRUPO I - SEPTIEMBRE',
+    descripcion: 'Campograma mensual y alineación para Primera RFEF Grupo I',
+    fechaModificacion: '01/09/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Septiembre 2026.'
+  },
+  {
+    id: 'c_septiembre_2026_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'septiembre',
+    nombre: 'PRIMERA RFEF GRUPO II - SEPTIEMBRE',
+    descripcion: 'Campograma mensual y alineación para Primera RFEF Grupo II',
+    fechaModificacion: '01/09/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Septiembre 2026.'
+  },
+  {
     id: 'c_invierno_principal',
     folderId: 'invierno',
     nombre: 'Campograma Mercado de Invierno',
@@ -519,7 +547,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   useEffect(() => {
     // Purge target deleted campogramas from Supabase immediately
     if (isSupabaseConfigured()) {
-      const toPurge = ['c_septiembre_2026_1rfef_g1', 'c_septiembre_2026_1rfef_g2', 'c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2'];
+      const toPurge = ['c_agosto_2026_1rfef_g1', 'c_agosto_2026_1rfef_g2'];
       toPurge.forEach(id => dbDeleteCampograma(id).catch(() => {}));
     }
 
@@ -1537,8 +1565,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           </div>
         </div>
 
-        {/* Month Folders Grid for 1ª RFEF or 2ª RFEF */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Month Folders List for 1ª RFEF or 2ª RFEF */}
+        <div className="flex flex-col space-y-3.5">
           {MONTH_FOLDERS.map((mf) => {
             const itemsInMonthFolder = campogramas.filter(c => 
               c.folderId === 'mensuales' && 
@@ -1551,31 +1579,32 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 onClick={() => {
                   setCurrentMonthFolder(mf.id);
                 }}
-                className={`bg-gradient-to-b ${mf.gradient} border ${mf.borderColor} rounded-xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden`}
+                className={`bg-gradient-to-r ${mf.gradient} border ${mf.borderColor} rounded-xl p-4 md:p-5 shadow-lg hover:shadow-xl hover:translate-x-1 transition-all duration-200 cursor-pointer group flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden`}
               >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
-                      <Calendar className="w-6 h-6" />
-                    </div>
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full border ${mf.badgeBg}`}>
-                      {itemsInMonthFolder.length} {itemsInMonthFolder.length === 1 ? 'Campograma' : 'Campogramas'}
-                    </span>
+                <div className="flex items-center space-x-4">
+                  <div className={`w-12 h-12 rounded-xl bg-slate-950/90 border border-slate-800 flex items-center justify-center ${mf.accentColor} group-hover:scale-105 transition-transform shrink-0 shadow-inner`}>
+                    <Calendar className="w-6 h-6" />
                   </div>
-
-                  <h3 className="text-xl font-bold font-display text-white group-hover:text-amber-300 transition-colors uppercase tracking-wide">
-                    Carpeta {mf.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                    {mf.description}
-                  </p>
+                  <div>
+                    <div className="flex items-center flex-wrap gap-2.5">
+                      <h3 className="text-lg md:text-xl font-bold font-display text-white group-hover:text-amber-300 transition-colors uppercase tracking-wide">
+                        Carpeta {mf.title}
+                      </h3>
+                      <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full border ${mf.badgeBg}`}>
+                        {itemsInMonthFolder.length} {itemsInMonthFolder.length === 1 ? 'Campograma' : 'Campogramas'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                      {mf.description}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono font-bold">
-                  <span className={`${mf.accentColor} flex items-center space-x-1`}>
+                <div className="flex items-center justify-end pt-3 md:pt-0 border-t md:border-t-0 border-slate-800/60 md:shrink-0 text-xs font-mono font-bold">
+                  <div className={`px-4 py-2 rounded-lg bg-slate-950/60 border border-slate-800 group-hover:border-slate-700 ${mf.accentColor} flex items-center space-x-2 transition-all`}>
                     <span>Entrar en Carpeta {mf.shortTitle}</span>
-                  </span>
-                  <ChevronRight className={`w-4 h-4 ${mf.accentColor} group-hover:translate-x-1 transition-transform`} />
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
               </div>
             );
@@ -1596,14 +1625,35 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     ? MONTH_FOLDERS.find(m => m.id === currentMonthFolder)
     : null;
 
-  const folderItems = campogramas.filter(c => {
-    if (c.folderId !== currentFolder) return false;
-    if (currentFolder === 'mensuales') {
-      if ((c.subFolderId || '1rfef') !== (currentSubFolder || '1rfef')) return false;
-      return (c.monthFolderId || 'septiembre') === (currentMonthFolder || 'septiembre');
-    }
-    return true;
-  });
+  const folderItems = campogramas
+    .filter(c => {
+      if (c.folderId !== currentFolder) return false;
+      if (currentFolder === 'mensuales') {
+        if ((c.subFolderId || '1rfef') !== (currentSubFolder || '1rfef')) return false;
+        return (c.monthFolderId || 'septiembre') === (currentMonthFolder || 'septiembre');
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const getGroupRank = (item: CampogramaItem): number => {
+        const text = `${item.nombre} ${item.id}`.toUpperCase();
+        if (/\bGRUPO\s+I\b|\bGRUPO\s+1\b|_G1\b/i.test(text)) return 1;
+        if (/\bGRUPO\s+II\b|\bGRUPO\s+2\b|_G2\b/i.test(text)) return 2;
+        if (/\bGRUPO\s+III\b|\bGRUPO\s+3\b|_G3\b/i.test(text)) return 3;
+        if (/\bGRUPO\s+IV\b|\bGRUPO\s+4\b|_G4\b/i.test(text)) return 4;
+        if (/\bGRUPO\s+V\b|\bGRUPO\s+5\b|_G5\b/i.test(text)) return 5;
+        return 999;
+      };
+
+      const rankA = getGroupRank(a);
+      const rankB = getGroupRank(b);
+
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+
+      return (a.nombre || '').localeCompare(b.nombre || '', 'es', { numeric: true, sensitivity: 'base' });
+    });
 
   if (activeCampogramaId === null) {
     const Icon = folderInfo.icon;
