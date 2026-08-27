@@ -13,6 +13,7 @@ import {
   dbSaveSetting, 
   isSupabaseConfigured, 
   getSQLInstructions,
+  getCampogramaNoviembreSQL,
   getCampogramaOctubreSQL,
   getCampogramaSeptiembreSQL,
   getCampogramaAgostoSQL,
@@ -157,10 +158,48 @@ const MONTH_FOLDERS = [
     borderColor: 'border-orange-500/30 hover:border-orange-500/60',
     accentColor: 'text-orange-400',
     badgeBg: 'bg-orange-950/60 text-orange-300 border-orange-800/40',
+  },
+  {
+    id: 'noviembre',
+    title: 'NOVIEMBRE',
+    shortTitle: 'Noviembre',
+    description: 'Campogramas posicionales y alineaciones del mes de Noviembre 2026',
+    gradient: 'from-blue-600/20 via-indigo-600/10 to-slate-900',
+    borderColor: 'border-blue-500/30 hover:border-blue-500/60',
+    accentColor: 'text-blue-400',
+    badgeBg: 'bg-blue-950/60 text-blue-300 border-blue-800/40',
   }
 ];
 
 const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
+  {
+    id: 'c_noviembre_2026_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'noviembre',
+    nombre: 'PRIMERA RFEF GRUPO I - NOVIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Noviembre 2026)',
+    fechaModificacion: '01/11/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Noviembre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_noviembre_2026_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'noviembre',
+    nombre: 'PRIMERA RFEF GRUPO II - NOVIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Noviembre 2026)',
+    fechaModificacion: '01/11/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Noviembre 2026 vinculado a Supabase.'
+  },
   {
     id: 'c_octubre_2026_1rfef_g1',
     folderId: 'mensuales',
@@ -509,7 +548,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [showSqlModal, setShowSqlModal] = useState(false);
-  const [activeSqlTab, setActiveSqlTab] = useState<'2rfef_g1' | 'octubre' | 'septiembre' | 'sistemas_pos' | 'live' | 'full' | 'vercel'>('2rfef_g1');
+  const [activeSqlTab, setActiveSqlTab] = useState<'2rfef_g1' | 'noviembre' | 'octubre' | 'septiembre' | 'sistemas_pos' | 'live' | 'full' | 'vercel'>('2rfef_g1');
   const [selectedItemForSql, setSelectedItemForSql] = useState<CampogramaItem | null>(null);
   const [copiedSql, setCopiedSql] = useState(false);
 
@@ -520,7 +559,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const clean = sanitizeCampogramas(parsed, players, deletedSet);
+          const existingIds = new Set(parsed.map((p: any) => p?.id));
+          const missingDefaults = DEFAULT_CAMPOGRAMAS.filter(d => !existingIds.has(d.id) && !deletedSet.has(d.id));
+          const mergedList = [...parsed, ...missingDefaults];
+          const clean = sanitizeCampogramas(mergedList, players, deletedSet);
           localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(clean));
           return clean;
         }
@@ -1796,7 +1838,9 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedItemForSql(item);
-                        if (item.monthFolderId === 'octubre' || item.id.includes('octubre')) {
+                        if (item.monthFolderId === 'noviembre' || item.id.includes('noviembre')) {
+                          setActiveSqlTab('noviembre');
+                        } else if (item.monthFolderId === 'octubre' || item.id.includes('octubre')) {
                           setActiveSqlTab('octubre');
                         } else if (item.monthFolderId === 'septiembre' || item.id.includes('septiembre')) {
                           setActiveSqlTab('2rfef_g1');
@@ -2719,6 +2763,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 {selectedItemForSql ? selectedItemForSql.nombre : 'Segunda RFEF G1 (Septiembre)'}
               </button>
               <button
+                onClick={() => setActiveSqlTab('noviembre')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'noviembre'
+                    ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Carpeta Noviembre (1ª RFEF)
+              </button>
+              <button
                 onClick={() => setActiveSqlTab('octubre')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'octubre'
@@ -2790,6 +2844,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
                       {selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'noviembre' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para crear la tabla <code className="text-amber-300">scouting_campogramas</code> y vincular la carpeta <strong>NOVIEMBRE</strong> con sus dos campogramas (<code className="text-blue-300">PRIMERA RFEF GRUPO I</code> y <code className="text-blue-300">PRIMERA RFEF GRUPO II</code>) y sus 11 posiciones y roles tácticos en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-blue-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaNoviembreSQL()}
                     </pre>
                   </div>
                 </div>
@@ -2910,17 +2977,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   onClick={() => {
                     const textToCopy = activeSqlTab === '2rfef_g1'
                       ? (selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL())
-                      : activeSqlTab === 'octubre'
-                        ? getCampogramaOctubreSQL()
-                        : activeSqlTab === 'sistemas_pos'
-                          ? getSistemasYPosicionesSQL(campogramas)
-                          : activeSqlTab === 'septiembre' 
-                            ? getCampogramaSeptiembreSQL() 
-                            : activeSqlTab === 'live'
-                              ? generateLiveCampogramasSQL(campogramas)
-                              : activeSqlTab === 'full' 
-                                ? getSQLInstructions() 
-                                : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                      : activeSqlTab === 'noviembre'
+                        ? getCampogramaNoviembreSQL()
+                        : activeSqlTab === 'octubre'
+                          ? getCampogramaOctubreSQL()
+                          : activeSqlTab === 'sistemas_pos'
+                            ? getSistemasYPosicionesSQL(campogramas)
+                            : activeSqlTab === 'septiembre' 
+                              ? getCampogramaSeptiembreSQL() 
+                              : activeSqlTab === 'live'
+                                ? generateLiveCampogramasSQL(campogramas)
+                                : activeSqlTab === 'full' 
+                                  ? getSQLInstructions() 
+                                  : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
                     navigator.clipboard.writeText(textToCopy);
                     setCopiedSql(true);
                     setTimeout(() => setCopiedSql(false), 2500);
