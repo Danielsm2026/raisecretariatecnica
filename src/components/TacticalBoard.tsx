@@ -13,6 +13,7 @@ import {
   dbSaveSetting, 
   isSupabaseConfigured, 
   getSQLInstructions,
+  getCampogramaDiciembreSQL,
   getCampogramaNoviembreSQL,
   getCampogramaOctubreSQL,
   getCampogramaSeptiembreSQL,
@@ -168,10 +169,118 @@ const MONTH_FOLDERS = [
     borderColor: 'border-blue-500/30 hover:border-blue-500/60',
     accentColor: 'text-blue-400',
     badgeBg: 'bg-blue-950/60 text-blue-300 border-blue-800/40',
+  },
+  {
+    id: 'diciembre',
+    title: 'DICIEMBRE',
+    shortTitle: 'Diciembre',
+    description: 'Campogramas posicionales y alineaciones del mes de Diciembre 2026',
+    gradient: 'from-teal-600/20 via-emerald-600/10 to-slate-900',
+    borderColor: 'border-teal-500/30 hover:border-teal-500/60',
+    accentColor: 'text-teal-400',
+    badgeBg: 'bg-teal-950/60 text-teal-300 border-teal-800/40',
   }
 ];
 
 const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
+  {
+    id: 'c_diciembre_2026_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'diciembre',
+    nombre: 'PRIMERA RFEF GRUPO I - DICIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Diciembre 2026)',
+    fechaModificacion: '01/12/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Diciembre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_diciembre_2026_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'diciembre',
+    nombre: 'PRIMERA RFEF GRUPO II - DICIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Diciembre 2026)',
+    fechaModificacion: '01/12/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Diciembre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_diciembre_2026_2rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'diciembre',
+    nombre: 'SEGUNDA RFEF GRUPO I - DICIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Diciembre 2026)',
+    fechaModificacion: '01/12/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I en Diciembre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_diciembre_2026_2rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'diciembre',
+    nombre: 'SEGUNDA RFEF GRUPO II - DICIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Diciembre 2026)',
+    fechaModificacion: '01/12/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo II en Diciembre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_diciembre_2026_2rfef_g3',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'diciembre',
+    nombre: 'SEGUNDA RFEF GRUPO III - DICIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Diciembre 2026)',
+    fechaModificacion: '01/12/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo III en Diciembre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_diciembre_2026_2rfef_g4',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'diciembre',
+    nombre: 'SEGUNDA RFEF GRUPO IV - DICIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Diciembre 2026)',
+    fechaModificacion: '01/12/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo IV en Diciembre 2026 vinculado a Supabase.'
+  },
+  {
+    id: 'c_diciembre_2026_2rfef_g5',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'diciembre',
+    nombre: 'SEGUNDA RFEF GRUPO V - DICIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Diciembre 2026)',
+    fechaModificacion: '01/12/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo V en Diciembre 2026 vinculado a Supabase.'
+  },
   {
     id: 'c_noviembre_2026_1rfef_g1',
     folderId: 'mensuales',
@@ -233,28 +342,28 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     folderId: 'mensuales',
     subFolderId: '1rfef',
     monthFolderId: 'septiembre',
-    nombre: 'PRIMERA RFEF GRUPO I - SEPTIEMBRE',
-    descripcion: 'Campograma mensual y alineación para Primera RFEF Grupo I',
+    nombre: 'PRIMERA RFEF GRUPO I - SEPTIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Septiembre 2026)',
     fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {},
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Septiembre 2026.'
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Septiembre 2026 vinculado a Supabase.'
   },
   {
     id: 'c_septiembre_2026_1rfef_g2',
     folderId: 'mensuales',
     subFolderId: '1rfef',
     monthFolderId: 'septiembre',
-    nombre: 'PRIMERA RFEF GRUPO II - SEPTIEMBRE',
-    descripcion: 'Campograma mensual y alineación para Primera RFEF Grupo II',
+    nombre: 'PRIMERA RFEF GRUPO II - SEPTIEMBRE 2026',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Septiembre 2026)',
     fechaModificacion: '01/09/2026',
     formation: '4-4-2',
     monthlyView: false,
     assignments: {},
     monthlyAssignments: {},
-    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Septiembre 2026.'
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Septiembre 2026 vinculado a Supabase.'
   },
   {
     id: 'c_invierno_principal',
@@ -548,7 +657,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [showSqlModal, setShowSqlModal] = useState(false);
-  const [activeSqlTab, setActiveSqlTab] = useState<'2rfef_g1' | 'noviembre' | 'octubre' | 'septiembre' | 'sistemas_pos' | 'live' | 'full' | 'vercel'>('2rfef_g1');
+  const [activeSqlTab, setActiveSqlTab] = useState<'2rfef_g1' | 'diciembre' | 'noviembre' | 'octubre' | 'septiembre' | 'sistemas_pos' | 'live' | 'full' | 'vercel'>('2rfef_g1');
   const [selectedItemForSql, setSelectedItemForSql] = useState<CampogramaItem | null>(null);
   const [copiedSql, setCopiedSql] = useState(false);
 
@@ -1830,12 +1939,14 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedItemForSql(item);
-                        if (item.monthFolderId === 'noviembre' || item.id.includes('noviembre')) {
+                        if (item.monthFolderId === 'diciembre' || item.id.includes('diciembre')) {
+                          setActiveSqlTab('diciembre');
+                        } else if (item.monthFolderId === 'noviembre' || item.id.includes('noviembre')) {
                           setActiveSqlTab('noviembre');
                         } else if (item.monthFolderId === 'octubre' || item.id.includes('octubre')) {
                           setActiveSqlTab('octubre');
                         } else if (item.monthFolderId === 'septiembre' || item.id.includes('septiembre')) {
-                          setActiveSqlTab('2rfef_g1');
+                          setActiveSqlTab('septiembre');
                         } else {
                           setActiveSqlTab('2rfef_g1');
                         }
@@ -2755,6 +2866,16 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 {selectedItemForSql ? selectedItemForSql.nombre : 'Segunda RFEF G1 (Septiembre)'}
               </button>
               <button
+                onClick={() => setActiveSqlTab('diciembre')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'diciembre'
+                    ? 'bg-slate-800 text-teal-400 border-b-2 border-teal-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Carpeta Diciembre (Completa)
+              </button>
+              <button
                 onClick={() => setActiveSqlTab('noviembre')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'noviembre'
@@ -2841,6 +2962,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 </div>
               )}
 
+              {activeSqlTab === 'diciembre' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para crear la tabla <code className="text-amber-300">scouting_campogramas</code> y vincular la carpeta <strong>DICIEMBRE</strong> con todos sus 7 campogramas (<code className="text-teal-300">1ª RFEF Grupo I y II</code> + <code className="text-teal-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones tácticas en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-teal-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaDiciembreSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
               {activeSqlTab === 'noviembre' && (
                 <div className="space-y-2">
                   <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
@@ -2884,7 +3018,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 <div className="space-y-2">
                   <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
                     <p className="text-slate-400 font-sans text-xs mb-2">
-                      Copia y pega este código SQL directamente en el <strong>SQL Editor</strong> de tu panel de Supabase para crear la tabla <code className="text-amber-300">scouting_campogramas</code> e insertar todos los campogramas de Septiembre (1ª RFEF y 2ª RFEF) con todas sus alineaciones y configuraciones:
+                      Script SQL completo para crear la tabla <code className="text-amber-300">scouting_campogramas</code> y vincular la carpeta <strong>SEPTIEMBRE</strong> con todos sus 7 campogramas (<code className="text-emerald-300">1ª RFEF Grupo I y II</code> + <code className="text-emerald-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones tácticas en Supabase:
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-emerald-300 overflow-x-auto select-all max-h-[300px]">
                       {getCampogramaSeptiembreSQL()}
@@ -2969,19 +3103,21 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   onClick={() => {
                     const textToCopy = activeSqlTab === '2rfef_g1'
                       ? (selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL())
-                      : activeSqlTab === 'noviembre'
-                        ? getCampogramaNoviembreSQL()
-                        : activeSqlTab === 'octubre'
-                          ? getCampogramaOctubreSQL()
-                          : activeSqlTab === 'sistemas_pos'
-                            ? getSistemasYPosicionesSQL(campogramas)
-                            : activeSqlTab === 'septiembre' 
-                              ? getCampogramaSeptiembreSQL() 
-                              : activeSqlTab === 'live'
-                                ? generateLiveCampogramasSQL(campogramas)
-                                : activeSqlTab === 'full' 
-                                  ? getSQLInstructions() 
-                                  : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                      : activeSqlTab === 'diciembre'
+                        ? getCampogramaDiciembreSQL()
+                        : activeSqlTab === 'noviembre'
+                          ? getCampogramaNoviembreSQL()
+                          : activeSqlTab === 'octubre'
+                            ? getCampogramaOctubreSQL()
+                            : activeSqlTab === 'sistemas_pos'
+                              ? getSistemasYPosicionesSQL(campogramas)
+                              : activeSqlTab === 'septiembre' 
+                                ? getCampogramaSeptiembreSQL() 
+                                : activeSqlTab === 'live'
+                                  ? generateLiveCampogramasSQL(campogramas)
+                                  : activeSqlTab === 'full' 
+                                    ? getSQLInstructions() 
+                                    : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
                     navigator.clipboard.writeText(textToCopy);
                     setCopiedSql(true);
                     setTimeout(() => setCopiedSql(false), 2500);
