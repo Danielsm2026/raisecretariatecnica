@@ -225,6 +225,7 @@ interface PositionBoxProps {
   colorClass: string;
   players: ScoutedPlayer[];
   onSelectPlayer: (player: ScoutedPlayer) => void;
+  onEditReport?: (player: ScoutedPlayer) => void;
   onRemovePlayer?: (playerId: string) => void;
   onDropPlayer?: (playerId: string) => void;
   candidates?: ScoutedPlayer[];
@@ -498,7 +499,7 @@ const systemsLayouts: Record<string, PitchRow[]> = {
   ]
 };
 
-function PositionBox({ title, colorClass, players, onSelectPlayer, onRemovePlayer, onDropPlayer, candidates }: PositionBoxProps) {
+function PositionBox({ title, colorClass, players, onSelectPlayer, onEditReport, onRemovePlayer, onDropPlayer, candidates }: PositionBoxProps) {
   const [isOver, setIsOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -558,12 +559,24 @@ function PositionBox({ title, colorClass, players, onSelectPlayer, onRemovePlaye
                   e.dataTransfer.setData('text/plain', player.id);
                   e.dataTransfer.effectAllowed = 'move';
                 }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  if (onEditReport) {
+                    onEditReport(player);
+                  }
+                }}
                 className="flex items-center justify-between text-[10px] font-mono py-0.5 border-b border-dotted border-slate-850/80 last:border-0 hover:bg-slate-800/40 px-1.5 rounded cursor-grab active:cursor-grabbing transition-all group/row"
-                title={`Ver detalles o arrastra para cambiar`}
+                title={`Doble clic para ver el informe de scouting de ${player.nombre}`}
               >
                 <div 
                   className="flex items-center space-x-1 min-w-0 flex-1 cursor-pointer"
                   onClick={() => onSelectPlayer(player)}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    if (onEditReport) {
+                      onEditReport(player);
+                    }
+                  }}
                 >
                   <span className="text-slate-200 group-hover/row:text-blue-400 transition-colors truncate font-semibold">
                     {formattedName}
@@ -1330,6 +1343,7 @@ export default function TeamsView({
                             colorClass={pos.colorClass} 
                             players={(activeLineup as any)[pos.key] || []} 
                             onSelectPlayer={onSelectPlayer}
+                            onEditReport={onEditReport}
                             onRemovePlayer={(playerId) => removePlayerFromPosition(playerId, pos.positionId)}
                             onDropPlayer={(playerId) => assignPlayerToPosition(playerId, pos.positionId)}
                             candidates={getCandidatesForPosition(pos.positionId, currentTeamRoster?.allPlayers || [])}
@@ -1368,7 +1382,12 @@ export default function TeamsView({
                         return (
                           <div 
                             key={player.id}
-                            className="bg-slate-900 border border-slate-850/80 rounded-lg p-3 hover:border-slate-700/60 hover:bg-slate-900/80 transition-all flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 group"
+                            onDoubleClick={(e) => {
+                              e.stopPropagation();
+                              onEditReport(player);
+                            }}
+                            title={`Doble clic para ver el informe de scouting de ${player.nombre}`}
+                            className="bg-slate-900 border border-slate-850/80 rounded-lg p-3 hover:border-slate-700/60 hover:bg-slate-900/80 transition-all flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 group cursor-pointer"
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               {/* Position Badge Icon */}
@@ -1378,6 +1397,10 @@ export default function TeamsView({
                               <div 
                                 className="w-14 h-14 rounded-md bg-slate-950/60 border border-slate-850 overflow-hidden shrink-0 flex items-center justify-center p-0.5 cursor-pointer"
                                 onClick={() => onSelectPlayer(player)}
+                                onDoubleClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditReport(player);
+                                }}
                               >
                                 {player.fotoUrl ? (
                                   <img 
@@ -1397,6 +1420,10 @@ export default function TeamsView({
                                   <h4 
                                     className="font-bold text-xs text-white truncate hover:text-blue-400 cursor-pointer" 
                                     onClick={() => onSelectPlayer(player)}
+                                    onDoubleClick={(e) => {
+                                      e.stopPropagation();
+                                      onEditReport(player);
+                                    }}
                                   >
                                     {player.nombre}
                                   </h4>
@@ -1434,7 +1461,7 @@ export default function TeamsView({
                                   onSelectPlayer(player);
                                   onEditReport(player);
                                 }}
-                                className="p-1 px-2.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded hover:text-white transition-all flex items-center space-x-1 text-[10px] font-mono font-bold"
+                                className="p-1 px-2.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded hover:text-white transition-all flex items-center space-x-1 text-[10px] font-mono font-bold cursor-pointer"
                                 title="Generar e imprimir informe de scouting"
                               >
                                 <FileText className="w-3.5 h-3.5 text-blue-400" />
@@ -1443,7 +1470,7 @@ export default function TeamsView({
 
                               <button
                                 onClick={() => onEditPlayer(player)}
-                                className="p-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded hover:text-white transition-all"
+                                className="p-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded hover:text-white transition-all cursor-pointer"
                                 title="Editar Perfil"
                               >
                                 <Edit className="w-3.5 h-3.5 text-indigo-400" />
@@ -1451,7 +1478,7 @@ export default function TeamsView({
 
                               <button
                                 onClick={() => setPlayerToDelete(player)}
-                                className="p-1.5 hover:bg-red-950/40 text-slate-500 hover:text-red-400 rounded transition-all"
+                                className="p-1.5 hover:bg-red-950/40 text-slate-500 hover:text-red-400 rounded transition-all cursor-pointer"
                                 title="Eliminar candidato"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1471,7 +1498,12 @@ export default function TeamsView({
                         return (
                           <div 
                             key={player.id}
-                            className="bg-slate-900 border border-slate-850/80 rounded-lg p-4 hover:border-slate-700/60 hover:bg-slate-900/80 transition-all group flex flex-col justify-between space-y-4"
+                            onDoubleClick={(e) => {
+                              e.stopPropagation();
+                              onEditReport(player);
+                            }}
+                            title={`Doble clic para ver el informe de scouting de ${player.nombre}`}
+                            className="bg-slate-900 border border-slate-850/80 rounded-lg p-4 hover:border-slate-700/60 hover:bg-slate-900/80 transition-all group flex flex-col justify-between space-y-4 cursor-pointer"
                           >
                             
                             <div className="flex items-start gap-3">
@@ -1482,6 +1514,10 @@ export default function TeamsView({
                               <div 
                                 className="w-18 h-18 rounded-lg bg-slate-950/60 border-2 border-slate-800 overflow-hidden shrink-0 flex items-center justify-center p-0.5 cursor-pointer hover:border-blue-500/50 transition-colors shadow-sm"
                                 onClick={() => onSelectPlayer(player)}
+                                onDoubleClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditReport(player);
+                                }}
                               >
                                 {player.fotoUrl ? (
                                   <img 
@@ -1497,7 +1533,14 @@ export default function TeamsView({
 
                               {/* Basic Player Stats */}
                               <div className="min-w-0 flex-1 space-y-1">
-                                <h4 className="font-bold text-xs text-white truncate hover:text-blue-400 cursor-pointer" onClick={() => onSelectPlayer(player)}>
+                                <h4 
+                                  className="font-bold text-xs text-white truncate hover:text-blue-400 cursor-pointer" 
+                                  onClick={() => onSelectPlayer(player)}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditReport(player);
+                                  }}
+                                >
                                   {player.nombre}
                                 </h4>
                                 <div className="text-[10px] font-mono text-slate-400 space-y-0.5">
@@ -1537,7 +1580,7 @@ export default function TeamsView({
                                     onSelectPlayer(player);
                                     onEditReport(player);
                                   }}
-                                  className="p-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded hover:text-white transition-all flex items-center space-x-1"
+                                  className="p-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded hover:text-white transition-all flex items-center space-x-1 cursor-pointer"
                                   title="Generar e imprimir informe de scouting"
                                 >
                                   <FileText className="w-3.5 h-3.5 text-blue-400" />
@@ -1546,7 +1589,7 @@ export default function TeamsView({
 
                                 <button
                                   onClick={() => onEditPlayer(player)}
-                                  className="p-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded hover:text-white transition-all"
+                                  className="p-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded hover:text-white transition-all cursor-pointer"
                                   title="Editar Perfil"
                                 >
                                   <Edit className="w-3.5 h-3.5 text-indigo-400" />
@@ -1554,7 +1597,7 @@ export default function TeamsView({
 
                                 <button
                                   onClick={() => setPlayerToDelete(player)}
-                                  className="p-1.5 hover:bg-red-950/40 text-slate-500 hover:text-red-400 rounded transition-all"
+                                  className="p-1.5 hover:bg-red-950/40 text-slate-500 hover:text-red-400 rounded transition-all cursor-pointer"
                                   title="Eliminar candidato"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
