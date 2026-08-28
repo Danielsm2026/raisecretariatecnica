@@ -2372,6 +2372,584 @@ NOTIFY pgrst, 'reload schema';
 }
 
 /**
+ * Helper to build SQL initialization for any specific month in 2027 or 2026.
+ */
+export function generateMonthCampogramasSQL(monthKey: string, monthNameUpper: string, year: number = 2027): string {
+  const dateStr = `01/${monthKey === 'enero' ? '01' : monthKey === 'febrero' ? '02' : monthKey === 'marzo' ? '03' : monthKey === 'abril' ? '04' : monthKey === 'mayo' ? '05' : monthKey === 'septiembre' ? '09' : monthKey === 'octubre' ? '10' : monthKey === 'noviembre' ? '11' : '12'}/${year}`;
+  
+  return `-- ==============================================================================
+-- SQL: VINCULACIÓN DE CARPETA ${monthNameUpper} ${year} (1ª RFEF G1-G2 Y 2ª RFEF G1-G5) EN SUPABASE
+-- ==============================================================================
+
+-- 1. Crear la tabla de campogramas tácticos si no existe
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL DEFAULT 'mensuales',
+  "folderId" TEXT DEFAULT 'mensuales',
+  sub_folder_id TEXT,
+  "subFolderId" TEXT,
+  month_folder_id TEXT DEFAULT '${monthKey}',
+  "monthFolderId" TEXT DEFAULT '${monthKey}',
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+-- 2. Habilitar seguridad RLS y políticas de acceso
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT DEFAULT '${monthKey}';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT DEFAULT '${monthKey}';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
+
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas 
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. TABLA DE SISTEMAS DE JUEGO (FORMACIONES TÁCTICAS)
+CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
+  id TEXT PRIMARY KEY,
+  codigo TEXT,
+  nombre TEXT,
+  descripcion TEXT,
+  defensas INTEGER DEFAULT 4,
+  centrocampistas INTEGER DEFAULT 4,
+  delanteros INTEGER DEFAULT 2,
+  posiciones_defecto JSONB DEFAULT '[]'::jsonb,
+  "posicionesDefecto" JSONB DEFAULT '[]'::jsonb,
+  activo BOOLEAN DEFAULT true,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
+CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. TABLA DE POSICIONES DE LOS JUGADORES VINCULADAS AL SISTEMA Y CAMPOGRAMA
+CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
+  id TEXT PRIMARY KEY,
+  sistema_id TEXT,
+  "sistemaId" TEXT,
+  campograma_id TEXT,
+  "campogramaId" TEXT,
+  posicion_id TEXT,
+  "posicionId" TEXT,
+  posicion_label TEXT,
+  "posicionLabel" TEXT,
+  categoria_posicion TEXT,
+  "categoriaPosicion" TEXT,
+  coord_x NUMERIC DEFAULT 50,
+  "coordX" NUMERIC DEFAULT 50,
+  coord_y NUMERIC DEFAULT 50,
+  "coordY" NUMERIC DEFAULT 50,
+  allowed_roles JSONB DEFAULT '[]'::jsonb,
+  "allowedRoles" JSONB DEFAULT '[]'::jsonb,
+  jugador_id TEXT,
+  "jugadorId" TEXT,
+  jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb,
+  "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb,
+  orden INTEGER DEFAULT 0,
+  notas TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
+CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
+
+-- 5. Insertar o actualizar los 7 Campogramas de la Carpeta ${monthNameUpper} ${year}
+INSERT INTO scouting_campogramas (
+  id, folder_id, "folderId", sub_folder_id, "subFolderId", month_folder_id, "monthFolderId",
+  nombre, descripcion, fecha_modificacion, "fechaModificacion", updated_at, "updatedAt",
+  formation, monthly_view, "monthlyView", assignments, monthly_assignments, "monthlyAssignments", notes
+) VALUES 
+-- PRIMERA RFEF - ${monthNameUpper} ${year}
+(
+  'c_${monthKey}_${year}_1rfef_g1',
+  'mensuales', 'mensuales', '1rfef', '1rfef', '${monthKey}', '${monthKey}',
+  'PRIMERA RFEF GRUPO I - ${monthNameUpper} ${year}',
+  'Campograma mensual y alineación táctica para Primera RFEF Grupo I (${monthNameUpper} ${year})',
+  '${dateStr}', '${dateStr}',
+  EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+  'Campograma de seguimiento para Primera RFEF Grupo I en ${monthNameUpper} ${year}.'
+),
+(
+  'c_${monthKey}_${year}_1rfef_g2',
+  'mensuales', 'mensuales', '1rfef', '1rfef', '${monthKey}', '${monthKey}',
+  'PRIMERA RFEF GRUPO II - ${monthNameUpper} ${year}',
+  'Campograma mensual y alineación táctica para Primera RFEF Grupo II (${monthNameUpper} ${year})',
+  '${dateStr}', '${dateStr}',
+  EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+  'Campograma de seguimiento para Primera RFEF Grupo II en ${monthNameUpper} ${year}.'
+),
+-- SEGUNDA RFEF - ${monthNameUpper} ${year} (GRUPOS I AL V)
+(
+  'c_${monthKey}_${year}_2rfef_g1',
+  'mensuales', 'mensuales', '2rfef', '2rfef', '${monthKey}', '${monthKey}',
+  'SEGUNDA RFEF GRUPO I - ${monthNameUpper} ${year}',
+  'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (${monthNameUpper} ${year})',
+  '${dateStr}', '${dateStr}',
+  EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo I en ${monthNameUpper} ${year}.'
+),
+(
+  'c_${monthKey}_${year}_2rfef_g2',
+  'mensuales', 'mensuales', '2rfef', '2rfef', '${monthKey}', '${monthKey}',
+  'SEGUNDA RFEF GRUPO II - ${monthNameUpper} ${year}',
+  'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (${monthNameUpper} ${year})',
+  '${dateStr}', '${dateStr}',
+  EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo II en ${monthNameUpper} ${year}.'
+),
+(
+  'c_${monthKey}_${year}_2rfef_g3',
+  'mensuales', 'mensuales', '2rfef', '2rfef', '${monthKey}', '${monthKey}',
+  'SEGUNDA RFEF GRUPO III - ${monthNameUpper} ${year}',
+  'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (${monthNameUpper} ${year})',
+  '${dateStr}', '${dateStr}',
+  EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo III en ${monthNameUpper} ${year}.'
+),
+(
+  'c_${monthKey}_${year}_2rfef_g4',
+  'mensuales', 'mensuales', '2rfef', '2rfef', '${monthKey}', '${monthKey}',
+  'SEGUNDA RFEF GRUPO IV - ${monthNameUpper} ${year}',
+  'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (${monthNameUpper} ${year})',
+  '${dateStr}', '${dateStr}',
+  EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo IV en ${monthNameUpper} ${year}.'
+),
+(
+  'c_${monthKey}_${year}_2rfef_g5',
+  'mensuales', 'mensuales', '2rfef', '2rfef', '${monthKey}', '${monthKey}',
+  'SEGUNDA RFEF GRUPO V - ${monthNameUpper} ${year}',
+  'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (${monthNameUpper} ${year})',
+  '${dateStr}', '${dateStr}',
+  EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000,
+  '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+  'Campograma de seguimiento para Segunda RFEF Grupo V en ${monthNameUpper} ${year}.'
+)
+ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
+  formation = EXCLUDED.formation,
+  monthly_view = EXCLUDED.monthly_view,
+  "monthlyView" = EXCLUDED."monthlyView",
+  assignments = EXCLUDED.assignments,
+  monthly_assignments = EXCLUDED.monthly_assignments,
+  "monthlyAssignments" = EXCLUDED."monthlyAssignments",
+  notes = EXCLUDED.notes;
+
+-- 6. Insertar posiciones para cada uno de los 7 campogramas de ${monthNameUpper} ${year}
+INSERT INTO scouting_posiciones_sistema (
+  id, sistema_id, "sistemaId", campograma_id, "campogramaId",
+  posicion_id, "posicionId", posicion_label, "posicionLabel",
+  categoria_posicion, "categoriaPosicion", coord_x, "coordX", coord_y, "coordY",
+  allowed_roles, "allowedRoles", orden, updated_at, "updatedAt"
+)
+SELECT 
+  'pos_' || c.id || '_' || p.pos_id as id,
+  '4-4-2' as sistema_id,
+  '4-4-2' as "sistemaId",
+  c.id as campograma_id,
+  c.id as "campogramaId",
+  p.pos_id as posicion_id,
+  p.pos_id as "posicionId",
+  p.label as posicion_label,
+  p.label as "posicionLabel",
+  p.cat as categoria_posicion,
+  p.cat as "categoriaPosicion",
+  p.cx as coord_x,
+  p.cx as "coordX",
+  p.cy as coord_y,
+  p.cy as "coordY",
+  p.roles::jsonb as allowed_roles,
+  p.roles::jsonb as "allowedRoles",
+  p.ord as orden,
+  EXTRACT(EPOCH FROM NOW()) * 1000 as updated_at,
+  EXTRACT(EPOCH FROM NOW()) * 1000 as "updatedAt"
+FROM (
+  VALUES 
+    ('c_${monthKey}_${year}_1rfef_g1'),
+    ('c_${monthKey}_${year}_1rfef_g2'),
+    ('c_${monthKey}_${year}_2rfef_g1'),
+    ('c_${monthKey}_${year}_2rfef_g2'),
+    ('c_${monthKey}_${year}_2rfef_g3'),
+    ('c_${monthKey}_${year}_2rfef_g4'),
+    ('c_${monthKey}_${year}_2rfef_g5')
+) as c(id)
+CROSS JOIN (
+  VALUES 
+    ('por', 'POR', 'Portero', 50, 88, '["Portero"]', 0),
+    ('ltd', 'LTD', 'Defensa', 15, 70, '["Lateral Derecho", "Defensa Central"]', 1),
+    ('dfc_d', 'DFC', 'Defensa', 38, 72, '["Defensa Central"]', 2),
+    ('dfc_i', 'DFC', 'Defensa', 62, 72, '["Defensa Central"]', 3),
+    ('lti', 'LTI', 'Defensa', 85, 70, '["Lateral Izquierdo", "Defensa Central"]', 4),
+    ('md', 'MD', 'Centrocampista', 15, 44, '["Extremo Derecho", "Mediocentro"]', 5),
+    ('mc_d', 'MC', 'Centrocampista', 38, 46, '["Mediocentro", "Mediocentro Defensivo", "Mediapunta"]', 6),
+    ('mc_i', 'MC', 'Centrocampista', 62, 46, '["Mediocentro", "Mediocentro Defensivo", "Mediapunta"]', 7),
+    ('mi', 'MI', 'Centrocampista', 85, 44, '["Extremo Izquierdo", "Mediocentro"]', 8),
+    ('dc_d', 'DC', 'Delantero', 38, 18, '["Delantero Centro", "Mediapunta"]', 9),
+    ('dc_i', 'DC', 'Delantero', 62, 18, '["Delantero Centro", "Mediapunta"]', 10)
+) as p(pos_id, label, cat, cx, cy, roles, ord)
+ON CONFLICT (id) DO UPDATE SET
+  sistema_id = EXCLUDED.sistema_id,
+  "sistemaId" = EXCLUDED."sistemaId",
+  campograma_id = EXCLUDED.campograma_id,
+  "campogramaId" = EXCLUDED."campogramaId",
+  posicion_id = EXCLUDED.posicion_id,
+  "posicionId" = EXCLUDED."posicionId",
+  posicion_label = EXCLUDED.posicion_label,
+  "posicionLabel" = EXCLUDED."posicionLabel",
+  categoria_posicion = EXCLUDED.categoria_posicion,
+  "categoriaPosicion" = EXCLUDED."categoriaPosicion",
+  coord_x = EXCLUDED.coord_x,
+  "coordX" = EXCLUDED."coordX",
+  coord_y = EXCLUDED.coord_y,
+  "coordY" = EXCLUDED."coordY",
+  allowed_roles = EXCLUDED.allowed_roles,
+  "allowedRoles" = EXCLUDED."allowedRoles",
+  orden = EXCLUDED.orden,
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt";
+
+-- 7. Notificar a PostgREST para recargar el esquema de tablas en tiempo real
+NOTIFY pgrst, 'reload schema';
+`;
+}
+
+export function getCampogramaEnero2027SQL(): string {
+  return generateMonthCampogramasSQL('enero', 'ENERO', 2027);
+}
+
+export function getCampogramaFebrero2027SQL(): string {
+  return generateMonthCampogramasSQL('febrero', 'FEBRERO', 2027);
+}
+
+export function getCampogramaMarzo2027SQL(): string {
+  return generateMonthCampogramasSQL('marzo', 'MARZO', 2027);
+}
+
+export function getCampogramaAbril2027SQL(): string {
+  return generateMonthCampogramasSQL('abril', 'ABRIL', 2027);
+}
+
+export function getCampogramaMayo2027SQL(): string {
+  return generateMonthCampogramasSQL('mayo', 'MAYO', 2027);
+}
+
+/**
+ * Returns complete SQL initialization for ALL 2027 months (Enero, Febrero, Marzo, Abril, Mayo) with 35 campogramas in total.
+ */
+export function getCampogramas2027CompletoSQL(): string {
+  return `-- ==============================================================================
+-- SQL: VINCULACIÓN COMPLETA AÑO 2027 (ENERO, FEBRERO, MARZO, ABRIL, MAYO) EN SUPABASE
+-- 35 CAMPOGRAMAS: 1ª RFEF G1-G2 Y 2ª RFEF G1-G5 POR CADA MES
+-- ==============================================================================
+
+-- 1. Crear tabla scouting_campogramas
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL DEFAULT 'mensuales',
+  "folderId" TEXT DEFAULT 'mensuales',
+  sub_folder_id TEXT,
+  "subFolderId" TEXT,
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'mensuales';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
+
+DROP POLICY IF EXISTS "Permitir todo en campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en campogramas" ON scouting_campogramas 
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- 2. TABLA DE SISTEMAS DE JUEGO
+CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
+  id TEXT PRIMARY KEY,
+  codigo TEXT,
+  nombre TEXT,
+  descripcion TEXT,
+  defensas INTEGER DEFAULT 4,
+  centrocampistas INTEGER DEFAULT 4,
+  delanteros INTEGER DEFAULT 2,
+  posiciones_defecto JSONB DEFAULT '[]'::jsonb,
+  "posicionesDefecto" JSONB DEFAULT '[]'::jsonb,
+  activo BOOLEAN DEFAULT true,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en sistemas juego" ON scouting_sistemas_juego;
+CREATE POLICY "Permitir todo en sistemas juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. TABLA DE POSICIONES DE LOS JUGADORES
+CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
+  id TEXT PRIMARY KEY,
+  sistema_id TEXT,
+  "sistemaId" TEXT,
+  campograma_id TEXT,
+  "campogramaId" TEXT,
+  posicion_id TEXT,
+  "posicionId" TEXT,
+  posicion_label TEXT,
+  "posicionLabel" TEXT,
+  categoria_posicion TEXT,
+  "categoriaPosicion" TEXT,
+  coord_x NUMERIC DEFAULT 50,
+  "coordX" NUMERIC DEFAULT 50,
+  coord_y NUMERIC DEFAULT 50,
+  "coordY" NUMERIC DEFAULT 50,
+  allowed_roles JSONB DEFAULT '[]'::jsonb,
+  "allowedRoles" JSONB DEFAULT '[]'::jsonb,
+  jugador_id TEXT,
+  "jugadorId" TEXT,
+  jugadores_mensuales_ids JSONB DEFAULT '[]'::jsonb,
+  "jugadoresMensualesIds" JSONB DEFAULT '[]'::jsonb,
+  orden INTEGER DEFAULT 0,
+  notas TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT
+);
+
+ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema;
+CREATE POLICY "Permitir todo en posiciones sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. INSERTAR LOS 35 CAMPOGRAMAS DEL AÑO 2027
+INSERT INTO scouting_campogramas (
+  id, folder_id, "folderId", sub_folder_id, "subFolderId", month_folder_id, "monthFolderId",
+  nombre, descripcion, fecha_modificacion, "fechaModificacion", updated_at, "updatedAt",
+  formation, monthly_view, "monthlyView", assignments, monthly_assignments, "monthlyAssignments", notes
+) VALUES
+-- ENERO 2027
+('c_enero_2027_1rfef_g1', 'mensuales', 'mensuales', '1rfef', '1rfef', 'enero', 'enero', 'PRIMERA RFEF GRUPO I - ENERO 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Enero 2027)', '01/01/2027', '01/01/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo I en Enero 2027.'),
+('c_enero_2027_1rfef_g2', 'mensuales', 'mensuales', '1rfef', '1rfef', 'enero', 'enero', 'PRIMERA RFEF GRUPO II - ENERO 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Enero 2027)', '01/01/2027', '01/01/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo II en Enero 2027.'),
+('c_enero_2027_2rfef_g1', 'mensuales', 'mensuales', '2rfef', '2rfef', 'enero', 'enero', 'SEGUNDA RFEF GRUPO I - ENERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Enero 2027)', '01/01/2027', '01/01/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo I en Enero 2027.'),
+('c_enero_2027_2rfef_g2', 'mensuales', 'mensuales', '2rfef', '2rfef', 'enero', 'enero', 'SEGUNDA RFEF GRUPO II - ENERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Enero 2027)', '01/01/2027', '01/01/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo II en Enero 2027.'),
+('c_enero_2027_2rfef_g3', 'mensuales', 'mensuales', '2rfef', '2rfef', 'enero', 'enero', 'SEGUNDA RFEF GRUPO III - ENERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Enero 2027)', '01/01/2027', '01/01/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo III en Enero 2027.'),
+('c_enero_2027_2rfef_g4', 'mensuales', 'mensuales', '2rfef', '2rfef', 'enero', 'enero', 'SEGUNDA RFEF GRUPO IV - ENERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Enero 2027)', '01/01/2027', '01/01/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo IV en Enero 2027.'),
+('c_enero_2027_2rfef_g5', 'mensuales', 'mensuales', '2rfef', '2rfef', 'enero', 'enero', 'SEGUNDA RFEF GRUPO V - ENERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Enero 2027)', '01/01/2027', '01/01/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo V en Enero 2027.'),
+
+-- FEBRERO 2027
+('c_febrero_2027_1rfef_g1', 'mensuales', 'mensuales', '1rfef', '1rfef', 'febrero', 'febrero', 'PRIMERA RFEF GRUPO I - FEBRERO 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Febrero 2027)', '01/02/2027', '01/02/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo I en Febrero 2027.'),
+('c_febrero_2027_1rfef_g2', 'mensuales', 'mensuales', '1rfef', '1rfef', 'febrero', 'febrero', 'PRIMERA RFEF GRUPO II - FEBRERO 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Febrero 2027)', '01/02/2027', '01/02/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo II en Febrero 2027.'),
+('c_febrero_2027_2rfef_g1', 'mensuales', 'mensuales', '2rfef', '2rfef', 'febrero', 'febrero', 'SEGUNDA RFEF GRUPO I - FEBRERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Febrero 2027)', '01/02/2027', '01/02/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo I en Febrero 2027.'),
+('c_febrero_2027_2rfef_g2', 'mensuales', 'mensuales', '2rfef', '2rfef', 'febrero', 'febrero', 'SEGUNDA RFEF GRUPO II - FEBRERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Febrero 2027)', '01/02/2027', '01/02/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo II en Febrero 2027.'),
+('c_febrero_2027_2rfef_g3', 'mensuales', 'mensuales', '2rfef', '2rfef', 'febrero', 'febrero', 'SEGUNDA RFEF GRUPO III - FEBRERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Febrero 2027)', '01/02/2027', '01/02/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo III en Febrero 2027.'),
+('c_febrero_2027_2rfef_g4', 'mensuales', 'mensuales', '2rfef', '2rfef', 'febrero', 'febrero', 'SEGUNDA RFEF GRUPO IV - FEBRERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Febrero 2027)', '01/02/2027', '01/02/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo IV en Febrero 2027.'),
+('c_febrero_2027_2rfef_g5', 'mensuales', 'mensuales', '2rfef', '2rfef', 'febrero', 'febrero', 'SEGUNDA RFEF GRUPO V - FEBRERO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Febrero 2027)', '01/02/2027', '01/02/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo V en Febrero 2027.'),
+
+-- MARZO 2027
+('c_marzo_2027_1rfef_g1', 'mensuales', 'mensuales', '1rfef', '1rfef', 'marzo', 'marzo', 'PRIMERA RFEF GRUPO I - MARZO 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Marzo 2027)', '01/03/2027', '01/03/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo I en Marzo 2027.'),
+('c_marzo_2027_1rfef_g2', 'mensuales', 'mensuales', '1rfef', '1rfef', 'marzo', 'marzo', 'PRIMERA RFEF GRUPO II - MARZO 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Marzo 2027)', '01/03/2027', '01/03/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo II en Marzo 2027.'),
+('c_marzo_2027_2rfef_g1', 'mensuales', 'mensuales', '2rfef', '2rfef', 'marzo', 'marzo', 'SEGUNDA RFEF GRUPO I - MARZO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Marzo 2027)', '01/03/2027', '01/03/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo I en Marzo 2027.'),
+('c_marzo_2027_2rfef_g2', 'mensuales', 'mensuales', '2rfef', '2rfef', 'marzo', 'marzo', 'SEGUNDA RFEF GRUPO II - MARZO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Marzo 2027)', '01/03/2027', '01/03/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo II en Marzo 2027.'),
+('c_marzo_2027_2rfef_g3', 'mensuales', 'mensuales', '2rfef', '2rfef', 'marzo', 'marzo', 'SEGUNDA RFEF GRUPO III - MARZO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Marzo 2027)', '01/03/2027', '01/03/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo III en Marzo 2027.'),
+('c_marzo_2027_2rfef_g4', 'mensuales', 'mensuales', '2rfef', '2rfef', 'marzo', 'marzo', 'SEGUNDA RFEF GRUPO IV - MARZO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Marzo 2027)', '01/03/2027', '01/03/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo IV en Marzo 2027.'),
+('c_marzo_2027_2rfef_g5', 'mensuales', 'mensuales', '2rfef', '2rfef', 'marzo', 'marzo', 'SEGUNDA RFEF GRUPO V - MARZO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Marzo 2027)', '01/03/2027', '01/03/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo V en Marzo 2027.'),
+
+-- ABRIL 2027
+('c_abril_2027_1rfef_g1', 'mensuales', 'mensuales', '1rfef', '1rfef', 'abril', 'abril', 'PRIMERA RFEF GRUPO I - ABRIL 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Abril 2027)', '01/04/2027', '01/04/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo I en Abril 2027.'),
+('c_abril_2027_1rfef_g2', 'mensuales', 'mensuales', '1rfef', '1rfef', 'abril', 'abril', 'PRIMERA RFEF GRUPO II - ABRIL 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Abril 2027)', '01/04/2027', '01/04/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo II en Abril 2027.'),
+('c_abril_2027_2rfef_g1', 'mensuales', 'mensuales', '2rfef', '2rfef', 'abril', 'abril', 'SEGUNDA RFEF GRUPO I - ABRIL 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Abril 2027)', '01/04/2027', '01/04/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo I en Abril 2027.'),
+('c_abril_2027_2rfef_g2', 'mensuales', 'mensuales', '2rfef', '2rfef', 'abril', 'abril', 'SEGUNDA RFEF GRUPO II - ABRIL 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Abril 2027)', '01/04/2027', '01/04/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo II en Abril 2027.'),
+('c_abril_2027_2rfef_g3', 'mensuales', 'mensuales', '2rfef', '2rfef', 'abril', 'abril', 'SEGUNDA RFEF GRUPO III - ABRIL 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Abril 2027)', '01/04/2027', '01/04/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo III en Abril 2027.'),
+('c_abril_2027_2rfef_g4', 'mensuales', 'mensuales', '2rfef', '2rfef', 'abril', 'abril', 'SEGUNDA RFEF GRUPO IV - ABRIL 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Abril 2027)', '01/04/2027', '01/04/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo IV en Abril 2027.'),
+('c_abril_2027_2rfef_g5', 'mensuales', 'mensuales', '2rfef', '2rfef', 'abril', 'abril', 'SEGUNDA RFEF GRUPO V - ABRIL 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Abril 2027)', '01/04/2027', '01/04/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo V en Abril 2027.'),
+
+-- MAYO 2027
+('c_mayo_2027_1rfef_g1', 'mensuales', 'mensuales', '1rfef', '1rfef', 'mayo', 'mayo', 'PRIMERA RFEF GRUPO I - MAYO 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Mayo 2027)', '01/05/2027', '01/05/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo I en Mayo 2027.'),
+('c_mayo_2027_1rfef_g2', 'mensuales', 'mensuales', '1rfef', '1rfef', 'mayo', 'mayo', 'PRIMERA RFEF GRUPO II - MAYO 2027', 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Mayo 2027)', '01/05/2027', '01/05/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Primera RFEF Grupo II en Mayo 2027.'),
+('c_mayo_2027_2rfef_g1', 'mensuales', 'mensuales', '2rfef', '2rfef', 'mayo', 'mayo', 'SEGUNDA RFEF GRUPO I - MAYO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Mayo 2027)', '01/05/2027', '01/05/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo I en Mayo 2027.'),
+('c_mayo_2027_2rfef_g2', 'mensuales', 'mensuales', '2rfef', '2rfef', 'mayo', 'mayo', 'SEGUNDA RFEF GRUPO II - MAYO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Mayo 2027)', '01/05/2027', '01/05/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo II en Mayo 2027.'),
+('c_mayo_2027_2rfef_g3', 'mensuales', 'mensuales', '2rfef', '2rfef', 'mayo', 'mayo', 'SEGUNDA RFEF GRUPO III - MAYO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Mayo 2027)', '01/05/2027', '01/05/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo III en Mayo 2027.'),
+('c_mayo_2027_2rfef_g4', 'mensuales', 'mensuales', '2rfef', '2rfef', 'mayo', 'mayo', 'SEGUNDA RFEF GRUPO IV - MAYO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Mayo 2027)', '01/05/2027', '01/05/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo IV en Mayo 2027.'),
+('c_mayo_2027_2rfef_g5', 'mensuales', 'mensuales', '2rfef', '2rfef', 'mayo', 'mayo', 'SEGUNDA RFEF GRUPO V - MAYO 2027', 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Mayo 2027)', '01/05/2027', '01/05/2027', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento para Segunda RFEF Grupo V en Mayo 2027.')
+ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
+  formation = EXCLUDED.formation,
+  monthly_view = EXCLUDED.monthly_view,
+  "monthlyView" = EXCLUDED."monthlyView",
+  assignments = EXCLUDED.assignments,
+  monthly_assignments = EXCLUDED.monthly_assignments,
+  "monthlyAssignments" = EXCLUDED."monthlyAssignments",
+  notes = EXCLUDED.notes;
+
+-- 5. INSERTAR LAS 11 POSICIONES POR CADA UNO DE LOS 35 CAMPOGRAMAS DE 2027
+INSERT INTO scouting_posiciones_sistema (
+  id, sistema_id, "sistemaId", campograma_id, "campogramaId",
+  posicion_id, "posicionId", posicion_label, "posicionLabel",
+  categoria_posicion, "categoriaPosicion", coord_x, "coordX", coord_y, "coordY",
+  allowed_roles, "allowedRoles", orden, updated_at, "updatedAt"
+)
+SELECT 
+  'pos_' || c.id || '_' || p.pos_id as id,
+  '4-4-2' as sistema_id,
+  '4-4-2' as "sistemaId",
+  c.id as campograma_id,
+  c.id as "campogramaId",
+  p.pos_id as posicion_id,
+  p.pos_id as "posicionId",
+  p.label as posicion_label,
+  p.label as "posicionLabel",
+  p.cat as categoria_posicion,
+  p.cat as "categoriaPosicion",
+  p.cx as coord_x,
+  p.cx as "coordX",
+  p.cy as coord_y,
+  p.cy as "coordY",
+  p.roles::jsonb as allowed_roles,
+  p.roles::jsonb as "allowedRoles",
+  p.ord as orden,
+  EXTRACT(EPOCH FROM NOW()) * 1000 as updated_at,
+  EXTRACT(EPOCH FROM NOW()) * 1000 as "updatedAt"
+FROM (
+  VALUES 
+    -- Enero 2027
+    ('c_enero_2027_1rfef_g1'), ('c_enero_2027_1rfef_g2'),
+    ('c_enero_2027_2rfef_g1'), ('c_enero_2027_2rfef_g2'), ('c_enero_2027_2rfef_g3'), ('c_enero_2027_2rfef_g4'), ('c_enero_2027_2rfef_g5'),
+    -- Febrero 2027
+    ('c_febrero_2027_1rfef_g1'), ('c_febrero_2027_1rfef_g2'),
+    ('c_febrero_2027_2rfef_g1'), ('c_febrero_2027_2rfef_g2'), ('c_febrero_2027_2rfef_g3'), ('c_febrero_2027_2rfef_g4'), ('c_febrero_2027_2rfef_g5'),
+    -- Marzo 2027
+    ('c_marzo_2027_1rfef_g1'), ('c_marzo_2027_1rfef_g2'),
+    ('c_marzo_2027_2rfef_g1'), ('c_marzo_2027_2rfef_g2'), ('c_marzo_2027_2rfef_g3'), ('c_marzo_2027_2rfef_g4'), ('c_marzo_2027_2rfef_g5'),
+    -- Abril 2027
+    ('c_abril_2027_1rfef_g1'), ('c_abril_2027_1rfef_g2'),
+    ('c_abril_2027_2rfef_g1'), ('c_abril_2027_2rfef_g2'), ('c_abril_2027_2rfef_g3'), ('c_abril_2027_2rfef_g4'), ('c_abril_2027_2rfef_g5'),
+    -- Mayo 2027
+    ('c_mayo_2027_1rfef_g1'), ('c_mayo_2027_1rfef_g2'),
+    ('c_mayo_2027_2rfef_g1'), ('c_mayo_2027_2rfef_g2'), ('c_mayo_2027_2rfef_g3'), ('c_mayo_2027_2rfef_g4'), ('c_mayo_2027_2rfef_g5')
+) as c(id)
+CROSS JOIN (
+  VALUES 
+    ('por', 'POR', 'Portero', 50, 88, '["Portero"]', 0),
+    ('ltd', 'LTD', 'Defensa', 15, 70, '["Lateral Derecho", "Defensa Central"]', 1),
+    ('dfc_d', 'DFC', 'Defensa', 38, 72, '["Defensa Central"]', 2),
+    ('dfc_i', 'DFC', 'Defensa', 62, 72, '["Defensa Central"]', 3),
+    ('lti', 'LTI', 'Defensa', 85, 70, '["Lateral Izquierdo", "Defensa Central"]', 4),
+    ('md', 'MD', 'Centrocampista', 15, 44, '["Extremo Derecho", "Mediocentro"]', 5),
+    ('mc_d', 'MC', 'Centrocampista', 38, 46, '["Mediocentro", "Mediocentro Defensivo", "Mediapunta"]', 6),
+    ('mc_i', 'MC', 'Centrocampista', 62, 46, '["Mediocentro", "Mediocentro Defensivo", "Mediapunta"]', 7),
+    ('mi', 'MI', 'Centrocampista', 85, 44, '["Extremo Izquierdo", "Mediocentro"]', 8),
+    ('dc_d', 'DC', 'Delantero', 38, 18, '["Delantero Centro", "Mediapunta"]', 9),
+    ('dc_i', 'DC', 'Delantero', 62, 18, '["Delantero Centro", "Mediapunta"]', 10)
+) as p(pos_id, label, cat, cx, cy, roles, ord)
+ON CONFLICT (id) DO UPDATE SET
+  sistema_id = EXCLUDED.sistema_id,
+  "sistemaId" = EXCLUDED."sistemaId",
+  campograma_id = EXCLUDED.campograma_id,
+  "campogramaId" = EXCLUDED."campogramaId",
+  posicion_id = EXCLUDED.posicion_id,
+  "posicionId" = EXCLUDED."posicionId",
+  posicion_label = EXCLUDED.posicion_label,
+  "posicionLabel" = EXCLUDED."posicionLabel",
+  categoria_posicion = EXCLUDED.categoria_posicion,
+  "categoriaPosicion" = EXCLUDED."categoriaPosicion",
+  coord_x = EXCLUDED.coord_x,
+  "coordX" = EXCLUDED."coordX",
+  coord_y = EXCLUDED.coord_y,
+  "coordY" = EXCLUDED."coordY",
+  allowed_roles = EXCLUDED.allowed_roles,
+  "allowedRoles" = EXCLUDED."allowedRoles",
+  orden = EXCLUDED.orden,
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt";
+
+-- 6. Recargar esquema en PostgREST
+NOTIFY pgrst, 'reload schema';
+`;
+}
+
+/**
  * Returns the exact SQL script to create and initialize the table and all campogramas for Diciembre (1ª RFEF Grupo I & II, 2ª RFEF Grupos I al V) in Supabase.
  */
 export function getCampogramaDiciembreSQL(): string {

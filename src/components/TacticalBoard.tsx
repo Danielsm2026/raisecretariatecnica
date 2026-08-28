@@ -13,6 +13,12 @@ import {
   dbSaveSetting, 
   isSupabaseConfigured, 
   getSQLInstructions,
+  getCampogramas2027CompletoSQL,
+  getCampogramaEnero2027SQL,
+  getCampogramaFebrero2027SQL,
+  getCampogramaMarzo2027SQL,
+  getCampogramaAbril2027SQL,
+  getCampogramaMayo2027SQL,
   getCampogramaDiciembreSQL,
   getCampogramaNoviembreSQL,
   getCampogramaOctubreSQL,
@@ -179,10 +185,559 @@ const MONTH_FOLDERS = [
     borderColor: 'border-teal-500/30 hover:border-teal-500/60',
     accentColor: 'text-teal-400',
     badgeBg: 'bg-teal-950/60 text-teal-300 border-teal-800/40',
+  },
+  {
+    id: 'enero',
+    title: 'ENERO 2027',
+    shortTitle: 'Enero 2027',
+    description: 'Campogramas posicionales y alineaciones del mes de Enero 2027',
+    gradient: 'from-cyan-600/20 via-sky-600/10 to-slate-900',
+    borderColor: 'border-cyan-500/30 hover:border-cyan-500/60',
+    accentColor: 'text-cyan-400',
+    badgeBg: 'bg-cyan-950/60 text-cyan-300 border-cyan-800/40',
+  },
+  {
+    id: 'febrero',
+    title: 'FEBRERO 2027',
+    shortTitle: 'Febrero 2027',
+    description: 'Campogramas posicionales y alineaciones del mes de Febrero 2027',
+    gradient: 'from-indigo-600/20 via-purple-600/10 to-slate-900',
+    borderColor: 'border-indigo-500/30 hover:border-indigo-500/60',
+    accentColor: 'text-indigo-400',
+    badgeBg: 'bg-indigo-950/60 text-indigo-300 border-indigo-800/40',
+  },
+  {
+    id: 'marzo',
+    title: 'MARZO 2027',
+    shortTitle: 'Marzo 2027',
+    description: 'Campogramas posicionales y alineaciones del mes de Marzo 2027',
+    gradient: 'from-emerald-600/20 via-teal-600/10 to-slate-900',
+    borderColor: 'border-emerald-500/30 hover:border-emerald-500/60',
+    accentColor: 'text-emerald-400',
+    badgeBg: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/40',
+  },
+  {
+    id: 'abril',
+    title: 'ABRIL 2027',
+    shortTitle: 'Abril 2027',
+    description: 'Campogramas posicionales y alineaciones del mes de Abril 2027',
+    gradient: 'from-amber-600/20 via-yellow-600/10 to-slate-900',
+    borderColor: 'border-amber-500/30 hover:border-amber-500/60',
+    accentColor: 'text-amber-400',
+    badgeBg: 'bg-amber-950/60 text-amber-300 border-amber-800/40',
+  },
+  {
+    id: 'mayo',
+    title: 'MAYO 2027',
+    shortTitle: 'Mayo 2027',
+    description: 'Campogramas posicionales y alineaciones del mes de Mayo 2027',
+    gradient: 'from-rose-600/20 via-pink-600/10 to-slate-900',
+    borderColor: 'border-rose-500/30 hover:border-rose-500/60',
+    accentColor: 'text-rose-400',
+    badgeBg: 'bg-rose-950/60 text-rose-300 border-rose-800/40',
   }
 ];
 
 const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
+  // ================= ENERO 2027 =================
+  {
+    id: 'c_enero_2027_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'enero',
+    nombre: 'PRIMERA RFEF GRUPO I - ENERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Enero 2027)',
+    fechaModificacion: '01/01/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Enero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_enero_2027_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'enero',
+    nombre: 'PRIMERA RFEF GRUPO II - ENERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Enero 2027)',
+    fechaModificacion: '01/01/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Enero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_enero_2027_2rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'enero',
+    nombre: 'SEGUNDA RFEF GRUPO I - ENERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Enero 2027)',
+    fechaModificacion: '01/01/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I en Enero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_enero_2027_2rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'enero',
+    nombre: 'SEGUNDA RFEF GRUPO II - ENERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Enero 2027)',
+    fechaModificacion: '01/01/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo II en Enero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_enero_2027_2rfef_g3',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'enero',
+    nombre: 'SEGUNDA RFEF GRUPO III - ENERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Enero 2027)',
+    fechaModificacion: '01/01/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo III en Enero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_enero_2027_2rfef_g4',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'enero',
+    nombre: 'SEGUNDA RFEF GRUPO IV - ENERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Enero 2027)',
+    fechaModificacion: '01/01/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo IV en Enero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_enero_2027_2rfef_g5',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'enero',
+    nombre: 'SEGUNDA RFEF GRUPO V - ENERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Enero 2027)',
+    fechaModificacion: '01/01/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo V en Enero 2027 vinculado a Supabase.'
+  },
+
+  // ================= FEBRERO 2027 =================
+  {
+    id: 'c_febrero_2027_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'febrero',
+    nombre: 'PRIMERA RFEF GRUPO I - FEBRERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Febrero 2027)',
+    fechaModificacion: '01/02/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Febrero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_febrero_2027_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'febrero',
+    nombre: 'PRIMERA RFEF GRUPO II - FEBRERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Febrero 2027)',
+    fechaModificacion: '01/02/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Febrero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_febrero_2027_2rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'febrero',
+    nombre: 'SEGUNDA RFEF GRUPO I - FEBRERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Febrero 2027)',
+    fechaModificacion: '01/02/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I en Febrero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_febrero_2027_2rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'febrero',
+    nombre: 'SEGUNDA RFEF GRUPO II - FEBRERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Febrero 2027)',
+    fechaModificacion: '01/02/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo II en Febrero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_febrero_2027_2rfef_g3',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'febrero',
+    nombre: 'SEGUNDA RFEF GRUPO III - FEBRERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Febrero 2027)',
+    fechaModificacion: '01/02/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo III en Febrero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_febrero_2027_2rfef_g4',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'febrero',
+    nombre: 'SEGUNDA RFEF GRUPO IV - FEBRERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Febrero 2027)',
+    fechaModificacion: '01/02/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo IV en Febrero 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_febrero_2027_2rfef_g5',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'febrero',
+    nombre: 'SEGUNDA RFEF GRUPO V - FEBRERO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Febrero 2027)',
+    fechaModificacion: '01/02/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo V en Febrero 2027 vinculado a Supabase.'
+  },
+
+  // ================= MARZO 2027 =================
+  {
+    id: 'c_marzo_2027_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'marzo',
+    nombre: 'PRIMERA RFEF GRUPO I - MARZO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Marzo 2027)',
+    fechaModificacion: '01/03/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Marzo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_marzo_2027_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'marzo',
+    nombre: 'PRIMERA RFEF GRUPO II - MARZO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Marzo 2027)',
+    fechaModificacion: '01/03/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Marzo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_marzo_2027_2rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'marzo',
+    nombre: 'SEGUNDA RFEF GRUPO I - MARZO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Marzo 2027)',
+    fechaModificacion: '01/03/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I en Marzo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_marzo_2027_2rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'marzo',
+    nombre: 'SEGUNDA RFEF GRUPO II - MARZO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Marzo 2027)',
+    fechaModificacion: '01/03/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo II en Marzo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_marzo_2027_2rfef_g3',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'marzo',
+    nombre: 'SEGUNDA RFEF GRUPO III - MARZO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Marzo 2027)',
+    fechaModificacion: '01/03/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo III en Marzo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_marzo_2027_2rfef_g4',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'marzo',
+    nombre: 'SEGUNDA RFEF GRUPO IV - MARZO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Marzo 2027)',
+    fechaModificacion: '01/03/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo IV en Marzo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_marzo_2027_2rfef_g5',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'marzo',
+    nombre: 'SEGUNDA RFEF GRUPO V - MARZO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Marzo 2027)',
+    fechaModificacion: '01/03/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo V en Marzo 2027 vinculado a Supabase.'
+  },
+
+  // ================= ABRIL 2027 =================
+  {
+    id: 'c_abril_2027_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'abril',
+    nombre: 'PRIMERA RFEF GRUPO I - ABRIL 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Abril 2027)',
+    fechaModificacion: '01/04/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Abril 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_abril_2027_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'abril',
+    nombre: 'PRIMERA RFEF GRUPO II - ABRIL 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Abril 2027)',
+    fechaModificacion: '01/04/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Abril 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_abril_2027_2rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'abril',
+    nombre: 'SEGUNDA RFEF GRUPO I - ABRIL 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Abril 2027)',
+    fechaModificacion: '01/04/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I en Abril 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_abril_2027_2rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'abril',
+    nombre: 'SEGUNDA RFEF GRUPO II - ABRIL 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Abril 2027)',
+    fechaModificacion: '01/04/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo II en Abril 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_abril_2027_2rfef_g3',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'abril',
+    nombre: 'SEGUNDA RFEF GRUPO III - ABRIL 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Abril 2027)',
+    fechaModificacion: '01/04/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo III en Abril 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_abril_2027_2rfef_g4',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'abril',
+    nombre: 'SEGUNDA RFEF GRUPO IV - ABRIL 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Abril 2027)',
+    fechaModificacion: '01/04/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo IV en Abril 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_abril_2027_2rfef_g5',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'abril',
+    nombre: 'SEGUNDA RFEF GRUPO V - ABRIL 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Abril 2027)',
+    fechaModificacion: '01/04/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo V en Abril 2027 vinculado a Supabase.'
+  },
+
+  // ================= MAYO 2027 =================
+  {
+    id: 'c_mayo_2027_1rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'mayo',
+    nombre: 'PRIMERA RFEF GRUPO I - MAYO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo I (Mayo 2027)',
+    fechaModificacion: '01/05/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo I en Mayo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_mayo_2027_1rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '1rfef',
+    monthFolderId: 'mayo',
+    nombre: 'PRIMERA RFEF GRUPO II - MAYO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Primera RFEF Grupo II (Mayo 2027)',
+    fechaModificacion: '01/05/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Mayo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_mayo_2027_2rfef_g1',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'mayo',
+    nombre: 'SEGUNDA RFEF GRUPO I - MAYO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo I (Mayo 2027)',
+    fechaModificacion: '01/05/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo I en Mayo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_mayo_2027_2rfef_g2',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'mayo',
+    nombre: 'SEGUNDA RFEF GRUPO II - MAYO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo II (Mayo 2027)',
+    fechaModificacion: '01/05/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo II en Mayo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_mayo_2027_2rfef_g3',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'mayo',
+    nombre: 'SEGUNDA RFEF GRUPO III - MAYO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo III (Mayo 2027)',
+    fechaModificacion: '01/05/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo III en Mayo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_mayo_2027_2rfef_g4',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'mayo',
+    nombre: 'SEGUNDA RFEF GRUPO IV - MAYO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo IV (Mayo 2027)',
+    fechaModificacion: '01/05/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo IV en Mayo 2027 vinculado a Supabase.'
+  },
+  {
+    id: 'c_mayo_2027_2rfef_g5',
+    folderId: 'mensuales',
+    subFolderId: '2rfef',
+    monthFolderId: 'mayo',
+    nombre: 'SEGUNDA RFEF GRUPO V - MAYO 2027',
+    descripcion: 'Campograma mensual y alineación táctica para Segunda RFEF Grupo V (Mayo 2027)',
+    fechaModificacion: '01/05/2027',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento para Segunda RFEF Grupo V en Mayo 2027 vinculado a Supabase.'
+  },
   {
     id: 'c_diciembre_2026_1rfef_g1',
     folderId: 'mensuales',
@@ -657,7 +1212,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const [currentMonthFolder, setCurrentMonthFolder] = useState<string | null>(null);
   const [activeCampogramaId, setActiveCampogramaId] = useState<string | null>(null);
   const [showSqlModal, setShowSqlModal] = useState(false);
-  const [activeSqlTab, setActiveSqlTab] = useState<'2rfef_g1' | 'diciembre' | 'noviembre' | 'octubre' | 'septiembre' | 'sistemas_pos' | 'live' | 'full' | 'vercel'>('2rfef_g1');
+  const [activeSqlTab, setActiveSqlTab] = useState<
+    '2rfef_g1' | '2027_full' | 'enero_2027' | 'febrero_2027' | 'marzo_2027' | 'abril_2027' | 'mayo_2027' |
+    'diciembre' | 'noviembre' | 'octubre' | 'septiembre' | 'sistemas_pos' | 'live' | 'full' | 'vercel'
+  >('2rfef_g1');
   const [selectedItemForSql, setSelectedItemForSql] = useState<CampogramaItem | null>(null);
   const [copiedSql, setCopiedSql] = useState(false);
 
@@ -1939,7 +2497,17 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedItemForSql(item);
-                        if (item.monthFolderId === 'diciembre' || item.id.includes('diciembre')) {
+                        if (item.monthFolderId === 'enero' || item.id.includes('enero')) {
+                          setActiveSqlTab('enero_2027');
+                        } else if (item.monthFolderId === 'febrero' || item.id.includes('febrero')) {
+                          setActiveSqlTab('febrero_2027');
+                        } else if (item.monthFolderId === 'marzo' || item.id.includes('marzo')) {
+                          setActiveSqlTab('marzo_2027');
+                        } else if (item.monthFolderId === 'abril' || item.id.includes('abril')) {
+                          setActiveSqlTab('abril_2027');
+                        } else if (item.monthFolderId === 'mayo' || item.id.includes('mayo')) {
+                          setActiveSqlTab('mayo_2027');
+                        } else if (item.monthFolderId === 'diciembre' || item.id.includes('diciembre')) {
                           setActiveSqlTab('diciembre');
                         } else if (item.monthFolderId === 'noviembre' || item.id.includes('noviembre')) {
                           setActiveSqlTab('noviembre');
@@ -2866,6 +3434,66 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 {selectedItemForSql ? selectedItemForSql.nombre : 'Segunda RFEF G1 (Septiembre)'}
               </button>
               <button
+                onClick={() => setActiveSqlTab('2027_full')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === '2027_full'
+                    ? 'bg-slate-800 text-yellow-400 border-b-2 border-yellow-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                ⭐ Año 2027 Completo (35 Campogramas)
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('enero_2027')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'enero_2027'
+                    ? 'bg-slate-800 text-cyan-400 border-b-2 border-cyan-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Enero 2027 (7 Campogramas)
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('febrero_2027')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'febrero_2027'
+                    ? 'bg-slate-800 text-indigo-400 border-b-2 border-indigo-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Febrero 2027 (7 Campogramas)
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('marzo_2027')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'marzo_2027'
+                    ? 'bg-slate-800 text-emerald-400 border-b-2 border-emerald-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Marzo 2027 (7 Campogramas)
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('abril_2027')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'abril_2027'
+                    ? 'bg-slate-800 text-amber-400 border-b-2 border-amber-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Abril 2027 (7 Campogramas)
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('mayo_2027')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'mayo_2027'
+                    ? 'bg-slate-800 text-rose-400 border-b-2 border-rose-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Mayo 2027 (7 Campogramas)
+              </button>
+              <button
                 onClick={() => setActiveSqlTab('diciembre')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === 'diciembre'
@@ -2957,6 +3585,84 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
                       {selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === '2027_full' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL maestro para los 5 meses de 2027 (<strong>Enero, Febrero, Marzo, Abril y Mayo</strong>) con sus <strong>35 campogramas</strong> completos (1ª RFEF G1 y G2 + 2ª RFEF G1 a G5) y sus posiciones tácticas en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-yellow-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramas2027CompletoSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'enero_2027' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para la carpeta <strong>ENERO 2027</strong> con sus 7 campogramas (<code className="text-cyan-300">1ª RFEF Grupos I y II</code> + <code className="text-cyan-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaEnero2027SQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'febrero_2027' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para la carpeta <strong>FEBRERO 2027</strong> con sus 7 campogramas (<code className="text-indigo-300">1ª RFEF Grupos I y II</code> + <code className="text-indigo-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-indigo-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaFebrero2027SQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'marzo_2027' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para la carpeta <strong>MARZO 2027</strong> con sus 7 campogramas (<code className="text-emerald-300">1ª RFEF Grupos I y II</code> + <code className="text-emerald-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-emerald-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaMarzo2027SQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'abril_2027' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para la carpeta <strong>ABRIL 2027</strong> con sus 7 campogramas (<code className="text-amber-300">1ª RFEF Grupos I y II</code> + <code className="text-amber-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-amber-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaAbril2027SQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'mayo_2027' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para la carpeta <strong>MAYO 2027</strong> con sus 7 campogramas (<code className="text-rose-300">1ª RFEF Grupos I y II</code> + <code className="text-rose-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-rose-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaMayo2027SQL()}
                     </pre>
                   </div>
                 </div>
@@ -3103,21 +3809,33 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   onClick={() => {
                     const textToCopy = activeSqlTab === '2rfef_g1'
                       ? (selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL())
-                      : activeSqlTab === 'diciembre'
-                        ? getCampogramaDiciembreSQL()
-                        : activeSqlTab === 'noviembre'
-                          ? getCampogramaNoviembreSQL()
-                          : activeSqlTab === 'octubre'
-                            ? getCampogramaOctubreSQL()
-                            : activeSqlTab === 'sistemas_pos'
-                              ? getSistemasYPosicionesSQL(campogramas)
-                              : activeSqlTab === 'septiembre' 
-                                ? getCampogramaSeptiembreSQL() 
-                                : activeSqlTab === 'live'
-                                  ? generateLiveCampogramasSQL(campogramas)
-                                  : activeSqlTab === 'full' 
-                                    ? getSQLInstructions() 
-                                    : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
+                      : activeSqlTab === '2027_full'
+                        ? getCampogramas2027CompletoSQL()
+                        : activeSqlTab === 'enero_2027'
+                          ? getCampogramaEnero2027SQL()
+                          : activeSqlTab === 'febrero_2027'
+                            ? getCampogramaFebrero2027SQL()
+                            : activeSqlTab === 'marzo_2027'
+                              ? getCampogramaMarzo2027SQL()
+                              : activeSqlTab === 'abril_2027'
+                                ? getCampogramaAbril2027SQL()
+                                : activeSqlTab === 'mayo_2027'
+                                  ? getCampogramaMayo2027SQL()
+                                  : activeSqlTab === 'diciembre'
+                                    ? getCampogramaDiciembreSQL()
+                                    : activeSqlTab === 'noviembre'
+                                      ? getCampogramaNoviembreSQL()
+                                      : activeSqlTab === 'octubre'
+                                        ? getCampogramaOctubreSQL()
+                                        : activeSqlTab === 'sistemas_pos'
+                                          ? getSistemasYPosicionesSQL(campogramas)
+                                          : activeSqlTab === 'septiembre' 
+                                            ? getCampogramaSeptiembreSQL() 
+                                            : activeSqlTab === 'live'
+                                              ? generateLiveCampogramasSQL(campogramas)
+                                              : activeSqlTab === 'full' 
+                                                ? getSQLInstructions() 
+                                                : `VITE_SUPABASE_URL=\nVITE_SUPABASE_ANON_KEY=`;
                     navigator.clipboard.writeText(textToCopy);
                     setCopiedSql(true);
                     setTimeout(() => setCopiedSql(false), 2500);
