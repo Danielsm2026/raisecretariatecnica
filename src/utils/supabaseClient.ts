@@ -97,6 +97,28 @@ export const supabase = supabaseUrl && supabaseAnonKey
     }) 
   : null;
 
+let isSupabaseOffline = false;
+let lastSupabaseOfflineTime = 0;
+const SUPABASE_OFFLINE_COOLDOWN_MS = 30000; // 30 seconds cooldown on network failure
+
+export function markSupabaseOffline(): void {
+  isSupabaseOffline = true;
+  lastSupabaseOfflineTime = Date.now();
+}
+
+export function isSupabaseNetworkAvailable(): boolean {
+  if (!supabase) return false;
+  if (isSupabaseOffline) {
+    if (Date.now() - lastSupabaseOfflineTime > SUPABASE_OFFLINE_COOLDOWN_MS) {
+      // Cooldown elapsed, allow retry
+      isSupabaseOffline = false;
+      return true;
+    }
+    return false;
+  }
+  return true;
+}
+
 export function isSupabaseConfigured(): boolean {
   return !!supabase;
 }
@@ -359,6 +381,10 @@ function extractMissingColumnFromError(error: any): string | null {
  * Helper to perform an upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
 async function safeUpsert(table: string, payload: any, onConflict: string): Promise<any> {
+  if (!isSupabaseNetworkAvailable()) {
+    return { offline: true };
+  }
+
   let currentPayload = { ...payload };
   let retryCount = 0;
   let dateConversionAttempted = false;
@@ -373,12 +399,13 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
       error = res.error;
     } catch (fetchErr: any) {
       const msg = fetchErr?.message || String(fetchErr);
-      if ((msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) && retryCount < 2) {
+      if ((msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) && retryCount < 1) {
         retryCount++;
-        await new Promise((r) => setTimeout(r, 400 * retryCount));
+        await new Promise((r) => setTimeout(r, 300));
         continue;
       }
-      console.warn(`[Supabase Network Offline] No se pudo sincronizar en ${table}:`, msg);
+      markSupabaseOffline();
+      console.debug(`[Supabase Offline] No se pudo sincronizar en ${table} (modo local activado):`, msg);
       throw fetchErr;
     }
     
@@ -386,12 +413,8 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
 
     const errorMsg = error.message || '';
     if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Load failed')) {
-      if (retryCount < 2) {
-        retryCount++;
-        await new Promise((r) => setTimeout(r, 400 * retryCount));
-        continue;
-      }
-      console.warn(`[Supabase Network Offline] Error de red en ${table}:`, errorMsg);
+      markSupabaseOffline();
+      console.debug(`[Supabase Offline] Error de conexión en ${table}:`, errorMsg);
       throw error;
     }
 
@@ -448,6 +471,10 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
  * Helper to perform a bulk upsert on Supabase while automatically stripping out columns that don't exist in the database schema.
  */
 async function safeBulkUpsert(table: string, payloads: any[], onConflict: string): Promise<any> {
+  if (!isSupabaseNetworkAvailable() || payloads.length === 0) {
+    return { offline: true };
+  }
+
   let currentPayloads = payloads.map(p => ({ ...p }));
   let retryCount = 0;
   let dateConversionAttempted = false;
@@ -462,12 +489,13 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
       error = res.error;
     } catch (fetchErr: any) {
       const msg = fetchErr?.message || String(fetchErr);
-      if ((msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) && retryCount < 2) {
+      if ((msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) && retryCount < 1) {
         retryCount++;
-        await new Promise((r) => setTimeout(r, 400 * retryCount));
+        await new Promise((r) => setTimeout(r, 300));
         continue;
       }
-      console.warn(`[Supabase Network Offline] No se pudo realizar bulk upsert en ${table}:`, msg);
+      markSupabaseOffline();
+      console.debug(`[Supabase Offline] Bulk upsert manejado localmente en ${table}:`, msg);
       throw fetchErr;
     }
     
@@ -475,12 +503,8 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
 
     const errorMsg = error.message || '';
     if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Load failed')) {
-      if (retryCount < 2) {
-        retryCount++;
-        await new Promise((r) => setTimeout(r, 400 * retryCount));
-        continue;
-      }
-      console.warn(`[Supabase Network Offline] Error de red en bulk upsert ${table}:`, errorMsg);
+      markSupabaseOffline();
+      console.debug(`[Supabase Offline] Error de red en bulk upsert ${table}:`, errorMsg);
       throw error;
     }
 
@@ -1312,13 +1336,13 @@ export async function dbSaveCampograma(campograma: any): Promise<void> {
   try {
     await safeUpsert('scouting_campogramas', payload, 'id');
   } catch (err) {
-    console.warn('Upsert to scouting_campogramas failed, storing backup in settings:', err);
+    console.debug('Upsert to scouting_campogramas handled locally:', err);
   }
 
   // Non-blocking sync of position rows into scouting_posiciones_sistema
-  syncCampogramaWithPosicionesTable(campograma).catch(err => {
-    console.warn('Background sync of scouting_posiciones_sistema failed:', err);
-  });
+  if (isSupabaseNetworkAvailable()) {
+    syncCampogramaWithPosicionesTable(campograma).catch(() => {});
+  }
 }
 
 /**
@@ -1348,7 +1372,10 @@ export async function dbDeleteCampograma(id: string): Promise<void> {
  * Bulk upserts campogramas into Supabase table scouting_campogramas and synchronizes positions.
  */
 export async function dbBulkUpsertCampogramas(campogramas: any[]): Promise<void> {
-  if (!supabase) return;
+  if (!isSupabaseNetworkAvailable() || campogramas.length === 0) {
+    await dbSaveSetting('campogramas', campogramas);
+    return;
+  }
 
   const payloads = campogramas.map(campograma => ({
     id: campograma.id,
@@ -1376,13 +1403,15 @@ export async function dbBulkUpsertCampogramas(campogramas: any[]): Promise<void>
   try {
     await safeBulkUpsert('scouting_campogramas', payloads, 'id');
   } catch (err) {
-    console.warn('Bulk upsert to scouting_campogramas failed:', err);
+    console.debug('Bulk upsert to scouting_campogramas handled locally:', err);
     await dbSaveSetting('campogramas', campogramas);
   }
 
   // Synchronize positions in background for each campograma
-  for (const c of campogramas) {
-    syncCampogramaWithPosicionesTable(c).catch(() => {});
+  if (isSupabaseNetworkAvailable()) {
+    for (const c of campogramas) {
+      syncCampogramaWithPosicionesTable(c).catch(() => {});
+    }
   }
 }
 
@@ -1452,7 +1481,7 @@ export async function dbSaveSistemaJuego(sistema: SistemaJuego): Promise<void> {
   try {
     await safeUpsert('scouting_sistemas_juego', payload, 'id');
   } catch (err) {
-    console.warn('Failed saving to scouting_sistemas_juego:', err);
+    console.debug('Failed saving to scouting_sistemas_juego, fallback to local settings:', err);
   }
 }
 
@@ -1460,7 +1489,10 @@ export async function dbSaveSistemaJuego(sistema: SistemaJuego): Promise<void> {
  * Bulk upserts tactical systems into Supabase table scouting_sistemas_juego.
  */
 export async function dbBulkUpsertSistemasJuego(sistemas: SistemaJuego[]): Promise<void> {
-  if (!supabase) return;
+  if (!isSupabaseNetworkAvailable() || sistemas.length === 0) {
+    await dbSaveSetting('sistemas_juego', sistemas);
+    return;
+  }
   const payloads = sistemas.map(s => ({
     id: s.id,
     codigo: s.codigo,
@@ -1477,7 +1509,7 @@ export async function dbBulkUpsertSistemasJuego(sistemas: SistemaJuego[]): Promi
   try {
     await safeBulkUpsert('scouting_sistemas_juego', payloads, 'id');
   } catch (err) {
-    console.warn('Failed bulk upsert to scouting_sistemas_juego:', err);
+    console.debug('Failed bulk upsert to scouting_sistemas_juego, fallback to local settings:', err);
     await dbSaveSetting('sistemas_juego', sistemas);
   }
 }
@@ -1528,7 +1560,7 @@ export async function dbFetchPosicionesSistema(campogramaId?: string, sistemaId?
  * Saves a single position record linked to a system into scouting_posiciones_sistema.
  */
 export async function dbSavePosicionSistema(pos: PosicionSistema): Promise<void> {
-  if (!supabase) return;
+  if (!isSupabaseNetworkAvailable()) return;
   const payload = {
     id: pos.id,
     sistema_id: pos.sistemaId,
@@ -1548,8 +1580,7 @@ export async function dbSavePosicionSistema(pos: PosicionSistema): Promise<void>
   try {
     await safeUpsert('scouting_posiciones_sistema', payload, 'id');
   } catch (err) {
-    // Non-blocking position sync
-    console.debug('Posición de sistema no guardada en tabla remota:', err);
+    // Non-blocking position sync handled locally
   }
 }
 
@@ -1557,7 +1588,7 @@ export async function dbSavePosicionSistema(pos: PosicionSistema): Promise<void>
  * Bulk upserts position records into scouting_posiciones_sistema.
  */
 export async function dbBulkUpsertPosicionesSistema(posiciones: PosicionSistema[]): Promise<void> {
-  if (!supabase || posiciones.length === 0) return;
+  if (!isSupabaseNetworkAvailable() || posiciones.length === 0) return;
   const payloads = posiciones.map(pos => ({
     id: pos.id,
     sistema_id: pos.sistemaId,
@@ -1577,8 +1608,7 @@ export async function dbBulkUpsertPosicionesSistema(posiciones: PosicionSistema[
   try {
     await safeBulkUpsert('scouting_posiciones_sistema', payloads, 'id');
   } catch (err) {
-    // Graceful fallback to avoid uncaught warning popups in developer console
-    console.debug('Sincronización de posiciones de sistema manejada localmente:', err);
+    // Graceful fallback handled locally without logging uncaught warnings
   }
 }
 
@@ -1589,7 +1619,7 @@ export async function syncCampogramaWithPosicionesTable(
   campograma: any,
   tacticalPositions?: any[]
 ): Promise<void> {
-  if (!supabase || !campograma || !campograma.id) return;
+  if (!isSupabaseNetworkAvailable() || !campograma || !campograma.id) return;
   try {
     const formationCode = campograma.formation || '4-4-2';
     const positionsList = tacticalPositions && tacticalPositions.length > 0
@@ -1625,7 +1655,7 @@ export async function syncCampogramaWithPosicionesTable(
 
     await dbBulkUpsertPosicionesSistema(positionRecords);
   } catch (err) {
-    console.warn('Error in syncCampogramaWithPosicionesTable:', err);
+    // Non-blocking position sync fallback
   }
 }
 
