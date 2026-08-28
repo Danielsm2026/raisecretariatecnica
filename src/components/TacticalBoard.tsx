@@ -42,6 +42,7 @@ interface TacticalBoardProps {
   players: ScoutedPlayer[];
   showNotification: (msg: string, type?: 'success' | 'info' | 'error') => void;
   onUpdatePlayer?: (player: ScoutedPlayer) => void;
+  onOpenPlayerReport?: (player: ScoutedPlayer) => void;
   onBack?: () => void;
 }
 
@@ -1181,7 +1182,7 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
   }
 ];
 
-export default function TacticalBoard({ players, showNotification, onUpdatePlayer, onBack }: TacticalBoardProps) {
+export default function TacticalBoard({ players, showNotification, onUpdatePlayer, onOpenPlayerReport, onBack }: TacticalBoardProps) {
   // Folder Navigation State
   const [currentFolder, setCurrentFolder] = useState<CampogramaFolderId | null>(null);
   const [currentSubFolder, setCurrentSubFolder] = useState<CampogramaSubFolderId | null>(null);
@@ -3010,6 +3011,13 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                   key={player.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, player.id)}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    if (onOpenPlayerReport) {
+                      onOpenPlayerReport(player);
+                    }
+                  }}
+                  title={`Doble clic para abrir el informe de ${player.nombre}`}
                   onClick={() => {
                     if (monthlyView) {
                       if (selectedSlot) {
@@ -3034,7 +3042,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                       }
                     }
                   }}
-                  className={`p-2.5 rounded border text-left flex items-center justify-between transition-all select-none cursor-pointer ${
+                  className={`p-2.5 rounded border text-left flex items-center justify-between transition-all select-none cursor-pointer group ${
                     isAssigned
                       ? 'bg-blue-950/20 border-blue-900/60 shadow-inner'
                       : 'bg-slate-950 hover:bg-slate-850/70 border-slate-800 hover:border-slate-700 hover:shadow-md'
@@ -3060,7 +3068,10 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </div>
                     
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-100 truncate leading-tight">{player.nombre}</p>
+                      <div className="flex items-center space-x-1.5">
+                        <p className="text-xs font-bold text-slate-100 truncate leading-tight group-hover:text-blue-300 transition-colors">{player.nombre}</p>
+                        <FileText className="w-3 h-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" title="Doble clic para ver informe" />
+                      </div>
                       <p className="text-[9px] font-mono text-slate-400 mt-0.5 truncate uppercase">
                         {player.posicion} • {player.equipo || 'Sin Equipo'}
                       </p>
@@ -3240,11 +3251,19 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                             return (
                               <div
                                 key={pid}
-                                className="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded px-1.5 py-0.5 text-[9px] font-bold text-white group/item hover:border-blue-500/50"
+                                onDoubleClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onOpenPlayerReport) {
+                                    onOpenPlayerReport(p);
+                                  }
+                                }}
+                                title={`Doble clic para ver el informe de scouting de ${p.nombre}`}
+                                className="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded px-1.5 py-0.5 text-[9px] font-bold text-white group/item hover:border-blue-500/60 hover:bg-slate-850 cursor-pointer select-none transition-colors"
                               >
                                 <div className="min-w-0 flex-1 pr-1">
-                                  <div className="truncate text-white font-bold leading-tight">
-                                    {idx + 1}. {p.nombre.split(' ')[0]}
+                                  <div className="truncate text-white font-bold leading-tight flex items-center gap-1">
+                                    <span>{idx + 1}. {p.nombre.split(' ')[0]}</span>
+                                    <FileText className="w-2.5 h-2.5 text-blue-400 opacity-0 group-hover/item:opacity-100 transition-opacity shrink-0" title="Ver informe" />
                                   </div>
                                   <div className="truncate text-[7.5px] font-normal text-slate-400 leading-none">
                                     {p.equipo || 'Sin Equipo'}
@@ -3256,7 +3275,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                                     e.stopPropagation();
                                     removePlayerFromMonthly(pos.id, pid);
                                   }}
-                                  className="text-slate-500 hover:text-red-400 font-extrabold text-[8px] shrink-0"
+                                  className="text-slate-500 hover:text-red-400 font-extrabold text-[8px] shrink-0 ml-1 p-0.5"
+                                  title="Quitar jugador de esta posición"
                                 >
                                   ✕
                                 </button>
@@ -3284,18 +3304,31 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     key={pos.id}
                     style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                     onClick={() => setSelectedSlot(isSelected ? null : pos.id)}
+                    onDoubleClick={(e) => {
+                      if (player && onOpenPlayerReport) {
+                        e.stopPropagation();
+                        onOpenPlayerReport(player);
+                      }
+                    }}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDropOnPosition(e, pos.id)}
+                    title={player ? `Doble clic para ver el informe de ${player.nombre}` : `Posición ${pos.label}`}
                     className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center transition-all duration-200 z-30 cursor-pointer group"
                   >
                     <div
                       draggable={!!player}
                       onDragStart={(e) => player && handlePitchPositionDragStart(e, pos.id, player.id)}
+                      onDoubleClick={(e) => {
+                        if (player && onOpenPlayerReport) {
+                          e.stopPropagation();
+                          onOpenPlayerReport(player);
+                        }
+                      }}
                       className={`w-12 h-12 rounded-full border-2 flex flex-col items-center justify-center transition-all duration-200 shadow-xl relative ${
                         isSelected
                           ? 'border-blue-400 bg-blue-950 scale-110 ring-4 ring-blue-500/30'
                           : player
-                          ? 'border-blue-500 bg-slate-900 hover:scale-105'
+                          ? 'border-blue-500 bg-slate-900 hover:scale-105 group-hover:border-blue-400'
                           : 'border-emerald-400/80 bg-emerald-950/80 hover:bg-emerald-900 hover:border-emerald-300'
                       }`}
                     >
@@ -3331,10 +3364,20 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </div>
 
                     {player ? (
-                      <div className="mt-1 flex flex-col items-center text-center max-w-[110px]">
-                        <div className="bg-slate-950/95 px-1.5 py-0.5 rounded border border-slate-800 shadow-lg flex flex-col items-center min-w-[55px] max-w-[105px]">
-                          <span className="text-[9px] font-bold text-white truncate max-w-[95px] leading-tight">
-                            {player.nombre.split(' ')[0]}
+                      <div 
+                        className="mt-1 flex flex-col items-center text-center max-w-[110px]"
+                        onDoubleClick={(e) => {
+                          if (onOpenPlayerReport) {
+                            e.stopPropagation();
+                            onOpenPlayerReport(player);
+                          }
+                        }}
+                        title={`Doble clic para ver el informe de ${player.nombre}`}
+                      >
+                        <div className="bg-slate-950/95 px-1.5 py-0.5 rounded border border-slate-800 shadow-lg flex flex-col items-center min-w-[55px] max-w-[105px] group-hover:border-blue-500/60 transition-colors">
+                          <span className="text-[9px] font-bold text-white truncate max-w-[95px] leading-tight flex items-center gap-0.5">
+                            <span>{player.nombre.split(' ')[0]}</span>
+                            <FileText className="w-2 h-2 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity inline" />
                           </span>
                           <span className="text-[7.5px] font-medium text-blue-300 truncate max-w-[95px] leading-tight mt-0.5">
                             {player.equipo || 'Sin Equipo'}

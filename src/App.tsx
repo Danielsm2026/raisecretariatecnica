@@ -1896,6 +1896,10 @@ export default function App() {
             players={players}
             showNotification={showNotification}
             onUpdatePlayer={handleSavePlayer}
+            onOpenPlayerReport={(player) => {
+              setReportEditingPlayer(player);
+              setIsReportModalOpen(true);
+            }}
             onBack={() => setActiveTab('inicio')}
           />
         )}
