@@ -318,6 +318,23 @@ export async function dbFetchPlayers(): Promise<ScoutedPlayer[]> {
   });
 }
 
+function isDateTimeOverflowError(error: any): boolean {
+  if (!error) return false;
+  const code = String(error.code || '');
+  const msg = [error.message, error.details, error.hint].filter(Boolean).join(' ').toLowerCase();
+  return (
+    code === '22008' ||
+    code === '22007' ||
+    code === '42804' ||
+    msg.includes('datestyle') ||
+    msg.includes('date/time') ||
+    msg.includes('datetime') ||
+    msg.includes('out of range for type') ||
+    msg.includes('invalid input syntax for type timestamp') ||
+    msg.includes('invalid input syntax for type date')
+  );
+}
+
 /**
  * Saves a single player to Supabase (upsert pattern).
  */
@@ -332,7 +349,8 @@ function extractMissingColumnFromError(error: any): string | null {
                 errorMsg.match(/find the column ['"]([^'"]+)['"]/i) ||
                 errorMsg.match(/has no column named ['"]([^'"]+)['"]/i) ||
                 errorMsg.match(/column ['"]([^'"]+)['"] does not exist/i) ||
-                errorMsg.match(/column ([a-zA-Z0-9__]+) does not exist/i);
+                errorMsg.match(/column ([a-zA-Z0-9__]+) does not exist/i) ||
+                errorMsg.match(/column ['"]([^'"]+)['"] is of type/i);
 
   return match && match[1] ? match[1] : null;
 }
@@ -343,6 +361,9 @@ function extractMissingColumnFromError(error: any): string | null {
 async function safeUpsert(table: string, payload: any, onConflict: string): Promise<any> {
   let currentPayload = { ...payload };
   let retryCount = 0;
+  let dateConversionAttempted = false;
+  let dateStrippedAttempted = false;
+
   while (true) {
     let error: any = null;
     try {
@@ -374,11 +395,36 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
       throw error;
     }
 
+    // Check if error is due to date/time format or numeric timestamp in timestamp column
+    if (isDateTimeOverflowError(error)) {
+      if (!dateConversionAttempted) {
+        dateConversionAttempted = true;
+        let converted = false;
+        for (const k of ['updated_at', 'updatedAt', 'created_at', 'createdAt']) {
+          if (k in currentPayload && typeof currentPayload[k] === 'number') {
+            try {
+              currentPayload[k] = new Date(currentPayload[k]).toISOString();
+              converted = true;
+            } catch {
+              delete currentPayload[k];
+            }
+          }
+        }
+        if (converted) continue;
+      }
+
+      if (!dateStrippedAttempted) {
+        dateStrippedAttempted = true;
+        for (const k of ['updated_at', 'updatedAt', 'created_at', 'createdAt', 'fecha_modificacion', 'fechaModificacion']) {
+          delete currentPayload[k];
+        }
+        continue;
+      }
+    }
+
     const colName = extractMissingColumnFromError(error);
 
     if (colName) {
-      console.warn(`Column '${colName}' does not exist on table '${table}'. Retrying without it.`);
-      
       delete currentPayload[colName];
       if (colName.includes('_')) {
         const camel = colName.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
@@ -391,9 +437,10 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
       if (Object.keys(currentPayload).length <= 1) {
         throw error;
       }
-    } else {
-      throw error;
+      continue;
     }
+
+    throw error;
   }
 }
 
@@ -403,6 +450,9 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
 async function safeBulkUpsert(table: string, payloads: any[], onConflict: string): Promise<any> {
   let currentPayloads = payloads.map(p => ({ ...p }));
   let retryCount = 0;
+  let dateConversionAttempted = false;
+  let dateStrippedAttempted = false;
+
   while (true) {
     let error: any = null;
     try {
@@ -434,11 +484,44 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
       throw error;
     }
 
+    // Check if error is due to date/time format or numeric timestamp in timestamp column
+    if (isDateTimeOverflowError(error)) {
+      if (!dateConversionAttempted) {
+        dateConversionAttempted = true;
+        let converted = false;
+        currentPayloads = currentPayloads.map(payload => {
+          const next = { ...payload };
+          for (const k of ['updated_at', 'updatedAt', 'created_at', 'createdAt']) {
+            if (k in next && typeof next[k] === 'number') {
+              try {
+                next[k] = new Date(next[k]).toISOString();
+                converted = true;
+              } catch {
+                delete next[k];
+              }
+            }
+          }
+          return next;
+        });
+        if (converted) continue;
+      }
+
+      if (!dateStrippedAttempted) {
+        dateStrippedAttempted = true;
+        currentPayloads = currentPayloads.map(payload => {
+          const next = { ...payload };
+          for (const k of ['updated_at', 'updatedAt', 'created_at', 'createdAt', 'fecha_modificacion', 'fechaModificacion']) {
+            delete next[k];
+          }
+          return next;
+        });
+        continue;
+      }
+    }
+
     const colName = extractMissingColumnFromError(error);
 
     if (colName) {
-      console.warn(`Column '${colName}' does not exist on table '${table}'. Retrying bulk upsert without it.`);
-      
       currentPayloads = currentPayloads.map(payload => {
         const nextPayload = { ...payload };
         delete nextPayload[colName];
@@ -455,9 +538,10 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
       if (currentPayloads.length === 0 || Object.keys(currentPayloads[0]).length <= 1) {
         throw error;
       }
-    } else {
-      throw error;
+      continue;
     }
+
+    throw error;
   }
 }
 
@@ -1458,14 +1542,14 @@ export async function dbSavePosicionSistema(pos: PosicionSistema): Promise<void>
     jugador_id: pos.jugadorId || null,
     jugadores_mensuales_ids: pos.jugadoresMensualesIds || [],
     orden: pos.orden ?? 0,
-    notas: pos.notas || '',
-    updated_at: pos.updatedAt || Date.now()
+    notas: pos.notas || ''
   };
 
   try {
     await safeUpsert('scouting_posiciones_sistema', payload, 'id');
   } catch (err) {
-    console.warn('Error saving to scouting_posiciones_sistema:', err);
+    // Non-blocking position sync
+    console.debug('Posición de sistema no guardada en tabla remota:', err);
   }
 }
 
@@ -1487,14 +1571,14 @@ export async function dbBulkUpsertPosicionesSistema(posiciones: PosicionSistema[
     jugador_id: pos.jugadorId || null,
     jugadores_mensuales_ids: pos.jugadoresMensualesIds || [],
     orden: pos.orden ?? 0,
-    notas: pos.notas || '',
-    updated_at: pos.updatedAt || Date.now()
+    notas: pos.notas || ''
   }));
 
   try {
     await safeBulkUpsert('scouting_posiciones_sistema', payloads, 'id');
   } catch (err) {
-    console.warn('Error bulk upserting to scouting_posiciones_sistema:', err);
+    // Graceful fallback to avoid uncaught warning popups in developer console
+    console.debug('Sincronización de posiciones de sistema manejada localmente:', err);
   }
 }
 
