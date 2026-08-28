@@ -26,6 +26,9 @@ import {
   getCampogramaAgostoSQL,
   getCampogramaSegundaRFEFGrupo1SeptiembreSQL,
   getCampogramaSegundaRFEFGrupo2SeptiembreSQL,
+  getCampogramaInviernoSQL,
+  getCampogramaVeranoSQL,
+  getCampogramasMercadosCompletoSQL,
   getCampogramaSingleSQL,
   getSistemasYPosicionesSQL,
   generateLiveCampogramasSQL,
@@ -116,7 +119,7 @@ const FOLDERS = [
 const LOGO_PRIMERA_RFEF = 'https://assets.football-logos.cc/logos/spain/1500x1500/primera-federacion--no-text.88bef19f.png';
 const LOGO_SEGUNDA_RFEF = 'https://cdn.resfu.com/media/img/league_logos/segunda_rfef.png?size=120x&lossy=1';
 
-const SUBFOLDERS_MENSUALES = [
+const SUBFOLDERS_RFEF = [
   {
     id: '1rfef' as const,
     title: 'Campograma Primera RFEF',
@@ -144,6 +147,8 @@ const SUBFOLDERS_MENSUALES = [
     description: 'Campogramas posicionales, cartera y promesas monitorizadas en Segunda RFEF.',
   }
 ];
+
+const SUBFOLDERS_MENSUALES = SUBFOLDERS_RFEF;
 
 const MONTH_FOLDERS = [
   {
@@ -920,59 +925,189 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     monthlyAssignments: {},
     notes: 'Campograma de seguimiento para Primera RFEF Grupo II en Septiembre 2026 vinculado a Supabase.'
   },
+  // --- INVIERNO (1ª RFEF G1-G2 + 2ª RFEF G1-G5) ---
   {
-    id: 'c_invierno_principal',
+    id: 'c_invierno_1rfef_g1',
     folderId: 'invierno',
-    nombre: 'Campograma Mercado de Invierno',
-    descripcion: 'Alineación de referencia para la ventana de invierno',
+    subFolderId: '1rfef',
+    nombre: 'PRIMERA RFEF GRUPO I - INVIERNO',
+    descripcion: 'Campograma y planificación de mercado invernal para Primera RFEF Grupo I',
     fechaModificacion: '20/01/2026',
-    formation: '4-2-3-1',
+    formation: '4-4-2',
     monthlyView: false,
-    assignments: {
-      'mcd_d': 'p_mangel_prendes',
-      'mcd_i': 'p_isi_gomez',
-      'mco': 'p_samu_mayo',
-      'mco_i': 'p_brais_abelenda',
-      'mco_d': 'p_inigo_munoz',
-      'dc': 'p_julian_mahicas',
-      'lti': 'p16'
-    },
-    monthlyAssignments: {},
-    notes: 'Prioridad incorporar pivote defensivo de refresco e interior zurdo.'
-  },
-  {
-    id: 'c_invierno_refuerzos',
-    folderId: 'invierno',
-    nombre: 'Refuerzos Prioritarios Invierno',
-    descripcion: 'Candidatos posicionales para el mercado invernal',
-    fechaModificacion: '18/01/2026',
-    formation: '4-3-3',
-    monthlyView: true,
     assignments: {},
-    monthlyAssignments: {
-      'mcd': ['p_mangel_prendes', 'p_samu_mayo'],
-      'dc': ['p_julian_mahicas']
-    },
-    notes: ''
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de invierno para Primera RFEF Grupo I vinculado a Supabase.'
   },
   {
-    id: 'c_verano_principal',
-    folderId: 'verano',
-    nombre: 'Campograma Mercado de Verano',
-    descripcion: 'Esquema y plantilla objetivo para la próxima temporada',
-    fechaModificacion: '22/07/2026',
-    formation: '4-3-3',
+    id: 'c_invierno_1rfef_g2',
+    folderId: 'invierno',
+    subFolderId: '1rfef',
+    nombre: 'PRIMERA RFEF GRUPO II - INVIERNO',
+    descripcion: 'Campograma y planificación de mercado invernal para Primera RFEF Grupo II',
+    fechaModificacion: '20/01/2026',
+    formation: '4-4-2',
     monthlyView: false,
-    assignments: {
-      'mcd': 'p_mangel_prendes',
-      'mc_d': 'p_samu_mayo',
-      'mc_i': 'p_isi_gomez',
-      'dc': 'p_julian_mahicas',
-      'ed': 'p_inigo_munoz',
-      'ei': 'p_brais_abelenda'
-    },
+    assignments: {},
     monthlyAssignments: {},
-    notes: 'Planificación estival para afianzar el bloque competitivo.'
+    notes: 'Campograma de seguimiento y fichajes de invierno para Primera RFEF Grupo II vinculado a Supabase.'
+  },
+  {
+    id: 'c_invierno_2rfef_g1',
+    folderId: 'invierno',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO I - INVIERNO',
+    descripcion: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo I',
+    fechaModificacion: '20/01/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de invierno para Segunda RFEF Grupo I vinculado a Supabase.'
+  },
+  {
+    id: 'c_invierno_2rfef_g2',
+    folderId: 'invierno',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO II - INVIERNO',
+    descripcion: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo II',
+    fechaModificacion: '20/01/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de invierno para Segunda RFEF Grupo II vinculado a Supabase.'
+  },
+  {
+    id: 'c_invierno_2rfef_g3',
+    folderId: 'invierno',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO III - INVIERNO',
+    descripcion: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo III',
+    fechaModificacion: '20/01/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de invierno para Segunda RFEF Grupo III vinculado a Supabase.'
+  },
+  {
+    id: 'c_invierno_2rfef_g4',
+    folderId: 'invierno',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO IV - INVIERNO',
+    descripcion: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo IV',
+    fechaModificacion: '20/01/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de invierno para Segunda RFEF Grupo IV vinculado a Supabase.'
+  },
+  {
+    id: 'c_invierno_2rfef_g5',
+    folderId: 'invierno',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO V - INVIERNO',
+    descripcion: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo V',
+    fechaModificacion: '20/01/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de invierno para Segunda RFEF Grupo V vinculado a Supabase.'
+  },
+  // --- VERANO (1ª RFEF G1-G2 + 2ª RFEF G1-G5) ---
+  {
+    id: 'c_verano_1rfef_g1',
+    folderId: 'verano',
+    subFolderId: '1rfef',
+    nombre: 'PRIMERA RFEF GRUPO I - VERANO',
+    descripcion: 'Campograma y planificación de mercado estival para Primera RFEF Grupo I',
+    fechaModificacion: '22/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de verano para Primera RFEF Grupo I vinculado a Supabase.'
+  },
+  {
+    id: 'c_verano_1rfef_g2',
+    folderId: 'verano',
+    subFolderId: '1rfef',
+    nombre: 'PRIMERA RFEF GRUPO II - VERANO',
+    descripcion: 'Campograma y planificación de mercado estival para Primera RFEF Grupo II',
+    fechaModificacion: '22/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de verano para Primera RFEF Grupo II vinculado a Supabase.'
+  },
+  {
+    id: 'c_verano_2rfef_g1',
+    folderId: 'verano',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO I - VERANO',
+    descripcion: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo I',
+    fechaModificacion: '22/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de verano para Segunda RFEF Grupo I vinculado a Supabase.'
+  },
+  {
+    id: 'c_verano_2rfef_g2',
+    folderId: 'verano',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO II - VERANO',
+    descripcion: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo II',
+    fechaModificacion: '22/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de verano para Segunda RFEF Grupo II vinculado a Supabase.'
+  },
+  {
+    id: 'c_verano_2rfef_g3',
+    folderId: 'verano',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO III - VERANO',
+    descripcion: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo III',
+    fechaModificacion: '22/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de verano para Segunda RFEF Grupo III vinculado a Supabase.'
+  },
+  {
+    id: 'c_verano_2rfef_g4',
+    folderId: 'verano',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO IV - VERANO',
+    descripcion: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo IV',
+    fechaModificacion: '22/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de verano para Segunda RFEF Grupo IV vinculado a Supabase.'
+  },
+  {
+    id: 'c_verano_2rfef_g5',
+    folderId: 'verano',
+    subFolderId: '2rfef',
+    nombre: 'SEGUNDA RFEF GRUPO V - VERANO',
+    descripcion: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo V',
+    fechaModificacion: '22/07/2026',
+    formation: '4-4-2',
+    monthlyView: false,
+    assignments: {},
+    monthlyAssignments: {},
+    notes: 'Campograma de seguimiento y fichajes de verano para Segunda RFEF Grupo V vinculado a Supabase.'
   },
   {
     id: 'c_septiembre_2026_2rfef_g1',
@@ -1043,23 +1178,6 @@ const DEFAULT_CAMPOGRAMAS: CampogramaItem[] = [
     assignments: {},
     monthlyAssignments: {},
     notes: 'Campograma de seguimiento para Segunda RFEF Grupo V en Septiembre 2026.'
-  },
-  {
-    id: 'c_verano_plantilla',
-    folderId: 'verano',
-    nombre: 'Proyección Plantilla Verano',
-    descripcion: 'Evaluación posicional de hasta 5 candidatos por puesto',
-    fechaModificacion: '23/07/2026',
-    formation: '4-4-2',
-    monthlyView: true,
-    assignments: {},
-    monthlyAssignments: {
-      'mc_d': ['p_mangel_prendes', 'p_samu_mayo'],
-      'mc_i': ['p_isi_gomez'],
-      'dc_d': ['p_julian_mahicas'],
-      'dc_i': ['p_brais_abelenda']
-    },
-    notes: ''
   }
 ];
 
@@ -1075,7 +1193,11 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       'c_mensual_2rfef_principal',
       'c_enero_2026_2rfef_g1',
       'c_agosto_2026_1rfef_g1',
-      'c_agosto_2026_1rfef_g2'
+      'c_agosto_2026_1rfef_g2',
+      'c_invierno_principal',
+      'c_invierno_refuerzos',
+      'c_verano_principal',
+      'c_verano_plantilla'
     ];
     try {
       const saved = localStorage.getItem('scouting_deleted_campogramas_v2');
@@ -1299,7 +1421,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
         const rawList = Array.from(map.values());
         const cleaned = sanitizeCampogramas(rawList, players, deletedSet);
         localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(cleaned));
-        dbBulkUpsertCampogramas(cleaned).catch(console.error);
+        dbBulkUpsertCampogramas(cleaned).catch(() => {});
         return cleaned;
       });
     }).catch(err => {
@@ -1317,7 +1439,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     if (originalStr !== sanitizedStr) {
       setCampogramas(sanitized);
       localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', sanitizedStr);
-      dbBulkUpsertCampogramas(sanitized).catch(console.error);
+      dbBulkUpsertCampogramas(sanitized).catch(() => {});
     }
   }, [players]);
 
@@ -1328,7 +1450,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     } catch (e) {
       console.error('Error saving campogramas:', e);
     }
-    dbBulkUpsertCampogramas(campogramas).catch(console.error);
+    dbBulkUpsertCampogramas(campogramas).catch(() => {});
   }, [campogramas]);
 
   // Cloud Sync & Backup Functions for Campogramas
@@ -1955,7 +2077,9 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   const handleCreateNewCampograma = () => {
     if (!currentFolder) return;
     const title = newTitle.trim() || `Nuevo Campograma ${new Date().toLocaleDateString('es-ES')}`;
-    const assignedSubFolder = currentFolder === 'mensuales' ? (newSubFolder || currentSubFolder || '1rfef') : undefined;
+    const assignedSubFolder = (currentFolder === 'mensuales' || currentFolder === 'invierno' || currentFolder === 'verano') 
+      ? (newSubFolder || currentSubFolder || '1rfef') 
+      : undefined;
     const newCamp: CampogramaItem = {
       id: `c_${Date.now()}`,
       folderId: currentFolder,
@@ -2007,13 +2131,13 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
     saveLocalDeletedCampogramaIds(updatedDeleted);
 
     // Delete from Supabase scouting_campogramas
-    dbDeleteCampograma(id).catch(console.error);
+    dbDeleteCampograma(id).catch(() => {});
 
     // Filter state
     const cleanList = campogramas.filter(c => c.id !== id);
     setCampogramas(cleanList);
     localStorage.setItem('DEPARTAMENTO_SCOUTING_CAMPOGRAMAS_V2', JSON.stringify(cleanList));
-    dbBulkUpsertCampogramas(cleanList).catch(console.error);
+    dbBulkUpsertCampogramas(cleanList).catch(() => {});
 
     if (activeCampogramaId === id) setActiveCampogramaId(null);
     showNotification(`Campograma "${nombre}" eliminado permanentemente en local y Supabase.`, 'info');
@@ -2143,8 +2267,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   // ==================== RENDER LEVEL 2: INSIDE A FOLDER (CAMPOGRAMAS LIST / SUBFOLDERS) ====================
   const folderInfo = FOLDERS.find(f => f.id === currentFolder)!;
 
-  // Level 1.5: If in 'mensuales' folder and no subfolder is selected yet
-  if (currentFolder === 'mensuales' && currentSubFolder === null && activeCampogramaId === null) {
+  // Level 1.5: If in 'mensuales', 'invierno', or 'verano' folder and no subfolder is selected yet
+  if ((currentFolder === 'mensuales' || currentFolder === 'invierno' || currentFolder === 'verano') && currentSubFolder === null && activeCampogramaId === null) {
     const Icon = folderInfo.icon;
     return (
       <>
@@ -2178,11 +2302,11 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
           </div>
         </div>
 
-        {/* Subfolders List for Mensuales */}
+        {/* Subfolders List for 1ª RFEF and 2ª RFEF */}
         <div className="flex flex-col space-y-3.5">
-          {SUBFOLDERS_MENSUALES.map((sf) => {
+          {SUBFOLDERS_RFEF.map((sf) => {
             const SfIcon = sf.icon;
-            const itemsInSubFolder = campogramas.filter(c => c.folderId === 'mensuales' && (c.subFolderId || '1rfef') === sf.id);
+            const itemsInSubFolder = campogramas.filter(c => c.folderId === currentFolder && (c.subFolderId || '1rfef') === sf.id);
             return (
               <div
                 key={sf.id}
@@ -2230,7 +2354,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
 
   // Level 1.75: If in 'mensuales' folder, a subfolder (1rfef / 2rfef) is selected, but no month folder is selected yet
   if (currentFolder === 'mensuales' && currentSubFolder !== null && currentMonthFolder === null && activeCampogramaId === null) {
-    const currentSubFolderObj = SUBFOLDERS_MENSUALES.find(s => s.id === currentSubFolder)!;
+    const currentSubFolderObj = SUBFOLDERS_RFEF.find(s => s.id === currentSubFolder)!;
     return (
       <>
       <div className="space-y-6">
@@ -2317,8 +2441,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
   }
 
   // Level 2: List of Campogramas inside current folder or subfolder
-  const currentSubFolderObj = currentFolder === 'mensuales' 
-    ? SUBFOLDERS_MENSUALES.find(s => s.id === (currentSubFolder || '1rfef'))
+  const currentSubFolderObj = (currentFolder === 'mensuales' || currentFolder === 'invierno' || currentFolder === 'verano')
+    ? SUBFOLDERS_RFEF.find(s => s.id === (currentSubFolder || '1rfef'))
     : null;
 
   const currentMonthFolderObj = currentMonthFolder 
@@ -2331,6 +2455,9 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
       if (currentFolder === 'mensuales') {
         if ((c.subFolderId || '1rfef') !== (currentSubFolder || '1rfef')) return false;
         return (c.monthFolderId || 'septiembre') === (currentMonthFolder || 'septiembre');
+      }
+      if (currentFolder === 'invierno' || currentFolder === 'verano') {
+        return (c.subFolderId || '1rfef') === (currentSubFolder || '1rfef');
       }
       return true;
     })
@@ -2369,11 +2496,11 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 if (currentFolder === 'mensuales') {
                   setCurrentMonthFolder(null);
                 } else {
-                  setCurrentFolder(null);
+                  setCurrentSubFolder(null);
                 }
               }}
               className="w-10 h-10 rounded-full border border-slate-700/80 bg-slate-950 hover:bg-slate-900 text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center shrink-0 shadow-md ring-1 ring-blue-500/20 hover:ring-blue-500/50 group active:scale-95 cursor-pointer"
-              title={currentFolder === 'mensuales' ? 'Volver a Carpetas de Meses' : 'Volver a Carpetas'}
+              title={currentFolder === 'mensuales' ? 'Volver a Carpetas de Meses' : 'Volver a Categorías RFEF'}
             >
               <ArrowLeft className="w-5 h-5 stroke-[2.5] text-blue-400 group-hover:text-blue-300 group-hover:-translate-x-0.5 transition-transform" />
             </button>
@@ -2404,7 +2531,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     ) : (
                       <Shield className={`w-5 h-5 ${currentSubFolderObj.accentColor}`} />
                     )}
-                    <span>{currentSubFolderObj.title} {currentMonthFolderObj ? `• CARPETA ${currentMonthFolderObj.title}` : ''}</span>
+                    <span>{currentSubFolderObj.title} {currentMonthFolderObj ? `• CARPETA ${currentMonthFolderObj.title}` : `• ${folderInfo.title}`}</span>
                   </>
                 ) : (
                   <>
@@ -2439,8 +2566,8 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
               ? Object.values(item.monthlyAssignments || {}).reduce<number>((acc, curr) => acc + ((curr as string[])?.length || 0), 0)
               : Object.values(item.assignments || {}).filter(Boolean).length;
 
-            const itemSubFolder = item.folderId === 'mensuales' 
-              ? SUBFOLDERS_MENSUALES.find(s => s.id === (item.subFolderId || '1rfef'))
+            const itemSubFolder = (item.folderId === 'mensuales' || item.folderId === 'invierno' || item.folderId === 'verano') 
+              ? SUBFOLDERS_RFEF.find(s => s.id === (item.subFolderId || '1rfef'))
               : null;
 
             return (
@@ -2597,7 +2724,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 </button>
               </div>
 
-              {currentFolder === 'mensuales' && (
+              {(currentFolder === 'mensuales' || currentFolder === 'invierno' || currentFolder === 'verano') && (
                 <div>
                   <label className="text-xs font-mono font-bold text-slate-300 uppercase block mb-1">
                     Carpeta / Categoría
@@ -3434,6 +3561,36 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                 {selectedItemForSql ? selectedItemForSql.nombre : 'Segunda RFEF G1 (Septiembre)'}
               </button>
               <button
+                onClick={() => setActiveSqlTab('mercados_full')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'mercados_full'
+                    ? 'bg-slate-800 text-sky-400 border-b-2 border-sky-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                ❄️☀️ Mercados Invierno + Verano (14 Campogramas)
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('invierno')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'invierno'
+                    ? 'bg-slate-800 text-cyan-400 border-b-2 border-cyan-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                ❄️ Mercado Invierno (7 Campogramas)
+              </button>
+              <button
+                onClick={() => setActiveSqlTab('verano')}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
+                  activeSqlTab === 'verano'
+                    ? 'bg-slate-800 text-amber-400 border-b-2 border-amber-500'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                ☀️ Mercado Verano (7 Campogramas)
+              </button>
+              <button
                 onClick={() => setActiveSqlTab('2027_full')}
                 className={`px-3 py-2 text-xs font-mono font-bold rounded-t-lg transition-colors whitespace-nowrap ${
                   activeSqlTab === '2027_full'
@@ -3585,6 +3742,45 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     </p>
                     <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
                       {selectedItemForSql ? getCampogramaSingleSQL(selectedItemForSql) : getCampogramaSegundaRFEFGrupo1SeptiembreSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'mercados_full' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL maestro para los dos mercados (<strong>Mercado de Invierno</strong> y <strong>Mercado de Verano</strong>) con sus <strong>14 campogramas</strong> completos (1ª RFEF Grupos I y II + 2ª RFEF Grupos I al V) y sus posiciones tácticas en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-sky-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramasMercadosCompletoSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'invierno' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para la carpeta <strong>CAMPOGRAMAS DE INVIERNO</strong> con sus subcarpetas y 7 campogramas (<code className="text-cyan-300">1ª RFEF Grupos I y II</code> + <code className="text-cyan-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones tácticas en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-cyan-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaInviernoSQL()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {activeSqlTab === 'verano' && (
+                <div className="space-y-2">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                    <p className="text-slate-400 font-sans text-xs mb-2">
+                      Script SQL completo para la carpeta <strong>CAMPOGRAMAS DE VERANO</strong> con sus subcarpetas y 7 campogramas (<code className="text-amber-300">1ª RFEF Grupos I y II</code> + <code className="text-amber-300">2ª RFEF Grupos I, II, III, IV y V</code>) y sus posiciones tácticas en Supabase:
+                    </p>
+                    <pre className="bg-slate-900/90 p-3 rounded border border-slate-800 text-[11px] text-amber-300 overflow-x-auto select-all max-h-[300px]">
+                      {getCampogramaVeranoSQL()}
                     </pre>
                   </div>
                 </div>

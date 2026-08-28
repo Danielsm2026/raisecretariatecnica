@@ -405,17 +405,15 @@ async function safeUpsert(table: string, payload: any, onConflict: string): Prom
         continue;
       }
       markSupabaseOffline();
-      console.debug(`[Supabase Offline] No se pudo sincronizar en ${table} (modo local activado):`, msg);
-      throw fetchErr;
+      return { offline: true };
     }
     
-    if (!error) return;
+    if (!error) return { success: true };
 
     const errorMsg = error.message || '';
     if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Load failed')) {
       markSupabaseOffline();
-      console.debug(`[Supabase Offline] Error de conexión en ${table}:`, errorMsg);
-      throw error;
+      return { offline: true };
     }
 
     // Check if error is due to date/time format or numeric timestamp in timestamp column
@@ -495,17 +493,15 @@ async function safeBulkUpsert(table: string, payloads: any[], onConflict: string
         continue;
       }
       markSupabaseOffline();
-      console.debug(`[Supabase Offline] Bulk upsert manejado localmente en ${table}:`, msg);
-      throw fetchErr;
+      return { offline: true };
     }
     
-    if (!error) return;
+    if (!error) return { success: true };
 
     const errorMsg = error.message || '';
     if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Load failed')) {
       markSupabaseOffline();
-      console.debug(`[Supabase Offline] Error de red en bulk upsert ${table}:`, errorMsg);
-      throw error;
+      return { offline: true };
     }
 
     // Check if error is due to date/time format or numeric timestamp in timestamp column
@@ -1109,46 +1105,53 @@ export async function dbFetchPlanSemanalWeeksWithStatus<T = any>(defaultWeeks: T
  * Fetch campogramas from Supabase table scouting_campogramas with fallback to settings storage.
  */
 export async function dbFetchCampogramas(): Promise<any[]> {
-  if (!supabase) {
-    throw new Error('Supabase client is not initialized.');
-  }
-
-  let { data, error } = await supabase
-    .from('scouting_campogramas')
-    .select('*')
-    .order('updated_at', { ascending: false });
-
-  if (error) {
-    // Fallback 1: try without ordering if updated_at column or order fails
-    const res2 = await supabase
-      .from('scouting_campogramas')
-      .select('*');
-    if (!res2.error) {
-      data = res2.data;
-      error = null;
-    }
-  }
-
-  if (error) {
-    console.warn('Error fetching campogramas from scouting_campogramas table, using fallback:', error.message || error);
+  if (!supabase || !isSupabaseNetworkAvailable()) {
     return dbFetchSetting<any[]>('campogramas', []);
   }
 
-  return (data || []).map((row: any) => ({
-    id: row.id,
-    folderId: row.folder_id || row.folderId || 'mensuales',
-    subFolderId: row.sub_folder_id || row.subFolderId || undefined,
-    monthFolderId: row.month_folder_id || row.monthFolderId || undefined,
-    nombre: row.nombre || 'Campograma sin nombre',
-    descripcion: row.descripcion || '',
-    fechaModificacion: row.fecha_modificacion || row.fechaModificacion || new Date().toLocaleDateString('es-ES'),
-    updatedAt: row.updated_at !== undefined ? Number(row.updated_at) : (row.updatedAt !== undefined ? Number(row.updatedAt) : Date.now()),
-    formation: row.formation || '4-4-2',
-    monthlyView: row.monthly_view !== undefined ? row.monthly_view : (row.monthlyView !== undefined ? row.monthlyView : true),
-    assignments: typeof row.assignments === 'string' ? JSON.parse(row.assignments) : (row.assignments || {}),
-    monthlyAssignments: typeof row.monthly_assignments === 'string' ? JSON.parse(row.monthly_assignments) : (row.monthlyAssignments ? (typeof row.monthlyAssignments === 'string' ? JSON.parse(row.monthlyAssignments) : row.monthlyAssignments) : {}),
-    notes: row.notes || ''
-  }));
+  try {
+    let { data, error } = await supabase
+      .from('scouting_campogramas')
+      .select('*')
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      // Fallback 1: try without ordering if updated_at column or order fails
+      const res2 = await supabase
+        .from('scouting_campogramas')
+        .select('*');
+      if (!res2.error) {
+        data = res2.data;
+        error = null;
+      }
+    }
+
+    if (error) {
+      return dbFetchSetting<any[]>('campogramas', []);
+    }
+
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      folderId: row.folder_id || row.folderId || 'mensuales',
+      subFolderId: row.sub_folder_id || row.subFolderId || undefined,
+      monthFolderId: row.month_folder_id || row.monthFolderId || undefined,
+      nombre: row.nombre || 'Campograma sin nombre',
+      descripcion: row.descripcion || '',
+      fechaModificacion: row.fecha_modificacion || row.fechaModificacion || new Date().toLocaleDateString('es-ES'),
+      updatedAt: row.updated_at !== undefined ? Number(row.updated_at) : (row.updatedAt !== undefined ? Number(row.updatedAt) : Date.now()),
+      formation: row.formation || '4-4-2',
+      monthlyView: row.monthly_view !== undefined ? row.monthly_view : (row.monthlyView !== undefined ? row.monthlyView : true),
+      assignments: typeof row.assignments === 'string' ? JSON.parse(row.assignments) : (row.assignments || {}),
+      monthlyAssignments: typeof row.monthly_assignments === 'string' ? JSON.parse(row.monthly_assignments) : (row.monthlyAssignments ? (typeof row.monthlyAssignments === 'string' ? JSON.parse(row.monthlyAssignments) : row.monthlyAssignments) : {}),
+      notes: row.notes || ''
+    }));
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+      markSupabaseOffline();
+    }
+    return dbFetchSetting<any[]>('campogramas', []);
+  }
 }
 
 /**
@@ -5322,6 +5325,360 @@ export async function dbUploadVideoFile(file: File): Promise<string> {
     .getPublicUrl(filePath);
 
   return publicUrl;
+}
+
+export function getCampogramaInviernoSQL(): string {
+  const campogramasInvierno = [
+    { id: 'c_invierno_1rfef_g1', subFolder: '1rfef', name: 'PRIMERA RFEF GRUPO I - INVIERNO', desc: 'Campograma y planificación de mercado invernal para Primera RFEF Grupo I' },
+    { id: 'c_invierno_1rfef_g2', subFolder: '1rfef', name: 'PRIMERA RFEF GRUPO II - INVIERNO', desc: 'Campograma y planificación de mercado invernal para Primera RFEF Grupo II' },
+    { id: 'c_invierno_2rfef_g1', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO I - INVIERNO', desc: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo I' },
+    { id: 'c_invierno_2rfef_g2', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO II - INVIERNO', desc: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo II' },
+    { id: 'c_invierno_2rfef_g3', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO III - INVIERNO', desc: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo III' },
+    { id: 'c_invierno_2rfef_g4', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO IV - INVIERNO', desc: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo IV' },
+    { id: 'c_invierno_2rfef_g5', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO V - INVIERNO', desc: 'Campograma y planificación de mercado invernal para Segunda RFEF Grupo V' }
+  ];
+
+  const defaultPositions442 = getPosicionesDefectoPorSistema('4-4-2');
+
+  const campogramasInserts = campogramasInvierno.map(c => `  ('${c.id}', 'invierno', 'invierno', '${c.subFolder}', '${c.subFolder}', NULL, NULL, '${c.name}', '${c.desc}', '20/01/2026', '20/01/2026', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento y fichajes de invierno para ${c.name} vinculado a Supabase.')`).join(',\n');
+
+  const posicionesInserts = campogramasInvierno.flatMap(c => {
+    return defaultPositions442.map((pos: any, idx: number) => {
+      const recId = `pos_${c.id}_${pos.id}`;
+      const rolesJson = JSON.stringify(pos.allowedRoles || []).replace(/'/g, "''");
+      return `  ('${recId}', '4-4-2', '4-4-2', '${c.id}', '${c.id}', '${pos.id}', '${pos.id}', '${pos.label}', '${pos.label}', '${pos.category}', '${pos.category}', ${pos.x}, ${pos.x}, ${pos.y}, ${pos.y}, '${rolesJson}'::jsonb, '${rolesJson}'::jsonb, NULL, NULL, '[]'::jsonb, '[]'::jsonb, ${idx}, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000)`;
+    });
+  }).join(',\n');
+
+  return `-- ==============================================================================
+-- SQL: VINCULACIÓN DE CAMPOGRAMAS DE INVIERNO (1ª RFEF G1-G2 + 2ª RFEF G1-G5)
+-- ==============================================================================
+
+-- 1. TABLA PRINCIPAL DE CAMPOGRAMAS
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL DEFAULT 'invierno',
+  "folderId" TEXT DEFAULT 'invierno',
+  sub_folder_id TEXT DEFAULT '1rfef',
+  "subFolderId" TEXT DEFAULT '1rfef',
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'invierno';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'invierno';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT DEFAULT '1rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT DEFAULT '1rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
+
+DROP POLICY IF EXISTS "Permitir todo en scouting_campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en scouting_campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
+
+-- 2. TABLA DE SISTEMAS DE JUEGO TÁCTICOS
+CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
+  id TEXT PRIMARY KEY,
+  codigo TEXT UNIQUE NOT NULL,
+  nombre TEXT NOT NULL,
+  categoria_base TEXT DEFAULT '4 Defensas',
+  descripcion TEXT,
+  posiciones_defecto JSONB DEFAULT '[]'::jsonb,
+  "posicionesDefecto" JSONB DEFAULT '[]'::jsonb,
+  es_sistema_club BOOLEAN DEFAULT true,
+  "esSistemaClub" BOOLEAN DEFAULT true,
+  orden INTEGER DEFAULT 1
+);
+
+ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en scouting_sistemas_juego" ON scouting_sistemas_juego;
+CREATE POLICY "Permitir todo en scouting_sistemas_juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. TABLA DE POSICIONES DE SISTEMA (11 POSICIONES POR CAMPOGRAMA)
+CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
+  id TEXT PRIMARY KEY,
+  sistema_id TEXT,
+  "sistemaId" TEXT,
+  campograma_id TEXT,
+  "campogramaId" TEXT,
+  posicion_codigo TEXT,
+  "posicionCodigo" TEXT,
+  posicion_label TEXT,
+  "posicionLabel" TEXT,
+  categoria TEXT,
+  coord_x NUMERIC(5,2),
+  "coordX" NUMERIC(5,2),
+  coord_y NUMERIC(5,2),
+  "coordY" NUMERIC(5,2),
+  roles_permitidos JSONB DEFAULT '[]'::jsonb,
+  "rolesPermitidos" JSONB DEFAULT '[]'::jsonb,
+  jugador_titular_id TEXT,
+  "jugadorTitularId" TEXT,
+  candidatos_ids JSONB DEFAULT '[]'::jsonb,
+  "candidatosIds" JSONB DEFAULT '[]'::jsonb,
+  orden INTEGER DEFAULT 0,
+  created_at BIGINT,
+  updated_at BIGINT
+);
+
+ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en scouting_posiciones_sistema" ON scouting_posiciones_sistema;
+CREATE POLICY "Permitir todo en scouting_posiciones_sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. INSERTAR LOS 7 CAMPOGRAMAS DE INVIERNO (1ª RFEF G1-G2 Y 2ª RFEF G1-G5)
+INSERT INTO scouting_campogramas (
+  id, folder_id, "folderId", sub_folder_id, "subFolderId", month_folder_id, "monthFolderId", nombre, descripcion, fecha_modificacion, "fechaModificacion", updated_at, "updatedAt", formation, monthly_view, "monthlyView", assignments, monthly_assignments, "monthlyAssignments", notes
+)
+VALUES
+${campogramasInserts}
+ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
+  formation = EXCLUDED.formation,
+  notes = EXCLUDED.notes;
+
+-- 5. INSERTAR O ACTUALIZAR LAS 77 POSICIONES TÁCTICAS DE INVIERNO
+INSERT INTO scouting_posiciones_sistema (
+  id, sistema_id, "sistemaId", campograma_id, "campogramaId", posicion_codigo, "posicionCodigo", posicion_label, "posicionLabel", categoria, "categoria", coord_x, "coordX", coord_y, "coordY", roles_permitidos, "rolesPermitidos", jugador_titular_id, "jugadorTitularId", candidatos_ids, "candidatosIds", orden, created_at, updated_at
+)
+VALUES
+${posicionesInserts}
+ON CONFLICT (id) DO UPDATE SET
+  sistema_id = EXCLUDED.sistema_id,
+  "sistemaId" = EXCLUDED."sistemaId",
+  campograma_id = EXCLUDED.campograma_id,
+  "campogramaId" = EXCLUDED."campogramaId",
+  posicion_label = EXCLUDED.posicion_label,
+  "posicionLabel" = EXCLUDED."posicionLabel",
+  categoria = EXCLUDED.categoria,
+  coord_x = EXCLUDED.coord_x,
+  "coordX" = EXCLUDED."coordX",
+  coord_y = EXCLUDED.coord_y,
+  "coordY" = EXCLUDED."coordY",
+  roles_permitidos = EXCLUDED.roles_permitidos,
+  "rolesPermitidos" = EXCLUDED."rolesPermitidos",
+  orden = EXCLUDED.orden,
+  updated_at = EXCLUDED.updated_at;
+`;
+}
+
+export function getCampogramaVeranoSQL(): string {
+  const campogramasVerano = [
+    { id: 'c_verano_1rfef_g1', subFolder: '1rfef', name: 'PRIMERA RFEF GRUPO I - VERANO', desc: 'Campograma y planificación de mercado estival para Primera RFEF Grupo I' },
+    { id: 'c_verano_1rfef_g2', subFolder: '1rfef', name: 'PRIMERA RFEF GRUPO II - VERANO', desc: 'Campograma y planificación de mercado estival para Primera RFEF Grupo II' },
+    { id: 'c_verano_2rfef_g1', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO I - VERANO', desc: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo I' },
+    { id: 'c_verano_2rfef_g2', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO II - VERANO', desc: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo II' },
+    { id: 'c_verano_2rfef_g3', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO III - VERANO', desc: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo III' },
+    { id: 'c_verano_2rfef_g4', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO IV - VERANO', desc: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo IV' },
+    { id: 'c_verano_2rfef_g5', subFolder: '2rfef', name: 'SEGUNDA RFEF GRUPO V - VERANO', desc: 'Campograma y planificación de mercado estival para Segunda RFEF Grupo V' }
+  ];
+
+  const defaultPositions442 = getPosicionesDefectoPorSistema('4-4-2');
+
+  const campogramasInserts = campogramasVerano.map(c => `  ('${c.id}', 'verano', 'verano', '${c.subFolder}', '${c.subFolder}', NULL, NULL, '${c.name}', '${c.desc}', '22/07/2026', '22/07/2026', EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000, '4-4-2', false, false, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'Campograma de seguimiento y fichajes de verano para ${c.name} vinculado a Supabase.')`).join(',\n');
+
+  const posicionesInserts = campogramasVerano.flatMap(c => {
+    return defaultPositions442.map((pos: any, idx: number) => {
+      const recId = `pos_${c.id}_${pos.id}`;
+      const rolesJson = JSON.stringify(pos.allowedRoles || []).replace(/'/g, "''");
+      return `  ('${recId}', '4-4-2', '4-4-2', '${c.id}', '${c.id}', '${pos.id}', '${pos.id}', '${pos.label}', '${pos.label}', '${pos.category}', '${pos.category}', ${pos.x}, ${pos.x}, ${pos.y}, ${pos.y}, '${rolesJson}'::jsonb, '${rolesJson}'::jsonb, NULL, NULL, '[]'::jsonb, '[]'::jsonb, ${idx}, EXTRACT(EPOCH FROM NOW()) * 1000, EXTRACT(EPOCH FROM NOW()) * 1000)`;
+    });
+  }).join(',\n');
+
+  return `-- ==============================================================================
+-- SQL: VINCULACIÓN DE CAMPOGRAMAS DE VERANO (1ª RFEF G1-G2 + 2ª RFEF G1-G5)
+-- ==============================================================================
+
+-- 1. TABLA PRINCIPAL DE CAMPOGRAMAS
+CREATE TABLE IF NOT EXISTS scouting_campogramas (
+  id TEXT PRIMARY KEY,
+  folder_id TEXT NOT NULL DEFAULT 'verano',
+  "folderId" TEXT DEFAULT 'verano',
+  sub_folder_id TEXT DEFAULT '1rfef',
+  "subFolderId" TEXT DEFAULT '1rfef',
+  month_folder_id TEXT,
+  "monthFolderId" TEXT,
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  fecha_modificacion TEXT,
+  "fechaModificacion" TEXT,
+  updated_at BIGINT,
+  "updatedAt" BIGINT,
+  formation TEXT NOT NULL DEFAULT '4-4-2',
+  monthly_view BOOLEAN DEFAULT false,
+  "monthlyView" BOOLEAN DEFAULT false,
+  assignments JSONB DEFAULT '{}'::jsonb,
+  monthly_assignments JSONB DEFAULT '{}'::jsonb,
+  "monthlyAssignments" JSONB DEFAULT '{}'::jsonb,
+  notes TEXT
+);
+
+ALTER TABLE scouting_campogramas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS folder_id TEXT DEFAULT 'verano';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "folderId" TEXT DEFAULT 'verano';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS sub_folder_id TEXT DEFAULT '1rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "subFolderId" TEXT DEFAULT '1rfef';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS month_folder_id TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthFolderId" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS fecha_modificacion TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "fechaModificacion" TEXT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "updatedAt" BIGINT;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS formation TEXT DEFAULT '4-4-2';
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_view BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyView" BOOLEAN DEFAULT false;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS monthly_assignments JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS "monthlyAssignments" JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE scouting_campogramas ADD COLUMN IF NOT EXISTS notes TEXT;
+
+DROP POLICY IF EXISTS "Permitir todo en scouting_campogramas" ON scouting_campogramas;
+CREATE POLICY "Permitir todo en scouting_campogramas" ON scouting_campogramas FOR ALL USING (true) WITH CHECK (true);
+
+-- 2. TABLA DE SISTEMAS DE JUEGO TÁCTICOS
+CREATE TABLE IF NOT EXISTS scouting_sistemas_juego (
+  id TEXT PRIMARY KEY,
+  codigo TEXT UNIQUE NOT NULL,
+  nombre TEXT NOT NULL,
+  categoria_base TEXT DEFAULT '4 Defensas',
+  descripcion TEXT,
+  posiciones_defecto JSONB DEFAULT '[]'::jsonb,
+  "posicionesDefecto" JSONB DEFAULT '[]'::jsonb,
+  es_sistema_club BOOLEAN DEFAULT true,
+  "esSistemaClub" BOOLEAN DEFAULT true,
+  orden INTEGER DEFAULT 1
+);
+
+ALTER TABLE scouting_sistemas_juego ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en scouting_sistemas_juego" ON scouting_sistemas_juego;
+CREATE POLICY "Permitir todo en scouting_sistemas_juego" ON scouting_sistemas_juego FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. TABLA DE POSICIONES DE SISTEMA (11 POSICIONES POR CAMPOGRAMA)
+CREATE TABLE IF NOT EXISTS scouting_posiciones_sistema (
+  id TEXT PRIMARY KEY,
+  sistema_id TEXT,
+  "sistemaId" TEXT,
+  campograma_id TEXT,
+  "campogramaId" TEXT,
+  posicion_codigo TEXT,
+  "posicionCodigo" TEXT,
+  posicion_label TEXT,
+  "posicionLabel" TEXT,
+  categoria TEXT,
+  coord_x NUMERIC(5,2),
+  "coordX" NUMERIC(5,2),
+  coord_y NUMERIC(5,2),
+  "coordY" NUMERIC(5,2),
+  roles_permitidos JSONB DEFAULT '[]'::jsonb,
+  "rolesPermitidos" JSONB DEFAULT '[]'::jsonb,
+  jugador_titular_id TEXT,
+  "jugadorTitularId" TEXT,
+  candidatos_ids JSONB DEFAULT '[]'::jsonb,
+  "candidatosIds" JSONB DEFAULT '[]'::jsonb,
+  orden INTEGER DEFAULT 0,
+  created_at BIGINT,
+  updated_at BIGINT
+);
+
+ALTER TABLE scouting_posiciones_sistema ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir todo en scouting_posiciones_sistema" ON scouting_posiciones_sistema;
+CREATE POLICY "Permitir todo en scouting_posiciones_sistema" ON scouting_posiciones_sistema FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. INSERTAR LOS 7 CAMPOGRAMAS DE VERANO (1ª RFEF G1-G2 Y 2ª RFEF G1-G5)
+INSERT INTO scouting_campogramas (
+  id, folder_id, "folderId", sub_folder_id, "subFolderId", month_folder_id, "monthFolderId", nombre, descripcion, fecha_modificacion, "fechaModificacion", updated_at, "updatedAt", formation, monthly_view, "monthlyView", assignments, monthly_assignments, "monthlyAssignments", notes
+)
+VALUES
+${campogramasInserts}
+ON CONFLICT (id) DO UPDATE SET
+  folder_id = EXCLUDED.folder_id,
+  "folderId" = EXCLUDED."folderId",
+  sub_folder_id = EXCLUDED.sub_folder_id,
+  "subFolderId" = EXCLUDED."subFolderId",
+  month_folder_id = EXCLUDED.month_folder_id,
+  "monthFolderId" = EXCLUDED."monthFolderId",
+  nombre = EXCLUDED.nombre,
+  descripcion = EXCLUDED.descripcion,
+  fecha_modificacion = EXCLUDED.fecha_modificacion,
+  "fechaModificacion" = EXCLUDED."fechaModificacion",
+  updated_at = EXCLUDED.updated_at,
+  "updatedAt" = EXCLUDED."updatedAt",
+  formation = EXCLUDED.formation,
+  notes = EXCLUDED.notes;
+
+-- 5. INSERTAR O ACTUALIZAR LAS 77 POSICIONES TÁCTICAS DE VERANO
+INSERT INTO scouting_posiciones_sistema (
+  id, sistema_id, "sistemaId", campograma_id, "campogramaId", posicion_codigo, "posicionCodigo", posicion_label, "posicionLabel", categoria, "categoria", coord_x, "coordX", coord_y, "coordY", roles_permitidos, "rolesPermitidos", jugador_titular_id, "jugadorTitularId", candidatos_ids, "candidatosIds", orden, created_at, updated_at
+)
+VALUES
+${posicionesInserts}
+ON CONFLICT (id) DO UPDATE SET
+  sistema_id = EXCLUDED.sistema_id,
+  "sistemaId" = EXCLUDED."sistemaId",
+  campograma_id = EXCLUDED.campograma_id,
+  "campogramaId" = EXCLUDED."campogramaId",
+  posicion_label = EXCLUDED.posicion_label,
+  "posicionLabel" = EXCLUDED."posicionLabel",
+  categoria = EXCLUDED.categoria,
+  coord_x = EXCLUDED.coord_x,
+  "coordX" = EXCLUDED."coordX",
+  coord_y = EXCLUDED.coord_y,
+  "coordY" = EXCLUDED."coordY",
+  roles_permitidos = EXCLUDED.roles_permitidos,
+  "rolesPermitidos" = EXCLUDED."rolesPermitidos",
+  orden = EXCLUDED.orden,
+  updated_at = EXCLUDED.updated_at;
+`;
+}
+
+export function getCampogramasMercadosCompletoSQL(): string {
+  return `-- ==============================================================================
+-- SQL: VINCULACIÓN COMPLETA MERCADOS INVIERNO + VERANO (14 CAMPOGRAMAS)
+-- (1ª RFEF G1-G2 + 2ª RFEF G1-G5 EN AMBOS MERCADOS)
+-- ==============================================================================
+
+${getCampogramaInviernoSQL()}
+
+${getCampogramaVeranoSQL()}
+`;
 }
 
 /**
