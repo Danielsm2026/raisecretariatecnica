@@ -7,6 +7,7 @@ import { RAYO_MAJADAHONDA_PLAYERS, RAYO_MAJADAHONDA_ESCUDO } from './data/rayoMa
 import { VILLARREAL_B_PLAYERS, VILLARREAL_B_ESCUDO } from './data/villarrealBPlayers';
 import { JUVENTUD_TORREMOLINOS_PLAYERS, JUVENTUD_TORREMOLINOS_ESCUDO } from './data/juventudTorremolinosPlayers';
 import { CD_CORIA_PLAYERS, CD_CORIA_ESCUDO } from './data/cdCoriaPlayers';
+import { ATLETICO_MADRILENO_PLAYERS, ATLETICO_MADRILENO_ESCUDO } from './data/atleticoMadrilenoPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -2979,7 +2980,6 @@ const NUEVOS_PORTEROS_RAW = [
   { nombre: 'Oriol Martí', equipo: 'Alcorcón', anoNacimiento: 2000, altura: '1.92 m', lateralidad: 'Diestro' },
   { nombre: 'Manu González', equipo: 'Betis Deportivo', anoNacimiento: 2007, altura: '1.89 m', lateralidad: 'Diestro' },
   { nombre: 'Gaizka Campos', equipo: 'Barakaldo', anoNacimiento: 1997, altura: '1.90 m', lateralidad: 'Diestro' },
-  { nombre: 'S. Esquivel', equipo: 'Atlético Madrileño', anoNacimiento: 2005, altura: '1.93 m', lateralidad: 'Zurdo' },
   { nombre: 'Ramón Vila', equipo: 'Eldense', anoNacimiento: 2002, altura: '1.91 m', lateralidad: 'Diestro' },
   { nombre: 'Iker Piedra', equipo: 'CD Lugo', anoNacimiento: 2002, altura: '1.86 m', lateralidad: 'Diestro' },
   { nombre: 'Salvi Carrasco', equipo: 'Unionistas CF', anoNacimiento: 2000, altura: '1.92 m', lateralidad: 'Diestro' },
@@ -2991,7 +2991,6 @@ const NUEVOS_PORTEROS_RAW = [
   { nombre: 'Dani Alcover', equipo: 'Antequera CF', anoNacimiento: 2004, altura: '1.85 m', lateralidad: 'Diestro' },
   { nombre: 'O. Gastesi', equipo: 'Arenas de Getxo', anoNacimiento: 2003, altura: '1.90 m', lateralidad: 'Diestro' },
   { nombre: 'Padilla', equipo: 'Tenerife', anoNacimiento: 2003, altura: '1.81 m', lateralidad: 'Diestro' },
-  { nombre: 'Mario De Luis', equipo: 'Atlético Madrileño', anoNacimiento: 2002, altura: '1.85 m', lateralidad: 'Zurdo' },
   { nombre: 'Pablo Valencia', equipo: 'Eldense', anoNacimiento: 2001, altura: '1.88 m', lateralidad: 'Diestro' },
   { nombre: 'Tao Paradowski', equipo: 'UD Ibiza', anoNacimiento: 2005, altura: '1.80 m', lateralidad: 'Diestro' },
   { nombre: 'David Vassilev', equipo: 'Marbella FC', anoNacimiento: 2004, altura: '1.90 m', lateralidad: 'Diestro' },
@@ -4269,6 +4268,7 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...VILLARREAL_B_PLAYERS,
   ...JUVENTUD_TORREMOLINOS_PLAYERS,
   ...CD_CORIA_PLAYERS,
+  ...ATLETICO_MADRILENO_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4345,6 +4345,14 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'CD Coria',
       categoria: 'Primera RFEF',
       escudoUrl: CD_CORIA_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('madrileño') || player.equipo.toLowerCase().includes('madrileno') || player.equipo.toLowerCase().includes('atlético de madrid b') || player.equipo.toLowerCase().includes('atletico de madrid b') || player.equipo === 'Atlético Madrileño' || player.equipo === 'Atletico Madrileño')) {
+    return {
+      ...player,
+      equipo: 'Atlético Madrileño',
+      categoria: 'Primera RFEF',
+      escudoUrl: ATLETICO_MADRILENO_ESCUDO
     };
   }
   return player;

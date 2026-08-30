@@ -390,6 +390,15 @@ export default function App() {
               updated = true;
             }
           }
+          if (teamName.toLowerCase().includes('madrileño') || teamName.toLowerCase().includes('madrileno') || teamName.toLowerCase().includes('atlético de madrid b') || teamName.toLowerCase().includes('atletico de madrid b') || teamName === 'Atlético Madrileño' || teamName === 'Atletico Madrileño') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Atlético Madrileño') { current.equipo = 'Atlético Madrileño'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(err => {
@@ -711,6 +720,15 @@ export default function App() {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             if (current.equipo !== 'CD Coria') { current.equipo = 'CD Coria'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/677.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('madrileño') || teamName.toLowerCase().includes('madrileno') || teamName.toLowerCase().includes('atlético de madrid b') || teamName.toLowerCase().includes('atletico de madrid b') || teamName === 'Atlético Madrileño' || teamName === 'Atletico Madrileño') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Atlético Madrileño') { current.equipo = 'Atlético Madrileño'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;

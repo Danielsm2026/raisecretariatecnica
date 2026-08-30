@@ -46,6 +46,11 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'CD Coria': 'https://cdn.resfu.com/img_data/equipos/677.png?size=120x&lossy=1',
   'Coria': 'https://cdn.resfu.com/img_data/equipos/677.png?size=120x&lossy=1',
   'Club Deportivo Coria': 'https://cdn.resfu.com/img_data/equipos/677.png?size=120x&lossy=1',
+  'Atlético Madrileño': 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1',
+  'Atletico Madrileño': 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1',
+  'Atlético de Madrid B': 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1',
+  'Atletico de Madrid B': 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1',
+  'At. Madrileño': 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -112,6 +117,11 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is CD Coria, override the logo explicitly
   if (teamNormal && (teamNormal.toLowerCase().includes('coria') || teamNormal === 'CD Coria')) {
     return 'https://cdn.resfu.com/img_data/equipos/677.png?size=120x&lossy=1';
+  }
+
+  // If team is Atlético Madrileño, override the logo explicitly with 323.png
+  if (teamNormal && (teamNormal.toLowerCase().includes('madrileño') || teamNormal.toLowerCase().includes('madrileno') || teamNormal.toLowerCase().includes('atletico b') || teamNormal.toLowerCase().includes('atlético b') || teamNormal.toLowerCase().includes('atlético de madrid b') || teamNormal.toLowerCase().includes('atletico de madrid b') || teamNormal === 'Atlético Madrileño' || teamNormal === 'Atletico Madrileño')) {
+    return 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {
