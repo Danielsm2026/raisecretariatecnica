@@ -101,7 +101,7 @@ export default function PlayerReportModal({
 }: PlayerReportModalProps) {
   
   // Local edit states mirroring the document fields
-  const [isEditing, setIsEditing] = useState(true); // Default to editing mode for easy changes!
+  const [isEditing, setIsEditing] = useState(false); // Default to Previsualizar mode
   const [nombre, setNombre] = useState('');
   const [equipo, setEquipo] = useState('');
   const [escudoUrl, setEscudoUrl] = useState('');
@@ -139,7 +139,7 @@ export default function PlayerReportModal({
       setEscudoUrl(player.escudoUrl || '');
       setFotoUrl(player.fotoUrl || '');
       setBesoccerUrl(player.besoccerUrl || '');
-      setIsEditing(true); // Open directly with fields enabled or switchable
+      setIsEditing(false); // Open directly in Previsualizar mode
     }
   }, [player, isOpen]);
 
