@@ -399,6 +399,15 @@ export default function App() {
               updated = true;
             }
           }
+          if (teamName.toLowerCase().includes('ce europa') || teamName.toLowerCase().includes('club esportiu europa') || teamName === 'CE Europa' || teamName === 'Europa') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'CE Europa') { current.equipo = 'CE Europa'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/8760.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(err => {
@@ -729,6 +738,15 @@ export default function App() {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             if (current.equipo !== 'Atlético Madrileño') { current.equipo = 'Atlético Madrileño'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/323.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('ce europa') || teamName.toLowerCase().includes('club esportiu europa') || teamName === 'CE Europa' || teamName === 'Europa') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'CE Europa') { current.equipo = 'CE Europa'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/8760.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;

@@ -8,6 +8,7 @@ import { VILLARREAL_B_PLAYERS, VILLARREAL_B_ESCUDO } from './data/villarrealBPla
 import { JUVENTUD_TORREMOLINOS_PLAYERS, JUVENTUD_TORREMOLINOS_ESCUDO } from './data/juventudTorremolinosPlayers';
 import { CD_CORIA_PLAYERS, CD_CORIA_ESCUDO } from './data/cdCoriaPlayers';
 import { ATLETICO_MADRILENO_PLAYERS, ATLETICO_MADRILENO_ESCUDO } from './data/atleticoMadrilenoPlayers';
+import { CE_EUROPA_PLAYERS, CE_EUROPA_ESCUDO } from './data/ceEuropaPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -4269,6 +4270,7 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...JUVENTUD_TORREMOLINOS_PLAYERS,
   ...CD_CORIA_PLAYERS,
   ...ATLETICO_MADRILENO_PLAYERS,
+  ...CE_EUROPA_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4353,6 +4355,14 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'Atlético Madrileño',
       categoria: 'Primera RFEF',
       escudoUrl: ATLETICO_MADRILENO_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('ce europa') || player.equipo.toLowerCase().includes('club esportiu europa') || player.equipo === 'CE Europa' || player.equipo === 'Europa')) {
+    return {
+      ...player,
+      equipo: 'CE Europa',
+      categoria: 'Primera RFEF',
+      escudoUrl: CE_EUROPA_ESCUDO
     };
   }
   return player;
