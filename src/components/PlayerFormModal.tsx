@@ -130,6 +130,9 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
     if ((equipo || '').trim().toLowerCase().includes('pontevedra') && (!finalEscudoUrl || finalEscudoUrl.includes('1986.png'))) {
       finalEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
     }
+    if (((equipo || '').trim().toLowerCase().includes('mijas') || (equipo || '').trim().toLowerCase().includes('lagunas')) && !finalEscudoUrl) {
+      finalEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
+    }
 
     onSave({
       id: playerToEdit?.id,
@@ -219,7 +222,16 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                   type="text"
                   placeholder="Ej: FC Barcelona"
                   value={equipo}
-                  onChange={(e) => setEquipo(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEquipo(val);
+                    if (!escudoUrl || escudoUrl.trim() === '') {
+                      const lower = val.toLowerCase();
+                      if (lower.includes('mijas') || lower.includes('lagunas')) {
+                        setEscudoUrl('https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1');
+                      }
+                    }
+                  }}
                   className={`w-full text-xs px-3 py-2 bg-slate-900 text-white rounded border focus:outline-none focus:ring-1 ${
                     errors.equipo ? 'border-red-500 focus:ring-red-200' : 'border-slate-700 focus:ring-blue-500 focus:border-blue-500'
                   }`}

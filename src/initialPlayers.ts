@@ -9,6 +9,8 @@ import { JUVENTUD_TORREMOLINOS_PLAYERS, JUVENTUD_TORREMOLINOS_ESCUDO } from './d
 import { CD_CORIA_PLAYERS, CD_CORIA_ESCUDO } from './data/cdCoriaPlayers';
 import { ATLETICO_MADRILENO_PLAYERS, ATLETICO_MADRILENO_ESCUDO } from './data/atleticoMadrilenoPlayers';
 import { CE_EUROPA_PLAYERS, CE_EUROPA_ESCUDO } from './data/ceEuropaPlayers';
+import { ALGECIRAS_PLAYERS, ALGECIRAS_ESCUDO } from './data/algecirasPlayers';
+import { RM_CASTILLA_PLAYERS, RM_CASTILLA_ESCUDO } from './data/castillaPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -1281,33 +1283,6 @@ const RAW_PLAYERS: ScoutedPlayer[] = [
     tieneValorPor: 'POTENCIAL INTERNACIONAL.\nSÓLIDO BAJO PALOS.\nENVERGADURA DE ÉLITE.'
   },
   {
-    id: 'p38',
-    nombre: 'Sergio Mestre',
-    equipo: 'RM Castilla',
-    posicion: 'Portero',
-    anoNacimiento: 2005,
-    lateralidad: 'Diestro',
-    valorMercado: 400000,
-    calificacion: 3,
-    notas: 'Guardameta sobrio de buena envergadura, incorporado recientemente procedente de la cantera del Atlético de Madrid para reforzar la portería del Castilla.',
-    atributos: {
-      fisico: 8,
-      tecnica: 7,
-      tactica: 7,
-      mental: 7
-    },
-    fechaRegistro: '2026-06-06',
-    altura: '1.92 m',
-    recomendacion: 'SIN VALORAR',
-    recomendacionComentario: 'Arquero de gran colocación y regularidad. Útil para rotación de alto nivel competitivo.',
-    descripcionGeneral: 'Sergio Mestre destaca por mantener la concentración durante los 90 minutos y tener un posicionamiento excelente que minimiza la espectacularidad de sus paradas.',
-    fortalezas: 'Gran colocación bajo palos.\nSeguridad en el blocaje raseado.\nBuena velocidad de caída en tiros cruzados.',
-    debilidades: 'Margen de mejora en pases filtrados de larga distancia.\nTendencia a despejar de puños en vez de blocar en centros complicados.',
-    enSuEquipo: 'Aporta seguridad y una excelente alternativa competitiva aportando un gran fondo de plantilla bajo palos.',
-    enPocasPalabras: 'PORTERO SEGURO.\nCOLOCACIÓN SÓLIDA.\nCONCENTRACIÓN.\nREGULARIDAD.',
-    tieneValorPor: 'JUVENTUD Y ALTURA.\nPUNTOS TÁCTICOS SÓLIDOS.\nPROYECCIÓN SEGURA.'
-  },
-  {
     id: 'p39',
     nombre: 'Guille Súnico',
     equipo: 'RM Castilla',
@@ -1360,114 +1335,6 @@ const RAW_PLAYERS: ScoutedPlayer[] = [
     enSuEquipo: 'Suma contundencia aérea y rigor defensivo ante bloques de delanteros corpulentos.',
     enPocasPalabras: 'CORPULENCIA SÓLIDA.\nANTICIPACIÓN AÉREA.\nRIGOR POSICIONAL.\nCONTUNDENCIA.',
     tieneValorPor: 'ENVERGADURA DE 1.91M.\nMARCAJE INDIVIDUAL.\nESTADÍSTICA DE DETENCIÓN.'
-  },
-  {
-    id: 'p41',
-    nombre: 'Joan Martínez',
-    equipo: 'RM Castilla',
-    posicion: 'Defensa Central',
-    anoNacimiento: 2007,
-    lateralidad: 'Diestro',
-    valorMercado: 1500000,
-    calificacion: 5,
-    notas: 'Considerado una de las mayores promesas defensivas hispanas de la década. Comparado asiduamente por estilo e impacto defensivo con Sergio Ramos juvenil.',
-    atributos: {
-      fisico: 9,
-      tecnica: 8,
-      tactica: 9,
-      mental: 9
-    },
-    fechaRegistro: '2026-06-06',
-    altura: '1.89 m',
-    recomendacion: 'SIN VALORAR',
-    recomendacionComentario: 'Por tipo de jugador y proyección resulta un fichaje estratégico obligatorio. Futuro central de nivel Champions League y Selección Absoluta.',
-    descripcionGeneral: 'Joan Martínez combina velocidad estelar al corte, elasticidad corporal aérea portentosa, madurez posicional impropia para su corta edad y una elegancia constructiva única.',
-    fortalezas: 'Salto e impulso aéreo espectacular.\nRapidez de corrección en coberturas profundas.\nLiderazgo y templanza bajo máxima exigencia.\nSalida limpia con balón raseado o cambios cruzados.',
-    debilidades: 'Afinar la dosificación del ímpetu en cortes de entrada baja.\nEstructura corporal aún en periodo de desarrollo de volumen muscular.',
-    enSuEquipo: 'Ejerce de pilar defensivo, dinamizador táctico de líneas avanzadas y mariscal indiscutible.',
-    enPocasPalabras: 'TALENTO GENERACIONAL.\nLIRISTA TÁCTICO.\nIMPERIAL EN EL AIRE.\nCOBERTURA VELOZ.',
-    tieneValorPor: 'VERSATILIDAD DE RETORNO.\nSALIDA DE ESTILO ÉLITE.\nLIDERAZGO INNATO.'
-  },
-  {
-    id: 'p42',
-    nombre: 'Diego Aguado',
-    equipo: 'RM Castilla',
-    posicion: 'Defensa Central',
-    anoNacimiento: 2007,
-    lateralidad: 'Diestro',
-    valorMercado: 500000,
-    calificacion: 4,
-    notas: 'Central diestro de excelente coeficiente de intercepción inteligente y gran templanza para sostener la línea de zaga coordinada.',
-    atributos: {
-      fisico: 8,
-      tecnica: 7,
-      tactica: 8,
-      mental: 8
-    },
-    fechaRegistro: '2026-06-06',
-    altura: '1.86 m',
-    recomendacion: 'SIN VALORAR',
-    recomendacionComentario: 'Defensa moderno ideal para equipos de transiciones rápidas y presión asfixiante con líneas adelantadas.',
-    descripcionGeneral: 'Diego Aguado calcula los tiempos de anticipo con enorme destreza, lo que le permite limpiar jugadas o cortar pases filtrados rivales antes de que generen peligro directo.',
-    fortalezas: 'Intercepción inteligente sin falta.\nSalida limpia de balón en pase interior raseado.\nExcelente lectura tridimensional posicional.',
-    debilidades: 'Debe endurecer el choque corporal frente a tanques corpulentos de espaldas.\nMargen para aumentar volumen muscular de disputa.',
-    enSuEquipo: 'Asegura pases rápidos y limpios desde la retaguardia para iniciar rápidas contras en ataque.',
-    enPocasPalabras: 'INTERCEPCIÓN DE ÉLITE.\nLECTURA TÁCTICA.\nELEGANCIA DE INICIO.\nINTELIGENTE DEFENSA.',
-    tieneValorPor: 'APORTE ASOCIATIVO BAJO.\nVELOCIDAD DE ANTICIPACIÓN.\nCONTRAL CENTRAL SEGURO.'
-  },
-  {
-    id: 'p43',
-    nombre: 'Lamini Fati',
-    equipo: 'RM Castilla',
-    posicion: 'Defensa Central',
-    anoNacimiento: 2006,
-    lateralidad: 'Diestro',
-    valorMercado: 250000,
-    calificacion: 3,
-    notas: 'Central imponente, de gran fortaleza física y explosividad lineal en duelos de persecución a campo abierto.',
-    atributos: {
-      fisico: 9,
-      tecnica: 6,
-      tactica: 7,
-      mental: 7
-    },
-    fechaRegistro: '2026-06-06',
-    altura: '1.88 m',
-    recomendacion: 'SIN VALORAR',
-    recomendacionComentario: 'Su tremendo portento físico y elasticidad defensora rinde excelente en partidos de choque físico directo.',
-    descripcionGeneral: 'Lamini Fati anula al delantero centro mediante un marcaje pegajoso basado en su agilidad e impacto físico en duelos de salto vertical o sprint veloz.',
-    fortalezas: 'Físico explosivo imponente.\nDominio rápido de persecuciones lineales.\nGran poder de choque muscular en lomos.',
-    debilidades: 'Debe estructurar menor desorden táctico en salida de línea.\nPrecisión de distribución en largo.',
-    enSuEquipo: 'Aporta una fuerte presencia atlética, disuadiendo incursiones del delantero rival en el área.',
-    enPocasPalabras: 'ATLETA DE CONTENCIÓN.\nFUERZA FÍSICA.\nMARCAJE ASFIXIANTE.\nVELOCIDAD AL CORTE.',
-    tieneValorPor: 'CAPACIDAD FÍSICA EXTRAORDINARIA.\nRETORNO EN TRANSICIONES.\nCHOQUE DIRECTO.'
-  },
-  {
-    id: 'p44',
-    nombre: 'Mario Rivas',
-    equipo: 'RM Castilla',
-    posicion: 'Defensa Central',
-    anoNacimiento: 2007,
-    lateralidad: 'Diestro',
-    valorMercado: 200000,
-    calificacion: 3,
-    notas: 'Central disciplinado táctico, de excelente concentración continua, y solidario en coberturas inmediatas hacia el lateral de su bando.',
-    atributos: {
-      fisico: 7,
-      tecnica: 6,
-      tactica: 7,
-      mental: 8
-    },
-    fechaRegistro: '2026-06-06',
-    altura: '1.84 m',
-    recomendacion: 'SIN VALORAR',
-    recomendacionComentario: 'Jugador táctico de escasas estridencias, cumplidor bajo cualquier diseño de zaga.',
-    descripcionGeneral: 'Mario Rivas lee excelente los desplazamientos cruzados y se posiciona para neutralizar desmarques de apoyo sin perder de vista su marca individual.',
-    fortalezas: 'Excelente enfoque y rigor táctico continuado.\nSolidaridad impecable para coberturas.\nSencillez defensiva de bajísimo índice de pérdidas.',
-    debilidades: 'Menor alcance aéreo comparado con centrales de dos metros.\nVelocidad en repliegue alto intensivo.',
-    enSuEquipo: 'Es el baluarte de resguardo táctico que aporta equilibrio coordinado en la zaga.',
-    enPocasPalabras: 'CONCENTRACIÓN SÓLIDA.\nTÁCTICA SOBRIA.\nSEGURO DE MARCA.\nCOBERTURA CONSTANTE.',
-    tieneValorPor: 'DISCIPLINA DIRECTA.\nBENTAS TÁCTICOS SÓLIDOS.\nSOLIDEZ MENTAL GRUPAL.'
   },
   {
     id: 'p45',
@@ -2976,7 +2843,6 @@ const NUEVOS_PORTEROS_RAW = [
   { nombre: 'Samu Pérez', equipo: 'Antequera CF', anoNacimiento: 1997, altura: '1.88 m', lateralidad: 'Diestro' },
   { nombre: 'Manu García', equipo: 'Marbella FC', anoNacimiento: 1991, altura: '1.92 m', lateralidad: 'Diestro' },
   { nombre: 'P. Kudakovskiy', equipo: 'At. Sanluqueño', anoNacimiento: 2001, altura: '1.93 m', lateralidad: 'Diestro' },
-  { nombre: 'Iván Moreno', equipo: 'Algeciras CF', anoNacimiento: 1995, altura: '1.84 m', lateralidad: 'Diestro' },
   { nombre: 'Miquel Parera', equipo: 'Racing Ferrol', anoNacimiento: 1996, altura: '1.82 m', lateralidad: 'Diestro' },
   { nombre: 'Oriol Martí', equipo: 'Alcorcón', anoNacimiento: 2000, altura: '1.92 m', lateralidad: 'Diestro' },
   { nombre: 'Manu González', equipo: 'Betis Deportivo', anoNacimiento: 2007, altura: '1.89 m', lateralidad: 'Diestro' },
@@ -2993,7 +2859,6 @@ const NUEVOS_PORTEROS_RAW = [
   { nombre: 'O. Gastesi', equipo: 'Arenas de Getxo', anoNacimiento: 2003, altura: '1.90 m', lateralidad: 'Diestro' },
   { nombre: 'Padilla', equipo: 'Tenerife', anoNacimiento: 2003, altura: '1.81 m', lateralidad: 'Diestro' },
   { nombre: 'Pablo Valencia', equipo: 'Eldense', anoNacimiento: 2001, altura: '1.88 m', lateralidad: 'Diestro' },
-  { nombre: 'Tao Paradowski', equipo: 'UD Ibiza', anoNacimiento: 2005, altura: '1.80 m', lateralidad: 'Diestro' },
   { nombre: 'David Vassilev', equipo: 'Marbella FC', anoNacimiento: 2004, altura: '1.90 m', lateralidad: 'Diestro' },
   { nombre: 'Dani Vicente', equipo: 'CD Guadalajara', anoNacimiento: 2003, altura: '1.86 m', lateralidad: 'Diestro' },
   { nombre: 'Marco', equipo: 'Unionistas CF', anoNacimiento: 2004, altura: '1.87 m', lateralidad: 'Zurdo' },
@@ -4271,6 +4136,8 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...CD_CORIA_PLAYERS,
   ...ATLETICO_MADRILENO_PLAYERS,
   ...CE_EUROPA_PLAYERS,
+  ...ALGECIRAS_PLAYERS,
+  ...RM_CASTILLA_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4363,6 +4230,22 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'CE Europa',
       categoria: 'Primera RFEF',
       escudoUrl: CE_EUROPA_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('algeciras') || player.equipo === 'Algeciras CF' || player.equipo === 'Algeciras')) {
+    return {
+      ...player,
+      equipo: 'Algeciras CF',
+      categoria: 'Primera RFEF',
+      escudoUrl: ALGECIRAS_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('castilla') || player.equipo === 'RM Castilla' || player.equipo === 'Real Madrid Castilla')) {
+    return {
+      ...player,
+      equipo: 'RM Castilla',
+      categoria: 'Primera RFEF',
+      escudoUrl: RM_CASTILLA_ESCUDO
     };
   }
   return player;

@@ -54,6 +54,17 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'CE Europa': 'https://cdn.resfu.com/img_data/equipos/8760.png?size=120x&lossy=1',
   'Club Esportiu Europa': 'https://cdn.resfu.com/img_data/equipos/8760.png?size=120x&lossy=1',
   'Europa': 'https://cdn.resfu.com/img_data/equipos/8760.png?size=120x&lossy=1',
+  'Algeciras CF': 'https://cdn.resfu.com/img_data/equipos/166.png?size=120x&lossy=1',
+  'Algeciras': 'https://cdn.resfu.com/img_data/equipos/166.png?size=120x&lossy=1',
+  'RM Castilla': 'https://cdn.resfu.com/img_data/equipos/2170.png?size=120x&lossy=1',
+  'Real Madrid Castilla': 'https://cdn.resfu.com/img_data/equipos/2170.png?size=120x&lossy=1',
+  'Castilla': 'https://cdn.resfu.com/img_data/equipos/2170.png?size=120x&lossy=1',
+  'CP Mijas Las Lagunas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
+  'CP Mijas-Las Lagunas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
+  'Mijas Las Lagunas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
+  'CP Mijas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
+  'Mijas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
+  'Club Polideportivo Mijas Las Lagunas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -130,6 +141,21 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is CE Europa, override the logo explicitly
   if (teamNormal && (teamNormal.toLowerCase().includes('ce europa') || teamNormal.toLowerCase().includes('club esportiu europa') || teamNormal === 'CE Europa' || teamNormal === 'Europa')) {
     return 'https://cdn.resfu.com/img_data/equipos/8760.png?size=120x&lossy=1';
+  }
+
+  // If team is Algeciras CF, override the logo explicitly
+  if (teamNormal && (teamNormal.toLowerCase().includes('algeciras') || teamNormal === 'Algeciras CF' || teamNormal === 'Algeciras')) {
+    return 'https://cdn.resfu.com/img_data/equipos/166.png?size=120x&lossy=1';
+  }
+
+  // If team is RM Castilla, override the logo explicitly with 2170.png
+  if (teamNormal && (teamNormal.toLowerCase().includes('castilla') || teamNormal === 'RM Castilla' || teamNormal === 'Real Madrid Castilla')) {
+    return 'https://cdn.resfu.com/img_data/equipos/2170.png?size=120x&lossy=1';
+  }
+
+  // If team is CP Mijas Las Lagunas, override the logo explicitly with 8468.png
+  if (teamNormal && (teamNormal.toLowerCase().includes('mijas') || teamNormal.toLowerCase().includes('lagunas') || teamNormal === 'CP Mijas Las Lagunas' || teamNormal === 'CP Mijas-Las Lagunas')) {
+    return 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {

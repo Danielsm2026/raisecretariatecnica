@@ -83,7 +83,9 @@ export default function App() {
       'avi_09': 'p23', 'avi_10': 'p13', 'avi_11': 'p29', 'avi_12': 'p17',
       'avi_13': 'p33', 'avi_14': 'p18', 'avi_15': 'p25', 'avi_16': 'p28',
       'avi_17': 'p36', 'avi_18': 'p16', 'avi_19': 'p31', 'avi_20': 'p19',
-      'avi_21': 'p34', 'avi_22': 'p15'
+      'avi_21': 'p34', 'avi_22': 'p15',
+      'gk_algeciras_cf_ivan_moreno': 'p_algeciras_ivan_moreno',
+      'gk_ud_ibiza_tao_paradowski': 'p_algeciras_tao_paradowski'
     };
 
     // 1. First, explicitly remove any player with an 'avi_xx' ID if the corresponding 'pXX' exists in the list OR in INITIAL_PLAYERS
@@ -106,12 +108,24 @@ export default function App() {
       const team = (p.equipo === 'Real Avilés' || p.equipo === 'Real Avilés Industrial') ? 'Real Avilés Industrial' : p.equipo;
       const key = `${normName}_${team}`;
 
-      if (!seenKeys.has(key)) {
+      const existingIdx = unique.findIndex(u => {
+        const uNorm = u.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "").trim();
+        const uTeam = (u.equipo === 'Real Avilés' || u.equipo === 'Real Avilés Industrial') ? 'Real Avilés Industrial' : u.equipo;
+        return `${uNorm}_${uTeam}` === key;
+      });
+
+      if (existingIdx === -1) {
         seenKeys.add(key);
         unique.push(p);
       } else {
-        // If it's a duplicate, delete from Supabase if it's an extra one
-        if (p.id.startsWith('avi_')) {
+        // If the new one is richer (e.g. has dorsal or is from specialized dataset), swap it
+        if ((p.dorsal !== undefined && unique[existingIdx].dorsal === undefined) || p.id.startsWith('p_algeciras_') || p.id.startsWith('p_castilla_')) {
+          const oldId = unique[existingIdx].id;
+          unique[existingIdx] = p;
+          if (oldId !== p.id) {
+            dbDeletePlayer(oldId).catch(console.error);
+          }
+        } else if (p.id.startsWith('avi_') || p.id.startsWith('gk_')) {
           dbDeletePlayer(p.id).catch(console.error);
         }
       }
@@ -169,13 +183,26 @@ export default function App() {
           'p_rui_pedro', 'p_ander_vidorreta', 'p_adrian_argos',
           'p_ba_simon_garcia', 'p_ba23', 'p_ba13', 'p_ba_benat_larrea', 'p_ba_telmo_zarandona', 'p_ba03', 'p_ba06',
           'p_ba20', 'p_ba_dani_perez', 'p_ba_selton_sanchez', 'p_ba07', 'p_ba22', 'p_ba11', 'p_ba19', 'p_ba10', 'p_ba_elijah_gift',
-          'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_ba_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina',
+          'p_ba_aritz_conde', 'p_ba02', 'p_ba_aingeru_olabarrieta', 'p_ba24', 'p_ba_manex_lozano', 'p_asier_hierro', 'p_ba_igor_oyono', 'p_ba_txus_vizcay', 'p_ba_ander_pecina',
           'p_santi_franco',
           'p_mirandes_jesus_ruiz', 'p_mirandes_edgar_badia', 'p_mirandes_adrian_zango', 'p_mirandes_aritz_arambarri', 'p_mirandes_peru_rodriguez', 'p_mirandes_joaquin_fernandez', 'p_mirandes_hodei_arrillaga', 'p_mirandes_pablo_perez',
           'p_unionistas_emilio_bernad', 'p_unionistas_alex_daza', 'p_unionistas_christian_mutilva', 'p_unionistas_mikel_serrano', 'p_unionistas_ramiro_mayor', 'p_unionistas_alberto_retuerta', 'p_unionistas_gorka_rivera', 'p_unionistas_dani_morer', 'p_unionistas_abderrezzek_saidi', 'p_unionistas_arnau_casas', 'p_unionistas_juanma_lendinez', 'p_unionistas_alex_gil', 'p_unionistas_alejandro_marcelo', 'p_unionistas_luis_alcalde', 'p_unionistas_carlos_de_la_nava', 'p_unionistas_hugo_de_bustos', 'p_unionistas_alvaro_gomez', 'p_unionistas_dani_gonzalez', 'p_unionistas_pau_ferrer',
           'p_torremolinos_javi_belman', 'p_torremolinos_javi_cuenca', 'p_torremolinos_emin_grozdanic', 'p_torremolinos_matias_barboza', 'p_torremolinos_javi_merida', 'p_torremolinos_mamadouba_diaby', 'p_torremolinos_max_petersson', 'p_torremolinos_manu_sanchez', 'p_torremolinos_rodrigo_ajegun', 'p_torremolinos_cristian_rodriguez', 'p_torremolinos_angel_climent', 'p_torremolinos_wilfrid_kaptoum', 'p_torremolinos_dominique_moubeke', 'p_torremolinos_jose_antonio_bozada',
           'p_torremolinos_dani_gonzalez', 'p_torremolinos_oscar_buch', 'p_torremolinos_nico_njalla', 'p_torremolinos_pau_perez', 'p_torremolinos_ivan_laca', 'p_torremolinos_dioni_villalba',
-          'p_coria_aaron_alonso', 'p_coria_javi_garrido', 'p_coria_alberto_trapero', 'p_coria_inaki_leon', 'p_coria_jaime_calleja', 'p_coria_alvaro_dominguez', 'p_coria_jacobo_guzman', 'p_coria_marco_leiton', 'p_coria_jose_curras', 'p_coria_benji_nunez', 'p_coria_alex_blanco', 'p_coria_javi_tapia', 'p_coria_edu_llorente', 'p_coria_alberto_moreno', 'p_coria_sergio_gomez', 'p_coria_josu_gallastegui', 'p_coria_antonio_arcos', 'p_coria_alex_toper', 'p_coria_pau_palacin', 'p_coria_ivan_ramos'
+          'p_torremolinos_mateo_prevedini', 'p_torremolinos_martin_krug', 'p_torremolinos_julian_brandes',
+          'p_coria_aaron_alonso', 'p_coria_javi_garrido', 'p_coria_alberto_trapero', 'p_coria_inaki_leon', 'p_coria_jaime_calleja', 'p_coria_alvaro_dominguez', 'p_coria_jacobo_guzman', 'p_coria_marco_leiton', 'p_coria_jose_curras', 'p_coria_benji_nunez', 'p_coria_alex_blanco', 'p_coria_javi_tapia', 'p_coria_edu_llorente', 'p_coria_alberto_moreno', 'p_coria_sergio_gomez', 'p_coria_josu_gallastegui', 'p_coria_antonio_arcos', 'p_coria_alex_toper', 'p_coria_pau_palacin', 'p_coria_ivan_ramos',
+          'p_algeciras_ivan_moreno', 'p_algeciras_tao_paradowski', 'p_algeciras_fran_carmona', 'p_algeciras_angel_gomez', 'p_algeciras_victor_ruiz', 'p_algeciras_aleix_coch', 'p_algeciras_jose_carlos_marquez', 'p_algeciras_tomas_sanchez', 'p_algeciras_paris_adot',
+          'p_algeciras_jony_alamo', 'p_algeciras_toni_ramon', 'p_algeciras_oscar_castro', 'p_algeciras_ivan_turrillo', 'p_algeciras_diego_almeida', 'p_algeciras_dani_garrido',
+          'p_algeciras_joe_riley', 'p_algeciras_pau_martinez', 'p_algeciras_javi_aviles', 'p_algeciras_diego_iglesias', 'p_algeciras_raul_rubio', 'p_algeciras_juanma_garcia', 'p_algeciras_enrique_herrero',
+          'p_castilla_sergio_mestre', 'p_castilla_ferran_quetglas', 'p_castilla_diego_arroyo', 'p_castilla_javi_navarro',
+          'p_castilla_diego_aguado', 'p_castilla_joan_martinez', 'p_castilla_lamini_fati', 'p_castilla_mario_rivas',
+          'p_castilla_oscar_naasei', 'p_castilla_alvaro_lezcano', 'p_castilla_jesus_fortea',
+          'p_castilla_cristian_perea', 'p_castilla_jorge_cestero', 'p_castilla_sergio_martinez',
+          'p_castilla_roberto_martin', 'p_castilla_daniel_mesonero', 'p_castilla_izan_regueira',
+          'p_castilla_pol_fortuny', 'p_castilla_alexis_ciria', 'p_castilla_hugo_de_llanos',
+          'p_castilla_daniel_yanez', 'p_castilla_manex_rezola', 'p_castilla_alvaro_leiva',
+          'p_castilla_rachad_fettal', 'p_castilla_angel_carvajal',
+          'p37', 'p38', 'p39', 'p40', 'p41', 'p42', 'p43', 'p44', 'p45', 'p46', 'p47'
         ];
         if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
           localDeletedIds = localDeletedIds.filter(id => !forceKeepIds.includes(id));
@@ -408,6 +435,71 @@ export default function App() {
               updated = true;
             }
           }
+          const algecirasPlayerIds = [
+            'p_algeciras_ivan_moreno', 'p_algeciras_tao_paradowski', 'p_algeciras_fran_carmona',
+            'p_algeciras_angel_gomez', 'p_algeciras_victor_ruiz', 'p_algeciras_aleix_coch',
+            'p_algeciras_jose_carlos_marquez', 'p_algeciras_tomas_sanchez', 'p_algeciras_paris_adot',
+            'p_algeciras_jony_alamo', 'p_algeciras_toni_ramon', 'p_algeciras_oscar_castro',
+            'p_algeciras_ivan_turrillo', 'p_algeciras_diego_almeida', 'p_algeciras_dani_garrido',
+            'p_algeciras_joe_riley', 'p_algeciras_pau_martinez', 'p_algeciras_javi_aviles',
+            'p_algeciras_diego_iglesias', 'p_algeciras_raul_rubio', 'p_algeciras_juanma_garcia',
+            'p_algeciras_enrique_herrero'
+          ];
+          if (algecirasPlayerIds.includes(current.id) || (current.equipo?.includes('Algeciras') && ['iván moreno', 'ivan moreno', 'tao paradowski', 'fran carmona', 'ángel gómez', 'angel gomez', 'víctor ruiz', 'victor ruiz', 'aleix coch', 'josé carlos márquez', 'jose carlos marquez', 'tomás sánchez', 'tomas sanchez', 'paris adot', 'jony álamo', 'jony alamo', 'toni ramón', 'toni ramon', 'óscar castro', 'oscar castro', 'iván turrillo', 'ivan turrillo', 'diego almeida', 'dani garrido', 'joe riley', 'pau martínez', 'pau martinez', 'javi avilés', 'javi aviles', 'diego iglesias', 'raúl rubio', 'raul rubio', 'juanma garcía', 'juanma garcia', 'enrique herrero'].includes(current.nombre.toLowerCase().trim()))) {
+            const freshAlgeciras = INITIAL_PLAYERS.find(pl => pl.id === current.id || (pl.equipo === 'Algeciras CF' && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshAlgeciras) {
+              if (current.dorsal !== freshAlgeciras.dorsal || current.escudoUrl !== freshAlgeciras.escudoUrl || current.altura !== freshAlgeciras.altura || current.lateralidad !== freshAlgeciras.lateralidad || current.posicion !== freshAlgeciras.posicion) {
+                current = { ...current, ...freshAlgeciras };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('algeciras') || teamName === 'Algeciras CF' || teamName === 'Algeciras') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Algeciras CF') { current.equipo = 'Algeciras CF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/166.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          const castillaPlayerIds = [
+            'p_castilla_sergio_mestre', 'p_castilla_ferran_quetglas', 'p_castilla_diego_arroyo',
+            'p_castilla_javi_navarro', 'p_castilla_diego_aguado', 'p_castilla_joan_martinez',
+            'p_castilla_lamini_fati', 'p_castilla_mario_rivas', 'p_castilla_oscar_naasei',
+            'p_castilla_alvaro_lezcano', 'p_castilla_jesus_fortea',
+            'p_castilla_cristian_perea', 'p_castilla_jorge_cestero', 'p_castilla_sergio_martinez',
+            'p_castilla_roberto_martin', 'p_castilla_daniel_mesonero', 'p_castilla_izan_regueira',
+            'p_castilla_pol_fortuny', 'p_castilla_alexis_ciria', 'p_castilla_hugo_de_llanos',
+            'p_castilla_daniel_yanez', 'p_castilla_manex_rezola', 'p_castilla_alvaro_leiva',
+            'p_castilla_rachad_fettal', 'p_castilla_angel_carvajal',
+            'p37', 'p38', 'p39', 'p40', 'p41', 'p42', 'p43', 'p44', 'p45', 'p46', 'p47'
+          ];
+          if (castillaPlayerIds.includes(current.id) || (current.equipo?.includes('Castilla') && ['sergio mestre', 'ferran quetglas', 'ferran quetglás', 'diego arroyo', 'javi navarro', 'diego aguado', 'joan martinez', 'joan martínez', 'lamini fati', 'mario rivas', 'oscar naasei', 'alvaro lezcano', 'álvaro lezcano', 'jesus fortea', 'jesús fortea', 'cristian perea', 'jorge cestero', 'sergio martinez', 'sergio martínez', 'roberto martin', 'roberto martín', 'daniel mesonero', 'izan regueira', 'pol fortuny', 'alexis ciria', 'hugo de llanos', 'daniel yanez', 'daniel yáñez', 'manex rezola', 'alvaro leiva', 'álvaro leiva', 'rachad fettal', 'angel carvajal', 'ángel carvajal'].includes(current.nombre.toLowerCase().trim()))) {
+            const freshCastilla = INITIAL_PLAYERS.find(pl => pl.id === current.id || ((pl.equipo === 'RM Castilla' || pl.equipo?.includes('Castilla')) && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshCastilla) {
+              if (current.dorsal !== freshCastilla.dorsal || current.escudoUrl !== freshCastilla.escudoUrl || current.altura !== freshCastilla.altura || current.lateralidad !== freshCastilla.lateralidad || current.posicion !== freshCastilla.posicion || current.categoria !== freshCastilla.categoria) {
+                current = { ...current, ...freshCastilla };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('castilla') || teamName === 'RM Castilla' || teamName === 'Real Madrid Castilla') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'RM Castilla') { current.equipo = 'RM Castilla'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2170.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('mijas') || teamName.toLowerCase().includes('lagunas') || teamName === 'CP Mijas Las Lagunas' || teamName === 'CP Mijas-Las Lagunas') {
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(err => {
@@ -593,7 +685,20 @@ export default function App() {
           'p_unionistas_emilio_bernad', 'p_unionistas_alex_daza', 'p_unionistas_christian_mutilva', 'p_unionistas_mikel_serrano', 'p_unionistas_ramiro_mayor', 'p_unionistas_alberto_retuerta', 'p_unionistas_gorka_rivera', 'p_unionistas_dani_morer', 'p_unionistas_abderrezzek_saidi', 'p_unionistas_arnau_casas', 'p_unionistas_juanma_lendinez', 'p_unionistas_alex_gil', 'p_unionistas_alejandro_marcelo', 'p_unionistas_luis_alcalde', 'p_unionistas_carlos_de_la_nava', 'p_unionistas_hugo_de_bustos', 'p_unionistas_alvaro_gomez', 'p_unionistas_dani_gonzalez', 'p_unionistas_pau_ferrer',
           'p_torremolinos_javi_belman', 'p_torremolinos_javi_cuenca', 'p_torremolinos_emin_grozdanic', 'p_torremolinos_matias_barboza', 'p_torremolinos_javi_merida', 'p_torremolinos_mamadouba_diaby', 'p_torremolinos_max_petersson', 'p_torremolinos_manu_sanchez', 'p_torremolinos_rodrigo_ajegun', 'p_torremolinos_cristian_rodriguez', 'p_torremolinos_angel_climent', 'p_torremolinos_wilfrid_kaptoum', 'p_torremolinos_dominique_moubeke', 'p_torremolinos_jose_antonio_bozada',
           'p_torremolinos_dani_gonzalez', 'p_torremolinos_oscar_buch', 'p_torremolinos_nico_njalla', 'p_torremolinos_pau_perez', 'p_torremolinos_ivan_laca', 'p_torremolinos_dioni_villalba',
-          'p_coria_aaron_alonso', 'p_coria_javi_garrido', 'p_coria_alberto_trapero', 'p_coria_inaki_leon', 'p_coria_jaime_calleja', 'p_coria_alvaro_dominguez', 'p_coria_jacobo_guzman', 'p_coria_marco_leiton', 'p_coria_jose_curras', 'p_coria_benji_nunez', 'p_coria_alex_blanco', 'p_coria_javi_tapia', 'p_coria_edu_llorente', 'p_coria_alberto_moreno', 'p_coria_sergio_gomez', 'p_coria_josu_gallastegui', 'p_coria_antonio_arcos', 'p_coria_alex_toper', 'p_coria_pau_palacin', 'p_coria_ivan_ramos'
+          'p_torremolinos_mateo_prevedini', 'p_torremolinos_martin_krug', 'p_torremolinos_julian_brandes',
+          'p_coria_aaron_alonso', 'p_coria_javi_garrido', 'p_coria_alberto_trapero', 'p_coria_inaki_leon', 'p_coria_jaime_calleja', 'p_coria_alvaro_dominguez', 'p_coria_jacobo_guzman', 'p_coria_marco_leiton', 'p_coria_jose_curras', 'p_coria_benji_nunez', 'p_coria_alex_blanco', 'p_coria_javi_tapia', 'p_coria_edu_llorente', 'p_coria_alberto_moreno', 'p_coria_sergio_gomez', 'p_coria_josu_gallastegui', 'p_coria_antonio_arcos', 'p_coria_alex_toper', 'p_coria_pau_palacin', 'p_coria_ivan_ramos',
+          'p_algeciras_ivan_moreno', 'p_algeciras_tao_paradowski', 'p_algeciras_fran_carmona', 'p_algeciras_angel_gomez', 'p_algeciras_victor_ruiz', 'p_algeciras_aleix_coch', 'p_algeciras_jose_carlos_marquez', 'p_algeciras_tomas_sanchez', 'p_algeciras_paris_adot',
+          'p_algeciras_jony_alamo', 'p_algeciras_toni_ramon', 'p_algeciras_oscar_castro', 'p_algeciras_ivan_turrillo', 'p_algeciras_diego_almeida', 'p_algeciras_dani_garrido',
+          'p_algeciras_joe_riley', 'p_algeciras_pau_martinez', 'p_algeciras_javi_aviles', 'p_algeciras_diego_iglesias', 'p_algeciras_raul_rubio', 'p_algeciras_juanma_garcia', 'p_algeciras_enrique_herrero',
+          'p_castilla_sergio_mestre', 'p_castilla_ferran_quetglas', 'p_castilla_diego_arroyo', 'p_castilla_javi_navarro',
+          'p_castilla_diego_aguado', 'p_castilla_joan_martinez', 'p_castilla_lamini_fati', 'p_castilla_mario_rivas',
+          'p_castilla_oscar_naasei', 'p_castilla_alvaro_lezcano', 'p_castilla_jesus_fortea',
+          'p_castilla_cristian_perea', 'p_castilla_jorge_cestero', 'p_castilla_sergio_martinez',
+          'p_castilla_roberto_martin', 'p_castilla_daniel_mesonero', 'p_castilla_izan_regueira',
+          'p_castilla_pol_fortuny', 'p_castilla_alexis_ciria', 'p_castilla_hugo_de_llanos',
+          'p_castilla_daniel_yanez', 'p_castilla_manex_rezola', 'p_castilla_alvaro_leiva',
+          'p_castilla_rachad_fettal', 'p_castilla_angel_carvajal',
+          'p37', 'p38', 'p39', 'p40', 'p41', 'p42', 'p43', 'p44', 'p45', 'p46', 'p47'
         ];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
           deletedIds = deletedIds.filter(id => !forceKeepIds.includes(id));
@@ -747,6 +852,71 @@ export default function App() {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             if (current.equipo !== 'CE Europa') { current.equipo = 'CE Europa'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/8760.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          const algecirasPlayerIds = [
+            'p_algeciras_ivan_moreno', 'p_algeciras_tao_paradowski', 'p_algeciras_fran_carmona',
+            'p_algeciras_angel_gomez', 'p_algeciras_victor_ruiz', 'p_algeciras_aleix_coch',
+            'p_algeciras_jose_carlos_marquez', 'p_algeciras_tomas_sanchez', 'p_algeciras_paris_adot',
+            'p_algeciras_jony_alamo', 'p_algeciras_toni_ramon', 'p_algeciras_oscar_castro',
+            'p_algeciras_ivan_turrillo', 'p_algeciras_diego_almeida', 'p_algeciras_dani_garrido',
+            'p_algeciras_joe_riley', 'p_algeciras_pau_martinez', 'p_algeciras_javi_aviles',
+            'p_algeciras_diego_iglesias', 'p_algeciras_raul_rubio', 'p_algeciras_juanma_garcia',
+            'p_algeciras_enrique_herrero'
+          ];
+          if (algecirasPlayerIds.includes(current.id) || (current.equipo?.includes('Algeciras') && ['iván moreno', 'ivan moreno', 'tao paradowski', 'fran carmona', 'ángel gómez', 'angel gomez', 'víctor ruiz', 'victor ruiz', 'aleix coch', 'josé carlos márquez', 'jose carlos marquez', 'tomás sánchez', 'tomas sanchez', 'paris adot', 'jony álamo', 'jony alamo', 'toni ramón', 'toni ramon', 'óscar castro', 'oscar castro', 'iván turrillo', 'ivan turrillo', 'diego almeida', 'dani garrido', 'joe riley', 'pau martínez', 'pau martinez', 'javi avilés', 'javi aviles', 'diego iglesias', 'raúl rubio', 'raul rubio', 'juanma garcía', 'juanma garcia', 'enrique herrero'].includes(current.nombre.toLowerCase().trim()))) {
+            const freshAlgeciras = INITIAL_PLAYERS.find(pl => pl.id === current.id || (pl.equipo === 'Algeciras CF' && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshAlgeciras) {
+              if (current.dorsal !== freshAlgeciras.dorsal || current.escudoUrl !== freshAlgeciras.escudoUrl || current.altura !== freshAlgeciras.altura || current.lateralidad !== freshAlgeciras.lateralidad || current.posicion !== freshAlgeciras.posicion) {
+                current = { ...current, ...freshAlgeciras };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('algeciras') || teamName === 'Algeciras CF' || teamName === 'Algeciras') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Algeciras CF') { current.equipo = 'Algeciras CF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/166.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          const castillaPlayerIds = [
+            'p_castilla_sergio_mestre', 'p_castilla_ferran_quetglas', 'p_castilla_diego_arroyo',
+            'p_castilla_javi_navarro', 'p_castilla_diego_aguado', 'p_castilla_joan_martinez',
+            'p_castilla_lamini_fati', 'p_castilla_mario_rivas', 'p_castilla_oscar_naasei',
+            'p_castilla_alvaro_lezcano', 'p_castilla_jesus_fortea',
+            'p_castilla_cristian_perea', 'p_castilla_jorge_cestero', 'p_castilla_sergio_martinez',
+            'p_castilla_roberto_martin', 'p_castilla_daniel_mesonero', 'p_castilla_izan_regueira',
+            'p_castilla_pol_fortuny', 'p_castilla_alexis_ciria', 'p_castilla_hugo_de_llanos',
+            'p_castilla_daniel_yanez', 'p_castilla_manex_rezola', 'p_castilla_alvaro_leiva',
+            'p_castilla_rachad_fettal', 'p_castilla_angel_carvajal',
+            'p37', 'p38', 'p39', 'p40', 'p41', 'p42', 'p43', 'p44', 'p45', 'p46', 'p47'
+          ];
+          if (castillaPlayerIds.includes(current.id) || (current.equipo?.includes('Castilla') && ['sergio mestre', 'ferran quetglas', 'ferran quetglás', 'diego arroyo', 'javi navarro', 'diego aguado', 'joan martinez', 'joan martínez', 'lamini fati', 'mario rivas', 'oscar naasei', 'alvaro lezcano', 'álvaro lezcano', 'jesus fortea', 'jesús fortea', 'cristian perea', 'jorge cestero', 'sergio martinez', 'sergio martínez', 'roberto martin', 'roberto martín', 'daniel mesonero', 'izan regueira', 'pol fortuny', 'alexis ciria', 'hugo de llanos', 'daniel yanez', 'daniel yáñez', 'manex rezola', 'alvaro leiva', 'álvaro leiva', 'rachad fettal', 'angel carvajal', 'ángel carvajal'].includes(current.nombre.toLowerCase().trim()))) {
+            const freshCastilla = INITIAL_PLAYERS.find(pl => pl.id === current.id || ((pl.equipo === 'RM Castilla' || pl.equipo?.includes('Castilla')) && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshCastilla) {
+              if (current.dorsal !== freshCastilla.dorsal || current.escudoUrl !== freshCastilla.escudoUrl || current.altura !== freshCastilla.altura || current.lateralidad !== freshCastilla.lateralidad || current.posicion !== freshCastilla.posicion || current.categoria !== freshCastilla.categoria) {
+                current = { ...current, ...freshCastilla };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('castilla') || teamName === 'RM Castilla' || teamName === 'Real Madrid Castilla') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'RM Castilla') { current.equipo = 'RM Castilla'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2170.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('mijas') || teamName.toLowerCase().includes('lagunas') || teamName === 'CP Mijas Las Lagunas' || teamName === 'CP Mijas-Las Lagunas') {
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
@@ -1013,6 +1183,12 @@ export default function App() {
       const targetTeam = playerData.equipo.trim().toLowerCase();
       if (targetTeam.includes('pontevedra')) {
         resolvedEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/1997.png?size=120x&lossy=1';
+      } else if (targetTeam.includes('algeciras')) {
+        resolvedEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/166.png?size=120x&lossy=1';
+      } else if (targetTeam.includes('castilla')) {
+        resolvedEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/2170.png?size=120x&lossy=1';
+      } else if (targetTeam.includes('mijas') || targetTeam.includes('lagunas')) {
+        resolvedEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
       } else {
         // First, look for any other player in the list who has a non-empty escudoUrl for this team
         const existingTeamPlayer = players.find(
