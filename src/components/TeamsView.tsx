@@ -166,6 +166,9 @@ export function PositionLegendBar() {
 
 // Helper to get a realistic 2-digit dorsal number from a player ID or name
 function getPlayerDorsal(player: ScoutedPlayer): string {
+  if (player.dorsal !== undefined && player.dorsal !== null) {
+    return player.dorsal.toString().padStart(2, '0');
+  }
   const matches = player.id.match(/\d+/);
   if (matches) {
     const num = parseInt(matches[0], 10);

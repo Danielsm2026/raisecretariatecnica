@@ -11,6 +11,8 @@ import { ATLETICO_MADRILENO_PLAYERS, ATLETICO_MADRILENO_ESCUDO } from './data/at
 import { CE_EUROPA_PLAYERS, CE_EUROPA_ESCUDO } from './data/ceEuropaPlayers';
 import { ALGECIRAS_PLAYERS, ALGECIRAS_ESCUDO } from './data/algecirasPlayers';
 import { RM_CASTILLA_PLAYERS, RM_CASTILLA_ESCUDO } from './data/castillaPlayers';
+import { REAL_OVIEDO_VETUSTA_PLAYERS, REAL_OVIEDO_VETUSTA_ESCUDO } from './data/realOviedoVetustaPlayers';
+import { EIBAR_B_PLAYERS, EIBAR_B_ESCUDO } from './data/eibarBPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -4138,6 +4140,8 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...CE_EUROPA_PLAYERS,
   ...ALGECIRAS_PLAYERS,
   ...RM_CASTILLA_PLAYERS,
+  ...REAL_OVIEDO_VETUSTA_PLAYERS,
+  ...EIBAR_B_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4246,6 +4250,22 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'RM Castilla',
       categoria: 'Primera RFEF',
       escudoUrl: RM_CASTILLA_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('vetusta') || player.equipo === 'Real Oviedo Vetusta' || player.equipo === 'Oviedo Vetusta' || player.equipo === 'Real Oviedo B')) {
+    return {
+      ...player,
+      equipo: 'Real Oviedo Vetusta',
+      categoria: 'Segunda RFEF',
+      escudoUrl: REAL_OVIEDO_VETUSTA_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('eibar b') || player.equipo.toLowerCase().includes('eibar "b"') || player.equipo === 'Eibar B' || player.equipo === 'SD Eibar B')) {
+    return {
+      ...player,
+      equipo: 'Eibar B',
+      categoria: 'Segunda RFEF',
+      escudoUrl: EIBAR_B_ESCUDO
     };
   }
   return player;

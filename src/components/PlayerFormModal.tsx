@@ -133,6 +133,9 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
     if (((equipo || '').trim().toLowerCase().includes('mijas') || (equipo || '').trim().toLowerCase().includes('lagunas')) && !finalEscudoUrl) {
       finalEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
     }
+    if ((equipo || '').trim().toLowerCase().includes('vetusta') && !finalEscudoUrl) {
+      finalEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1';
+    }
 
     onSave({
       id: playerToEdit?.id,
@@ -229,6 +232,8 @@ export default function PlayerFormModal({ isOpen, onClose, onSave, onDeletePlaye
                       const lower = val.toLowerCase();
                       if (lower.includes('mijas') || lower.includes('lagunas')) {
                         setEscudoUrl('https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1');
+                      } else if (lower.includes('vetusta') || lower.includes('oviedo vetusta')) {
+                        setEscudoUrl('https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1');
                       }
                     }
                   }}

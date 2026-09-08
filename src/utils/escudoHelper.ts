@@ -65,6 +65,15 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'CP Mijas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
   'Mijas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
   'Club Polideportivo Mijas Las Lagunas': 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1',
+  'Real Oviedo Vetusta': 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1',
+  'Oviedo Vetusta': 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1',
+  'Vetusta': 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1',
+  'Real Oviedo B': 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1',
+  'Eibar B': 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1',
+  'SD Eibar B': 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1',
+  'Eibar "B"': 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1',
+  'SD Eibar': 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1',
+  'Eibar': 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -156,6 +165,16 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is CP Mijas Las Lagunas, override the logo explicitly with 8468.png
   if (teamNormal && (teamNormal.toLowerCase().includes('mijas') || teamNormal.toLowerCase().includes('lagunas') || teamNormal === 'CP Mijas Las Lagunas' || teamNormal === 'CP Mijas-Las Lagunas')) {
     return 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
+  }
+
+  // If team is Real Oviedo Vetusta, override the logo explicitly with 4646.png
+  if (teamNormal && (teamNormal.toLowerCase().includes('vetusta') || teamNormal === 'Real Oviedo Vetusta' || teamNormal === 'Oviedo Vetusta' || teamNormal === 'Real Oviedo B')) {
+    return 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1';
+  }
+
+  // If team is Eibar B, override the logo explicitly with 958.png
+  if (teamNormal && (teamNormal.toLowerCase().includes('eibar') || teamNormal === 'Eibar B' || teamNormal === 'SD Eibar B')) {
+    return 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {

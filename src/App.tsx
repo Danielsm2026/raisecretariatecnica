@@ -202,6 +202,21 @@ export default function App() {
           'p_castilla_pol_fortuny', 'p_castilla_alexis_ciria', 'p_castilla_hugo_de_llanos',
           'p_castilla_daniel_yanez', 'p_castilla_manex_rezola', 'p_castilla_alvaro_leiva',
           'p_castilla_rachad_fettal', 'p_castilla_angel_carvajal',
+          'p_oviedo_vetusta_mate_sauri', 'p_oviedo_vetusta_samu_franganillo', 'p_oviedo_vetusta_alvaro_rodriguez',
+          'p_oviedo_vetusta_diego_espinosa', 'p_oviedo_vetusta_iker_navarro', 'p_oviedo_vetusta_adrian_lopes',
+          'p_oviedo_vetusta_hector_gonzalez', 'p_oviedo_vetusta_omar_falah', 'p_oviedo_vetusta_arturo_arribas',
+          'p_oviedo_vetusta_martin_lavilla', 'p_oviedo_vetusta_miguel_gonzalez', 'p_oviedo_vetusta_adrian_fernandez',
+          'p_oviedo_vetusta_cheli_pereda', 'p_oviedo_vetusta_ot_remolins', 'p_oviedo_vetusta_gerard_marquez',
+          'p_oviedo_vetusta_jaime_fuentes', 'p_oviedo_vetusta_isi_angulo', 'p_oviedo_vetusta_lamine_gueye',
+          'p_oviedo_vetusta_miguel_claveria', 'p_oviedo_vetusta_oscar_de_la_hera', 'p_oviedo_vetusta_jaime_coballes',
+          'p_oviedo_vetusta_pelayo_garcia',
+          'p_eibar_b_joseba_bermejo', 'p_eibar_b_marc_marroco', 'p_eibar_b_oier_llorente',
+          'p_eibar_b_galder_herranz', 'p_eibar_b_xavier_pastor', 'p_eibar_b_haritz_ortuzar',
+          'p_eibar_b_hugo_rastrilla', 'p_eibar_b_llorenc_ferres', 'p_eibar_b_iker_otadui',
+          'p_eibar_b_asier_santolaya', 'p_eibar_b_oscar_garcia', 'p_eibar_b_unax_bernal',
+          'p_eibar_b_jon_andoni_gromaz', 'p_eibar_b_iker_zubiria', 'p_eibar_b_unai_garces',
+          'p_eibar_b_carlos_lumbreras', 'p_eibar_b_marcos_sotelo', 'p_eibar_b_mario_fuente',
+          'p_eibar_b_miguel_alvarez',
           'p37', 'p38', 'p39', 'p40', 'p41', 'p42', 'p43', 'p44', 'p45', 'p46', 'p47'
         ];
         if (localDeletedIds.some(id => forceKeepIds.includes(id))) {
@@ -500,6 +515,15 @@ export default function App() {
               updated = true;
             }
           }
+          if (teamName.toLowerCase().includes('vetusta') || teamName === 'Real Oviedo Vetusta' || teamName === 'Oviedo Vetusta' || teamName === 'Real Oviedo B') {
+            if (current.categoria !== 'Segunda RFEF') { current.categoria = 'Segunda RFEF'; updated = true; }
+            if (current.equipo !== 'Real Oviedo Vetusta') { current.equipo = 'Real Oviedo Vetusta'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(err => {
@@ -698,6 +722,21 @@ export default function App() {
           'p_castilla_pol_fortuny', 'p_castilla_alexis_ciria', 'p_castilla_hugo_de_llanos',
           'p_castilla_daniel_yanez', 'p_castilla_manex_rezola', 'p_castilla_alvaro_leiva',
           'p_castilla_rachad_fettal', 'p_castilla_angel_carvajal',
+          'p_oviedo_vetusta_mate_sauri', 'p_oviedo_vetusta_samu_franganillo', 'p_oviedo_vetusta_alvaro_rodriguez',
+          'p_oviedo_vetusta_diego_espinosa', 'p_oviedo_vetusta_iker_navarro', 'p_oviedo_vetusta_adrian_lopes',
+          'p_oviedo_vetusta_hector_gonzalez', 'p_oviedo_vetusta_omar_falah', 'p_oviedo_vetusta_arturo_arribas',
+          'p_oviedo_vetusta_martin_lavilla', 'p_oviedo_vetusta_miguel_gonzalez', 'p_oviedo_vetusta_adrian_fernandez',
+          'p_oviedo_vetusta_cheli_pereda', 'p_oviedo_vetusta_ot_remolins', 'p_oviedo_vetusta_gerard_marquez',
+          'p_oviedo_vetusta_jaime_fuentes', 'p_oviedo_vetusta_isi_angulo', 'p_oviedo_vetusta_lamine_gueye',
+          'p_oviedo_vetusta_miguel_claveria', 'p_oviedo_vetusta_oscar_de_la_hera', 'p_oviedo_vetusta_jaime_coballes',
+          'p_oviedo_vetusta_pelayo_garcia',
+          'p_eibar_b_joseba_bermejo', 'p_eibar_b_marc_marroco', 'p_eibar_b_oier_llorente',
+          'p_eibar_b_galder_herranz', 'p_eibar_b_xavier_pastor', 'p_eibar_b_haritz_ortuzar',
+          'p_eibar_b_hugo_rastrilla', 'p_eibar_b_llorenc_ferres', 'p_eibar_b_iker_otadui',
+          'p_eibar_b_asier_santolaya', 'p_eibar_b_oscar_garcia', 'p_eibar_b_unax_bernal',
+          'p_eibar_b_jon_andoni_gromaz', 'p_eibar_b_iker_zubiria', 'p_eibar_b_unai_garces',
+          'p_eibar_b_carlos_lumbreras', 'p_eibar_b_marcos_sotelo', 'p_eibar_b_mario_fuente',
+          'p_eibar_b_miguel_alvarez',
           'p37', 'p38', 'p39', 'p40', 'p41', 'p42', 'p43', 'p44', 'p45', 'p46', 'p47'
         ];
         if (deletedIds.some(id => forceKeepIds.includes(id))) {
@@ -917,6 +956,15 @@ export default function App() {
           }
           if (teamName.toLowerCase().includes('mijas') || teamName.toLowerCase().includes('lagunas') || teamName === 'CP Mijas Las Lagunas' || teamName === 'CP Mijas-Las Lagunas') {
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (teamName.toLowerCase().includes('vetusta') || teamName === 'Real Oviedo Vetusta' || teamName === 'Oviedo Vetusta' || teamName === 'Real Oviedo B') {
+            if (current.categoria !== 'Segunda RFEF') { current.categoria = 'Segunda RFEF'; updated = true; }
+            if (current.equipo !== 'Real Oviedo Vetusta') { current.equipo = 'Real Oviedo Vetusta'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
@@ -1189,6 +1237,8 @@ export default function App() {
         resolvedEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/2170.png?size=120x&lossy=1';
       } else if (targetTeam.includes('mijas') || targetTeam.includes('lagunas')) {
         resolvedEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/8468.png?size=120x&lossy=1';
+      } else if (targetTeam.includes('vetusta') || targetTeam.includes('oviedo vetusta')) {
+        resolvedEscudoUrl = 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1';
       } else {
         // First, look for any other player in the list who has a non-empty escudoUrl for this team
         const existingTeamPlayer = players.find(
