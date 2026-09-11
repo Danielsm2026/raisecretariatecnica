@@ -1015,7 +1015,9 @@ export default function TeamsView({
         onClose={() => setPlayerToDelete(null)}
         onConfirm={() => {
           if (playerToDelete) {
-            onDeletePlayer(playerToDelete.id);
+            const idToDelete = playerToDelete.id;
+            setPlayerToDelete(null);
+            onDeletePlayer(idToDelete);
           }
         }}
         title="Eliminar Prospecto"

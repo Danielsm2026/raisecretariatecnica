@@ -358,7 +358,9 @@ export default function PlayerTable({
         onClose={() => setPlayerToDelete(null)}
         onConfirm={() => {
           if (playerToDelete && onDeletePlayer) {
-            onDeletePlayer(playerToDelete.id);
+            const idToDelete = playerToDelete.id;
+            setPlayerToDelete(null);
+            onDeletePlayer(idToDelete);
           }
         }}
         title="Eliminar Prospecto"
