@@ -74,6 +74,9 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Eibar "B"': 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1',
   'SD Eibar': 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1',
   'Eibar': 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1',
+  'Real Murcia CF': 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1',
+  'Real Murcia': 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1',
+  'Murcia': 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -175,6 +178,11 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is Eibar B, override the logo explicitly with 958.png
   if (teamNormal && (teamNormal.toLowerCase().includes('eibar') || teamNormal === 'Eibar B' || teamNormal === 'SD Eibar B')) {
     return 'https://cdn.resfu.com/img_data/equipos/958.png?size=120x&lossy=1';
+  }
+
+  // If team is Real Murcia CF, override the logo explicitly with 2113.png
+  if (teamNormal && (teamNormal.toLowerCase().includes('murcia') || teamNormal === 'Real Murcia CF' || teamNormal === 'Real Murcia')) {
+    return 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {

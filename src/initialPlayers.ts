@@ -13,6 +13,7 @@ import { ALGECIRAS_PLAYERS, ALGECIRAS_ESCUDO } from './data/algecirasPlayers';
 import { RM_CASTILLA_PLAYERS, RM_CASTILLA_ESCUDO } from './data/castillaPlayers';
 import { REAL_OVIEDO_VETUSTA_PLAYERS, REAL_OVIEDO_VETUSTA_ESCUDO } from './data/realOviedoVetustaPlayers';
 import { EIBAR_B_PLAYERS, EIBAR_B_ESCUDO } from './data/eibarBPlayers';
+import { REAL_MURCIA_PLAYERS, REAL_MURCIA_ESCUDO } from './data/realMurciaPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -2810,7 +2811,6 @@ const CP_CACERENO_PLAYERS: ScoutedPlayer[] = [
 ];
 
 const NUEVOS_PORTEROS_RAW = [
-  { nombre: 'Dani Jiménez', equipo: 'Real Murcia', anoNacimiento: 1990, altura: '1.79 m', lateralidad: 'Diestro' },
   { nombre: 'K. Armesto', equipo: 'Eldense', anoNacimiento: 1997, altura: '1.86 m', lateralidad: 'Diestro' },
   { nombre: 'Dani Martín', equipo: 'Tenerife', anoNacimiento: 1998, altura: '1.87 m', lateralidad: 'Diestro' },
   { nombre: 'Andrés Prieto', equipo: 'Ponferradina', anoNacimiento: 1993, altura: '1.94 m', lateralidad: 'Diestro' },
@@ -2856,7 +2856,6 @@ const NUEVOS_PORTEROS_RAW = [
   { nombre: 'Nil Ruiz', equipo: 'CE Sabadell', anoNacimiento: 2003, altura: '1.90 m', lateralidad: 'Diestro' },
   { nombre: 'José Ortega', equipo: 'CE Sabadell', anoNacimiento: 1991, altura: '1.85 m', lateralidad: 'Diestro' },
   { nombre: 'Ángel Jiménez', equipo: 'Ponferradina', anoNacimiento: 2002, altura: '1.94 m', lateralidad: 'Diestro' },
-  { nickname: 'Diego Piñeiro', nombre: 'Diego Piñeiro', equipo: 'Real Murcia', anoNacimiento: 2004, altura: '1.85 m', lateralidad: 'Diestro' },
   { nombre: 'Dani Alcover', equipo: 'Antequera CF', anoNacimiento: 2004, altura: '1.85 m', lateralidad: 'Diestro' },
   { nombre: 'O. Gastesi', equipo: 'Arenas de Getxo', anoNacimiento: 2003, altura: '1.90 m', lateralidad: 'Diestro' },
   { nombre: 'Padilla', equipo: 'Tenerife', anoNacimiento: 2003, altura: '1.81 m', lateralidad: 'Diestro' },
@@ -4142,6 +4141,7 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...RM_CASTILLA_PLAYERS,
   ...REAL_OVIEDO_VETUSTA_PLAYERS,
   ...EIBAR_B_PLAYERS,
+  ...REAL_MURCIA_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4266,6 +4266,14 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'Eibar B',
       categoria: 'Segunda RFEF',
       escudoUrl: EIBAR_B_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('murcia') || player.equipo === 'Real Murcia' || player.equipo === 'Real Murcia CF')) {
+    return {
+      ...player,
+      equipo: 'Real Murcia CF',
+      categoria: 'Primera RFEF',
+      escudoUrl: REAL_MURCIA_ESCUDO
     };
   }
   return player;

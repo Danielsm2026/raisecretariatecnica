@@ -85,7 +85,9 @@ export default function App() {
       'avi_17': 'p36', 'avi_18': 'p16', 'avi_19': 'p31', 'avi_20': 'p19',
       'avi_21': 'p34', 'avi_22': 'p15',
       'gk_algeciras_cf_ivan_moreno': 'p_algeciras_ivan_moreno',
-      'gk_ud_ibiza_tao_paradowski': 'p_algeciras_tao_paradowski'
+      'gk_ud_ibiza_tao_paradowski': 'p_algeciras_tao_paradowski',
+      'p_gk_new_1': 'p_murcia_dani_jimenez',
+      'p_gk_new_47': 'p_murcia_diego_pineiro'
     };
 
     // 1. First, explicitly remove any player with an 'avi_xx' ID if the corresponding 'pXX' exists in the list OR in INITIAL_PLAYERS
@@ -119,7 +121,7 @@ export default function App() {
         unique.push(p);
       } else {
         // If the new one is richer (e.g. has dorsal or is from specialized dataset), swap it
-        if ((p.dorsal !== undefined && unique[existingIdx].dorsal === undefined) || p.id.startsWith('p_algeciras_') || p.id.startsWith('p_castilla_')) {
+        if ((p.dorsal !== undefined && unique[existingIdx].dorsal === undefined) || p.id.startsWith('p_algeciras_') || p.id.startsWith('p_castilla_') || p.id.startsWith('p_murcia_')) {
           const oldId = unique[existingIdx].id;
           unique[existingIdx] = p;
           if (oldId !== p.id) {
@@ -470,6 +472,24 @@ export default function App() {
             if (current.categoria !== 'Segunda RFEF') { current.categoria = 'Segunda RFEF'; updated = true; }
             if (current.equipo !== 'Real Oviedo Vetusta') { current.equipo = 'Real Oviedo Vetusta'; updated = true; }
             const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/4646.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (current.id.startsWith('p_murcia_') || (current.equipo && current.equipo.toLowerCase().includes('murcia'))) {
+            const freshMurcia = INITIAL_PLAYERS.find(pl => pl.id === current.id || ((pl.equipo === 'Real Murcia CF' || pl.equipo?.includes('Murcia')) && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshMurcia) {
+              if (current.dorsal !== freshMurcia.dorsal || current.escudoUrl !== freshMurcia.escudoUrl || current.altura !== freshMurcia.altura || current.lateralidad !== freshMurcia.lateralidad || current.posicion !== freshMurcia.posicion || current.categoria !== freshMurcia.categoria || current.equipo !== freshMurcia.equipo) {
+                current = { ...current, ...freshMurcia };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('murcia') || teamName === 'Real Murcia CF' || teamName === 'Real Murcia') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Real Murcia CF') { current.equipo = 'Real Murcia CF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
@@ -872,6 +892,24 @@ export default function App() {
               updated = true;
             }
           }
+          if (current.id.startsWith('p_murcia_') || (current.equipo && current.equipo.toLowerCase().includes('murcia'))) {
+            const freshMurcia = INITIAL_PLAYERS.find(pl => pl.id === current.id || ((pl.equipo === 'Real Murcia CF' || pl.equipo?.includes('Murcia')) && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshMurcia) {
+              if (current.dorsal !== freshMurcia.dorsal || current.escudoUrl !== freshMurcia.escudoUrl || current.altura !== freshMurcia.altura || current.lateralidad !== freshMurcia.lateralidad || current.posicion !== freshMurcia.posicion || current.categoria !== freshMurcia.categoria || current.equipo !== freshMurcia.equipo) {
+                current = { ...current, ...freshMurcia };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('murcia') || teamName === 'Real Murcia CF' || teamName === 'Real Murcia') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Real Murcia CF') { current.equipo = 'Real Murcia CF'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             changed = true;
             return current;
@@ -891,7 +929,7 @@ export default function App() {
         }
         setPlayers(parsed);
         if (parsed.length > 0) {
-          const newlyAdded = parsed.find(p => p.id === 'p13' || p.id === 'p11' || p.id === 'p12' || p.id === 'p_neskes' || p.id === 'p_sillero' || p.id === 'p_artetxe');
+          const newlyAdded = parsed.find(p => p.id === 'p_murcia_dani_jimenez' || p.id === 'p_murcia_alberto_gonzalez' || p.id.startsWith('p_murcia_') || p.id === 'p13' || p.id === 'p11' || p.id === 'p12' || p.id === 'p_neskes' || p.id === 'p_sillero' || p.id === 'p_artetxe');
           setSelectedPlayer(newlyAdded || parsed[0]);
         } else {
           setSelectedPlayer(null);
