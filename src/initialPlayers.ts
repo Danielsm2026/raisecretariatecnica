@@ -14,6 +14,7 @@ import { RM_CASTILLA_PLAYERS, RM_CASTILLA_ESCUDO } from './data/castillaPlayers'
 import { REAL_OVIEDO_VETUSTA_PLAYERS, REAL_OVIEDO_VETUSTA_ESCUDO } from './data/realOviedoVetustaPlayers';
 import { EIBAR_B_PLAYERS, EIBAR_B_ESCUDO } from './data/eibarBPlayers';
 import { REAL_MURCIA_PLAYERS, REAL_MURCIA_ESCUDO } from './data/realMurciaPlayers';
+import { CD_TERUEL_PLAYERS, CD_TERUEL_ESCUDO } from './data/cdTeruelPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -4142,6 +4143,7 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...REAL_OVIEDO_VETUSTA_PLAYERS,
   ...EIBAR_B_PLAYERS,
   ...REAL_MURCIA_PLAYERS,
+  ...CD_TERUEL_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4274,6 +4276,14 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'Real Murcia CF',
       categoria: 'Primera RFEF',
       escudoUrl: REAL_MURCIA_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('teruel') || player.equipo === 'CD Teruel' || player.equipo === 'C.D. Teruel')) {
+    return {
+      ...player,
+      equipo: 'CD Teruel',
+      categoria: 'Primera RFEF',
+      escudoUrl: CD_TERUEL_ESCUDO
     };
   }
   return player;

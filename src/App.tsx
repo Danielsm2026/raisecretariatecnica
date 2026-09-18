@@ -29,7 +29,8 @@ import {
   getSupabaseUser,
   getSupabaseSession,
   onSupabaseAuthStateChange,
-  supabaseSignOut
+  supabaseSignOut,
+  clearStaleSupabaseAuthStorage
 } from './utils/supabaseClient';
 import { Trophy, HelpCircle, FileJson, Info, Calendar, Plus, Trash2, Edit, FileText, ChevronRight, BarChart3, LogOut, User, ArrowLeft } from 'lucide-react';
 
@@ -495,6 +496,24 @@ export default function App() {
               updated = true;
             }
           }
+          if (current.id.startsWith('p_teruel_') || (current.equipo && current.equipo.toLowerCase().includes('teruel'))) {
+            const freshTeruel = INITIAL_PLAYERS.find(pl => pl.id === current.id || ((pl.equipo === 'CD Teruel' || pl.equipo?.includes('Teruel')) && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshTeruel) {
+              if (current.dorsal !== freshTeruel.dorsal || current.escudoUrl !== freshTeruel.escudoUrl || current.altura !== freshTeruel.altura || current.lateralidad !== freshTeruel.lateralidad || current.posicion !== freshTeruel.posicion || current.categoria !== freshTeruel.categoria || current.equipo !== freshTeruel.equipo) {
+                current = { ...current, ...freshTeruel };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('teruel') || teamName === 'CD Teruel' || teamName === 'C.D. Teruel') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'CD Teruel') { current.equipo = 'CD Teruel'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             migratedAny = true;
             dbSavePlayer(current).catch(err => {
@@ -910,6 +929,24 @@ export default function App() {
               updated = true;
             }
           }
+          if (current.id.startsWith('p_teruel_') || (current.equipo && current.equipo.toLowerCase().includes('teruel'))) {
+            const freshTeruel = INITIAL_PLAYERS.find(pl => pl.id === current.id || ((pl.equipo === 'CD Teruel' || pl.equipo?.includes('Teruel')) && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshTeruel) {
+              if (current.dorsal !== freshTeruel.dorsal || current.escudoUrl !== freshTeruel.escudoUrl || current.altura !== freshTeruel.altura || current.lateralidad !== freshTeruel.lateralidad || current.posicion !== freshTeruel.posicion || current.categoria !== freshTeruel.categoria || current.equipo !== freshTeruel.equipo) {
+                current = { ...current, ...freshTeruel };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('teruel') || teamName === 'CD Teruel' || teamName === 'C.D. Teruel') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'CD Teruel') { current.equipo = 'CD Teruel'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
           if (updated) {
             changed = true;
             return current;
@@ -1099,10 +1136,12 @@ export default function App() {
   const handleSignOut = async () => {
     try {
       await supabaseSignOut();
+    } catch (err) {
+      console.warn('Non-critical issue during sign out:', err);
+    } finally {
+      clearStaleSupabaseAuthStorage();
       setUser(null);
       showNotification('Sesión cerrada correctamente', 'info');
-    } catch (err) {
-      console.error('Error al cerrar sesión:', err);
     }
   };
 
@@ -1116,12 +1155,14 @@ export default function App() {
         })
         .catch((err) => {
           console.warn('Initial Supabase session check error:', err);
+          clearStaleSupabaseAuthStorage();
           setUser(null);
           setAuthChecked(true);
         });
 
       const { data: { subscription } } = onSupabaseAuthStateChange((event, session) => {
         if (event === 'SIGNED_OUT' || (event as string) === 'TOKEN_REFRESH_FAILED') {
+          clearStaleSupabaseAuthStorage();
           setUser(null);
         } else {
           setUser(session?.user || null);

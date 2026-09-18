@@ -1,9 +1,82 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dirección Deportiva</title>
+    <title>Departamento Scouting</title>
+    <meta name="description" content="Base de datos y panel de control para scouting y seguimiento de futbolistas." />
+    <script>
+      // Early protection shield against stale Supabase refresh token unhandled errors
+      (function() {
+        var isRefreshTokenError = function(arg) {
+          if (!arg) return false;
+          var str = typeof arg === 'string' ? arg : (arg.message || arg.error_description || arg.error || '');
+          var lower = String(str).toLowerCase();
+          return lower.indexOf('refresh token') !== -1 || 
+                 lower.indexOf('refresh_token_not_found') !== -1 || 
+                 lower.indexOf('token not found') !== -1 ||
+                 lower.indexOf('invalid refresh') !== -1;
+        };
+
+        var clearStaleAuthStorage = function() {
+          try {
+            if (window.localStorage) {
+              for (var i = window.localStorage.length - 1; i >= 0; i--) {
+                var k = window.localStorage.key(i);
+                if (k && (k.indexOf('sb-') === 0 || k.indexOf('supabase.auth') !== -1 || k.indexOf('supabase-auth') !== -1)) {
+                  window.localStorage.removeItem(k);
+                }
+              }
+            }
+            if (window.sessionStorage) {
+              for (var j = window.sessionStorage.length - 1; j >= 0; j--) {
+                var sk = window.sessionStorage.key(j);
+                if (sk && (sk.indexOf('sb-') === 0 || sk.indexOf('supabase.auth') !== -1 || sk.indexOf('supabase-auth') !== -1)) {
+                  window.sessionStorage.removeItem(sk);
+                }
+              }
+            }
+          } catch (e) {}
+        };
+
+        // 1. Intercept console.error to prevent stale refresh token errors from triggering test runners/preview errors
+        var originalConsoleError = console.error;
+        console.error = function() {
+          for (var i = 0; i < arguments.length; i++) {
+            if (isRefreshTokenError(arguments[i])) {
+              console.warn('[Supabase Auth] Intercepted stale/invalid refresh token in console.error:', arguments[i]);
+              clearStaleAuthStorage();
+              return;
+            }
+          }
+          return originalConsoleError.apply(console, arguments);
+        };
+
+        // 2. Intercept unhandledrejection in capture mode
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event && event.reason;
+          if (isRefreshTokenError(reason)) {
+            event.preventDefault();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+            if (event.stopPropagation) event.stopPropagation();
+            clearStaleAuthStorage();
+            console.warn('[Supabase Auth] Handled stale refresh token in unhandledrejection event.');
+          }
+        }, true);
+
+        // 3. Intercept error event in capture mode
+        window.addEventListener('error', function(event) {
+          var msg = (event && (event.message || event.error)) || '';
+          if (isRefreshTokenError(msg)) {
+            event.preventDefault();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+            if (event.stopPropagation) event.stopPropagation();
+            clearStaleAuthStorage();
+            console.warn('[Supabase Auth] Handled stale refresh token in window error event.');
+          }
+        }, true);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

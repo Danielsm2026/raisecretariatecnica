@@ -77,6 +77,9 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'Real Murcia CF': 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1',
   'Real Murcia': 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1',
   'Murcia': 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1',
+  'CD Teruel': 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1',
+  'C.D. Teruel': 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1',
+  'Teruel': 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -183,6 +186,11 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
   // If team is Real Murcia CF, override the logo explicitly with 2113.png
   if (teamNormal && (teamNormal.toLowerCase().includes('murcia') || teamNormal === 'Real Murcia CF' || teamNormal === 'Real Murcia')) {
     return 'https://cdn.resfu.com/img_data/equipos/2113.png?size=120x&lossy=1';
+  }
+
+  // If team is CD Teruel, override the logo explicitly with 2485.jpg
+  if (teamNormal && (teamNormal.toLowerCase().includes('teruel') || teamNormal === 'CD Teruel' || teamNormal === 'C.D. Teruel')) {
+    return 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {

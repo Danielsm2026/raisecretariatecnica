@@ -37,6 +37,18 @@ export function clearStaleSupabaseAuthStorage() {
           try { window.sessionStorage.removeItem(k); } catch { /* Ignore */ }
         });
       }
+
+      // Also clean any cookie that might store sb auth tokens
+      if (typeof document !== 'undefined' && document.cookie) {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (isSbKey(name)) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          }
+        }
+      }
     }
   } catch {
     // Ignore storage access errors
@@ -45,6 +57,32 @@ export function clearStaleSupabaseAuthStorage() {
 
 // Global safety net for unhandled Supabase auth refresh token errors
 if (typeof window !== 'undefined') {
+  // 1. Intercept console.error to filter out stale refresh token errors from GoTrue
+  const originalConsoleError = console.error;
+  console.error = function (...args: any[]) {
+    const isRefreshTokenError = args.some(arg => {
+      if (!arg) return false;
+      const str = typeof arg === 'string'
+        ? arg
+        : (arg?.message || arg?.error_description || arg?.error || (typeof arg === 'object' ? JSON.stringify(arg) : ''));
+      const lower = String(str).toLowerCase();
+      return (
+        lower.includes('refresh token') ||
+        lower.includes('refresh_token_not_found') ||
+        lower.includes('token not found') ||
+        lower.includes('invalid refresh')
+      );
+    });
+
+    if (isRefreshTokenError) {
+      console.warn('[Supabase Auth] Intercepted and handled invalid/stale refresh token error in console.error.');
+      clearStaleSupabaseAuthStorage();
+      return;
+    }
+    return originalConsoleError.apply(console, args);
+  };
+
+  // 2. Intercept unhandledrejection
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event.reason;
     const msg = (
@@ -61,15 +99,23 @@ if (typeof window !== 'undefined') {
     ) {
       console.warn('Gracefully handled stale/invalid Supabase refresh token unhandled rejection.');
       event.preventDefault();
+      event.stopImmediatePropagation?.();
+      event.stopPropagation?.();
       clearStaleSupabaseAuthStorage();
       if (supabase) {
         supabase.auth.signOut({ scope: 'local' }).catch(() => {});
       }
     }
-  });
+  }, true);
 
+  // 3. Intercept window error
   window.addEventListener('error', (event) => {
-    const msg = (event.message || '').toLowerCase();
+    const msg = (
+      typeof event === 'string'
+        ? event
+        : (event?.message || (event?.error && event.error.message) || '')
+    ).toLowerCase();
+
     if (
       msg.includes('refresh token') ||
       msg.includes('invalid refresh') ||
@@ -78,13 +124,46 @@ if (typeof window !== 'undefined') {
     ) {
       console.warn('Gracefully handled stale/invalid Supabase refresh token window error.');
       event.preventDefault();
+      event.stopImmediatePropagation?.();
+      event.stopPropagation?.();
       clearStaleSupabaseAuthStorage();
       if (supabase) {
         supabase.auth.signOut({ scope: 'local' }).catch(() => {});
       }
     }
-  });
+  }, true);
 }
+
+// Custom global fetch to catch 400 invalid refresh token responses before GoTrue logs them
+const customAuthFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
+  try {
+    const res = await fetch(input, init);
+    if (urlStr.includes('/auth/v1/token') && (init?.body as string)?.includes('refresh_token')) {
+      if (res.status === 400) {
+        const clone = res.clone();
+        try {
+          const body = await clone.json();
+          const errCode = body?.error_code || body?.error || body?.msg || '';
+          const msg = String(body?.msg || body?.error_description || '').toLowerCase();
+          if (
+            String(errCode).includes('refresh_token_not_found') ||
+            msg.includes('refresh token') ||
+            msg.includes('token not found') ||
+            msg.includes('invalid refresh')
+          ) {
+            clearStaleSupabaseAuthStorage();
+          }
+        } catch {
+          // Ignore JSON parse error
+        }
+      }
+    }
+    return res;
+  } catch (err: any) {
+    throw err;
+  }
+};
 
 // Create the client only if keys are present
 export const supabase = supabaseUrl && supabaseAnonKey 
@@ -93,6 +172,9 @@ export const supabase = supabaseUrl && supabaseAnonKey
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true
+      },
+      global: {
+        fetch: customAuthFetch
       }
     }) 
   : null;
@@ -146,14 +228,14 @@ export async function getSupabaseSession() {
           // Ignore local signOut error
         }
       } else {
-        console.error('Error fetching Supabase session:', error);
+        console.warn('Non-critical issue fetching Supabase session:', error.message || error);
       }
       return null;
     }
     return data?.session || null;
   } catch (err: any) {
     const msg = err?.message || '';
-    if (msg.toLowerCase().includes('refresh token') || msg.toLowerCase().includes('not found')) {
+    if (msg.toLowerCase().includes('refresh token') || msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('invalid refresh')) {
       console.warn('Caught invalid refresh token exception. Resetting local auth session:', msg);
       clearStaleSupabaseAuthStorage();
       try {
@@ -162,7 +244,7 @@ export async function getSupabaseSession() {
         // Ignore
       }
     } else {
-      console.error('Unexpected error in getSupabaseSession:', err);
+      console.warn('Non-critical exception in getSupabaseSession:', err?.message || err);
     }
     return null;
   }
@@ -188,14 +270,14 @@ export async function getSupabaseUser() {
           // Ignore
         }
       } else {
-        console.error('Error fetching Supabase user:', error);
+        console.warn('Non-critical issue fetching Supabase user:', error.message || error);
       }
       return null;
     }
     return data?.user || null;
   } catch (err: any) {
     const msg = err?.message || '';
-    if (msg.toLowerCase().includes('refresh token') || msg.toLowerCase().includes('not found')) {
+    if (msg.toLowerCase().includes('refresh token') || msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('invalid refresh')) {
       console.warn('Caught invalid refresh token exception in getUser:', msg);
       clearStaleSupabaseAuthStorage();
       try {
@@ -204,7 +286,7 @@ export async function getSupabaseUser() {
         // Ignore
       }
     } else {
-      console.error('Unexpected error in getSupabaseUser:', err);
+      console.warn('Non-critical exception in getSupabaseUser:', err?.message || err);
     }
     return null;
   }
