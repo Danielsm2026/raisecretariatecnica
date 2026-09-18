@@ -165,6 +165,7 @@ export async function exportPlayerReportPDF(
     if (rec.includes('FIRMAR') || rec.includes('CONTRATAR')) return [74, 222, 128]; // green-400
     if (rec.includes('SEGUIR') || rec.includes('SEGUIMIENTO')) return [96, 165, 250]; // blue-400
     if (rec.includes('EVALUAR') || rec.includes('INTERESANTE')) return [251, 191, 36]; // amber-400
+    if (rec.includes('POSIBLES') || rec.includes('SITUACIONES')) return [192, 132, 252]; // purple-400
     if (rec.includes('SIN VALORAR') || rec.includes('SIN_VALORAR') || rec.includes('SIN VALORACION')) return [148, 163, 184]; // slate-400
     if (rec.includes('DESCARTAR')) return [239, 68, 68]; // red-500
     return [96, 165, 250]; // default blue-400
@@ -174,6 +175,7 @@ export async function exportPlayerReportPDF(
     if (rec.includes('FIRMAR') || rec.includes('CONTRATAR')) return 'Con nivel y experiencia en la categoría.';
     if (rec.includes('SEGUIR') || rec.includes('SEGUIMIENTO')) return 'Monitorear su progresión de forma regular.';
     if (rec.includes('EVALUAR') || rec.includes('INTERESANTE')) return 'Jugador útil para complementar fondo de armario.';
+    if (rec.includes('POSIBLES') || rec.includes('SITUACIONES')) return 'En consideración para posibles situaciones de mercado.';
     if (rec.includes('SIN VALORAR') || rec.includes('SIN_VALORAR') || rec.includes('SIN VALORACION')) return 'Pendiente de evaluación por el departamento.';
     if (rec.includes('DESCARTAR')) return 'No cumple los requerimientos actuales del club.';
     return 'Monitorear su progresión de forma regular.';

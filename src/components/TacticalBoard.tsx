@@ -3526,6 +3526,7 @@ export default function TacticalBoard({ players, showNotification, onUpdatePlaye
                     <option value="FIRMAR">⭐ FIRMAR / CONTRATAR</option>
                     <option value="SEGUIR">👀 SEGUIR</option>
                     <option value="INTERESANTE">💡 EVALUAR / INTERESANTE</option>
+                    <option value="POSIBLES SITUACIONES">🔄 POSIBLES SITUACIONES</option>
                     <option value="DESCARTAR">❌ DESCARTAR</option>
                   </select>
                 </div>

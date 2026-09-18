@@ -346,6 +346,7 @@ export default function PlayerReportModal({
                       <option value="FIRMAR">★ FIRMAR</option>
                       <option value="SEGUIR">★ SEGUIR</option>
                       <option value="INTERESANTE">★ INTERESANTE</option>
+                      <option value="POSIBLES SITUACIONES">★ POSIBLES SITUACIONES</option>
                       <option value="EVALUAR">★ EVALUAR</option>
                       <option value="DESCARTAR">★ DESCARTAR</option>
                     </select>
@@ -363,6 +364,7 @@ export default function PlayerReportModal({
                       (recomendacion === 'FIRMAR' || recomendacion === 'CONTRATAR') ? 'text-green-400' :
                       (recomendacion === 'SEGUIR' || recomendacion === 'SEGUIMIENTO') ? 'text-blue-400' :
                       (recomendacion === 'EVALUAR' || recomendacion === 'INTERESANTE') ? 'text-amber-400' :
+                      (recomendacion === 'POSIBLES SITUACIONES' || recomendacion === 'POSIBLES_SITUACIONES') ? 'text-purple-400' :
                       (recomendacion === 'SIN VALORAR' || recomendacion === 'SIN_VALORAR') ? 'text-slate-400' : 'text-red-500'
                     }`}>
                       ★ {recomendacion || 'SIN VALORAR'}
@@ -371,6 +373,8 @@ export default function PlayerReportModal({
                       {recomendacionComentario || (
                         (recomendacion === 'SIN VALORAR' || recomendacion === 'SIN_VALORAR')
                           ? 'Pendiente de evaluación por el departamento.'
+                          : (recomendacion === 'POSIBLES SITUACIONES' || recomendacion === 'POSIBLES_SITUACIONES')
+                          ? 'En consideración para posibles situaciones de mercado.'
                           : 'Monitoreo de rendimiento constante.'
                       )}
                     </p>

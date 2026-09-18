@@ -1,6 +1,6 @@
 import { ScoutedPlayer } from '../types';
 
-export const GIMNASTIC_TARRAGONA_ESCUDO = 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1';
+export const GIMNASTIC_TARRAGONA_ESCUDO = 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1';
 
 export const GIMNASTIC_TARRAGONA_PLAYERS: ScoutedPlayer[] = [
   // PORTEROS

@@ -91,6 +91,7 @@ export default function PlayerTable({
     if (rec === 'INTERESANTE' || rec === 'EVALUAR') return 'INTERESANTE';
     if (rec === 'FIRMAR' || rec === 'CONTRATAR') return 'FIRMAR';
     if (rec === 'DESCARTAR') return 'DESCARTAR';
+    if (rec === 'POSIBLES SITUACIONES' || rec === 'POSIBLE SITUACION' || rec === 'POSIBLES_SITUACIONES' || rec === 'POSIBLES SITUACIÓN') return 'POSIBLES SITUACIONES';
     return '';
   };
 
@@ -108,6 +109,9 @@ export default function PlayerTable({
     }
     if (normalized === 'DESCARTAR') {
       return 'bg-red-950/40 text-red-400 border-red-800/40 hover:border-red-750';
+    }
+    if (normalized === 'POSIBLES SITUACIONES' || normalized === 'POSIBLE SITUACION' || normalized === 'POSIBLES_SITUACIONES') {
+      return 'bg-purple-950/40 text-purple-300 border-purple-800/40 hover:border-purple-700';
     }
     return 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600';
   };
@@ -527,6 +531,8 @@ export default function PlayerTable({
               <option value="SEGUIR">Seguir</option>
               <option value="INTERESANTE">Interesante</option>
               <option value="FIRMAR">Firmar</option>
+              <option value="POSIBLES SITUACIONES">Posibles situaciones</option>
+              <option value="DESCARTAR">Descartar</option>
             </select>
           </div>
 
@@ -773,6 +779,7 @@ export default function PlayerTable({
                       <option value="SEGUIR" className="bg-slate-900 text-slate-100">Seguir</option>
                       <option value="INTERESANTE" className="bg-slate-900 text-slate-100">Interesante</option>
                       <option value="FIRMAR" className="bg-slate-900 text-slate-100">Firmar</option>
+                      <option value="POSIBLES SITUACIONES" className="bg-slate-900 text-purple-300">Posibles situaciones</option>
                       <option value="DESCARTAR" className="bg-slate-900 text-red-400">Descartar</option>
                     </select>
                   </td>

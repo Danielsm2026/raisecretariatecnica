@@ -80,13 +80,13 @@ export const DEFAULT_TEAM_ESCUDOS: Record<string, string> = {
   'CD Teruel': 'https://cdn.resfu.com/img_data/equipos/2485.png?size=120x&lossy=1',
   'C.D. Teruel': 'https://cdn.resfu.com/img_data/equipos/2485.png?size=120x&lossy=1',
   'Teruel': 'https://cdn.resfu.com/img_data/equipos/2485.png?size=120x&lossy=1',
-  'Gimnàstic Tarragona': 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1',
-  'Gimnàstic de Tarragona': 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1',
-  'Gimnastic Tarragona': 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1',
-  'Gimnastic de Tarragona': 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1',
-  'Nàstic de Tarragona': 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1',
-  'Nàstic': 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1',
-  'Nastic': 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1',
+  'Gimnàstic Tarragona': 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1',
+  'Gimnàstic de Tarragona': 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1',
+  'Gimnastic Tarragona': 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1',
+  'Gimnastic de Tarragona': 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1',
+  'Nàstic de Tarragona': 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1',
+  'Nàstic': 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1',
+  'Nastic': 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1',
 };
 
 // High-quality generic sports shield placeholder
@@ -200,9 +200,9 @@ export function getPlayerEscudoUrl(player: ScoutedPlayer): string {
     return 'https://cdn.resfu.com/img_data/equipos/2485.png?size=120x&lossy=1';
   }
 
-  // If team is Gimnàstic Tarragona, override the logo explicitly with 1228.jpg
+  // If team is Gimnàstic Tarragona, override the logo explicitly with 1228.png
   if (teamNormal && (teamNormal.toLowerCase().includes('gimnàstic') || teamNormal.toLowerCase().includes('gimnastic') || teamNormal.toLowerCase().includes('tarragona') || teamNormal.toLowerCase().includes('nàstic') || teamNormal.toLowerCase().includes('nastic'))) {
-    return 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1';
+    return 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1';
   }
 
   if (player.escudoUrl && player.escudoUrl.trim().length > 0) {

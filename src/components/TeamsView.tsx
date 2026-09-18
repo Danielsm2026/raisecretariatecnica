@@ -1449,6 +1449,7 @@ export default function TeamsView({
                                   (player.recomendacion === 'FIRMAR' || player.recomendacion === 'CONTRATAR') ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/30' :
                                   (player.recomendacion === 'SEGUIR' || player.recomendacion === 'SEGUIMIENTO') ? 'bg-blue-950/20 text-blue-400 border-blue-900/30' :
                                   (player.recomendacion === 'INTERESANTE' || player.recomendacion === 'EVALUAR') ? 'bg-amber-950/20 text-amber-400 border-amber-900/30' :
+                                  (player.recomendacion === 'POSIBLES SITUACIONES' || player.recomendacion === 'POSIBLES_SITUACIONES') ? 'bg-purple-950/20 text-purple-400 border-purple-900/30' :
                                   player.recomendacion === 'DESCARTAR' ? 'bg-red-950/20 text-red-400 border-red-900/30' :
                                   'bg-slate-950 text-slate-400 border-slate-800'
                                 }`}>
@@ -1568,6 +1569,7 @@ export default function TeamsView({
                                     (player.recomendacion === 'FIRMAR' || player.recomendacion === 'CONTRATAR') ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/30' :
                                     (player.recomendacion === 'SEGUIR' || player.recomendacion === 'SEGUIMIENTO') ? 'bg-blue-950/20 text-blue-400 border-blue-900/30' :
                                     (player.recomendacion === 'INTERESANTE' || player.recomendacion === 'EVALUAR') ? 'bg-amber-950/20 text-amber-400 border-amber-900/30' :
+                                    (player.recomendacion === 'POSIBLES SITUACIONES' || player.recomendacion === 'POSIBLES_SITUACIONES') ? 'bg-purple-950/20 text-purple-400 border-purple-900/30' :
                                     player.recomendacion === 'DESCARTAR' ? 'bg-red-950/20 text-red-400 border-red-900/30' :
                                     'bg-slate-950 text-slate-400 border-slate-800'
                                   }`}>

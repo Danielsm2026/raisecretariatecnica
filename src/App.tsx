@@ -526,7 +526,7 @@ export default function App() {
           if (teamName.toLowerCase().includes('gimnàstic') || teamName.toLowerCase().includes('gimnastic') || teamName.toLowerCase().includes('tarragona') || teamName.toLowerCase().includes('nàstic') || teamName.toLowerCase().includes('nastic') || teamName === 'Gimnàstic Tarragona') {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             if (current.equipo !== 'Gimnàstic Tarragona') { current.equipo = 'Gimnàstic Tarragona'; updated = true; }
-            const targetEscudo = 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1';
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
@@ -977,7 +977,7 @@ export default function App() {
           if (teamName.toLowerCase().includes('gimnàstic') || teamName.toLowerCase().includes('gimnastic') || teamName.toLowerCase().includes('tarragona') || teamName.toLowerCase().includes('nàstic') || teamName.toLowerCase().includes('nastic') || teamName === 'Gimnàstic Tarragona') {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             if (current.equipo !== 'Gimnàstic Tarragona') { current.equipo = 'Gimnàstic Tarragona'; updated = true; }
-            const targetEscudo = 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1';
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/1228.png?size=120x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
