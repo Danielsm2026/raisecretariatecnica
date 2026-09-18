@@ -1,6 +1,6 @@
 import { ScoutedPlayer } from '../types';
 
-export const CD_TERUEL_ESCUDO = 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1';
+export const CD_TERUEL_ESCUDO = 'https://cdn.resfu.com/img_data/equipos/2485.png?size=120x&lossy=1';
 
 export const CD_TERUEL_PLAYERS: ScoutedPlayer[] = [
   {

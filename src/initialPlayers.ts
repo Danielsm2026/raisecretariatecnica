@@ -15,6 +15,7 @@ import { REAL_OVIEDO_VETUSTA_PLAYERS, REAL_OVIEDO_VETUSTA_ESCUDO } from './data/
 import { EIBAR_B_PLAYERS, EIBAR_B_ESCUDO } from './data/eibarBPlayers';
 import { REAL_MURCIA_PLAYERS, REAL_MURCIA_ESCUDO } from './data/realMurciaPlayers';
 import { CD_TERUEL_PLAYERS, CD_TERUEL_ESCUDO } from './data/cdTeruelPlayers';
+import { GIMNASTIC_TARRAGONA_PLAYERS, GIMNASTIC_TARRAGONA_ESCUDO } from './data/gimnasticTarragonaPlayers';
 
 const RAW_PLAYERS: ScoutedPlayer[] = [
   {
@@ -4144,6 +4145,7 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
   ...EIBAR_B_PLAYERS,
   ...REAL_MURCIA_PLAYERS,
   ...CD_TERUEL_PLAYERS,
+  ...GIMNASTIC_TARRAGONA_PLAYERS,
   ...INITIAL_FICHAJES
 ].map(player => {
   if (player.equipo === 'Real Avilés' || player.equipo === 'Real Avilés Industrial') {
@@ -4284,6 +4286,14 @@ export const INITIAL_PLAYERS: ScoutedPlayer[] = [
       equipo: 'CD Teruel',
       categoria: 'Primera RFEF',
       escudoUrl: CD_TERUEL_ESCUDO
+    };
+  }
+  if (player.equipo && (player.equipo.toLowerCase().includes('gimnàstic') || player.equipo.toLowerCase().includes('gimnastic') || player.equipo.toLowerCase().includes('tarragona') || player.equipo.toLowerCase().includes('nàstic') || player.equipo.toLowerCase().includes('nastic') || player.equipo === 'Gimnàstic Tarragona')) {
+    return {
+      ...player,
+      equipo: 'Gimnàstic Tarragona',
+      categoria: 'Primera RFEF',
+      escudoUrl: GIMNASTIC_TARRAGONA_ESCUDO
     };
   }
   return player;

@@ -508,7 +508,25 @@ export default function App() {
           if (teamName.toLowerCase().includes('teruel') || teamName === 'CD Teruel' || teamName === 'C.D. Teruel') {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             if (current.equipo !== 'CD Teruel') { current.equipo = 'CD Teruel'; updated = true; }
-            const targetEscudo = 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1';
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2485.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (current.id.startsWith('p_nastic_') || (current.equipo && (current.equipo.toLowerCase().includes('gimnàstic') || current.equipo.toLowerCase().includes('gimnastic') || current.equipo.toLowerCase().includes('tarragona') || current.equipo.toLowerCase().includes('nàstic') || current.equipo.toLowerCase().includes('nastic')))) {
+            const freshNastic = INITIAL_PLAYERS.find(pl => pl.id === current.id || ((pl.equipo === 'Gimnàstic Tarragona' || pl.equipo?.includes('Tarragona') || pl.equipo?.includes('Gimnàstic')) && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshNastic) {
+              if (current.dorsal !== freshNastic.dorsal || current.escudoUrl !== freshNastic.escudoUrl || current.altura !== freshNastic.altura || current.lateralidad !== freshNastic.lateralidad || current.posicion !== freshNastic.posicion || current.categoria !== freshNastic.categoria || current.equipo !== freshNastic.equipo) {
+                current = { ...current, ...freshNastic };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('gimnàstic') || teamName.toLowerCase().includes('gimnastic') || teamName.toLowerCase().includes('tarragona') || teamName.toLowerCase().includes('nàstic') || teamName.toLowerCase().includes('nastic') || teamName === 'Gimnàstic Tarragona') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Gimnàstic Tarragona') { current.equipo = 'Gimnàstic Tarragona'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
@@ -941,7 +959,25 @@ export default function App() {
           if (teamName.toLowerCase().includes('teruel') || teamName === 'CD Teruel' || teamName === 'C.D. Teruel') {
             if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
             if (current.equipo !== 'CD Teruel') { current.equipo = 'CD Teruel'; updated = true; }
-            const targetEscudo = 'https://cdn.resfu.com/img_data/escudos/medium/2485.jpg?size=360x&lossy=1';
+            const targetEscudo = 'https://cdn.resfu.com/img_data/equipos/2485.png?size=120x&lossy=1';
+            if (current.escudoUrl !== targetEscudo) {
+              current.escudoUrl = targetEscudo;
+              updated = true;
+            }
+          }
+          if (current.id.startsWith('p_nastic_') || (current.equipo && (current.equipo.toLowerCase().includes('gimnàstic') || current.equipo.toLowerCase().includes('gimnastic') || current.equipo.toLowerCase().includes('tarragona') || current.equipo.toLowerCase().includes('nàstic') || current.equipo.toLowerCase().includes('nastic')))) {
+            const freshNastic = INITIAL_PLAYERS.find(pl => pl.id === current.id || ((pl.equipo === 'Gimnàstic Tarragona' || pl.equipo?.includes('Tarragona') || pl.equipo?.includes('Gimnàstic')) && pl.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === current.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            if (freshNastic) {
+              if (current.dorsal !== freshNastic.dorsal || current.escudoUrl !== freshNastic.escudoUrl || current.altura !== freshNastic.altura || current.lateralidad !== freshNastic.lateralidad || current.posicion !== freshNastic.posicion || current.categoria !== freshNastic.categoria || current.equipo !== freshNastic.equipo) {
+                current = { ...current, ...freshNastic };
+                updated = true;
+              }
+            }
+          }
+          if (teamName.toLowerCase().includes('gimnàstic') || teamName.toLowerCase().includes('gimnastic') || teamName.toLowerCase().includes('tarragona') || teamName.toLowerCase().includes('nàstic') || teamName.toLowerCase().includes('nastic') || teamName === 'Gimnàstic Tarragona') {
+            if (current.categoria !== 'Primera RFEF') { current.categoria = 'Primera RFEF'; updated = true; }
+            if (current.equipo !== 'Gimnàstic Tarragona') { current.equipo = 'Gimnàstic Tarragona'; updated = true; }
+            const targetEscudo = 'https://cdn.resfu.com/img_data/escudos/medium/1228.jpg?size=360x&lossy=1';
             if (current.escudoUrl !== targetEscudo) {
               current.escudoUrl = targetEscudo;
               updated = true;
